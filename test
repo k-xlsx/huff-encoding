@@ -1,0 +1,21 @@
+HuffTree { 
+    tree: {
+        HuffLeaf { 
+            character: None, 
+            frequency: 4, id: 18411276997536022349 
+            }: [
+                HuffLeaf { 
+                    character: None, 
+                    frequency: 2, 
+                    id: 5106355880859928484 
+                    }, 
+                HuffLeaf { 
+                    character: None, 
+                    frequency: 2, 
+                    id: 5106355880859928484 
+                    }
+            ], 
+            HuffLeaf { character: None, frequency: 5, id: 3816352124031770113 }: [HuffLeaf { character: Some('o'), frequency: 2, id: 9623213396524207678 }, HuffLeaf { character: 
+Some('l'), frequency: 3, id: 16137028908950474659 }], HuffLeaf { character: None, frequency: 8, id: 10996785520637226627 }: [HuffLeaf { character: None, frequency: 4, id: 18411276997536022349 }, HuffLeaf { character: None, frequency: 4, id: 18411276997536022349 }], HuffLeaf { character: None, frequency: 13, id: 5576546803252435268 }: [HuffLeaf { character: None, frequency: 5, id: 3816352124031770113 }, HuffLeaf { character: None, frequency: 8, id: 10996785520637226627 }], HuffLeaf { character: None, frequency: 2, id: 5106355880859928484 }: [HuffLeaf { character: Some('!'), frequency: 
+1, id: 12514876438129477545 }, HuffLeaf { character: Some('e'), frequency: 1, id: 10566809079935481532 }]}, root: Some(HuffLeaf { character: None, frequency: 13, id: 5576546803252435268 }) }       
+root: 13
