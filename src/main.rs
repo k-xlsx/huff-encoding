@@ -1,5 +1,4 @@
-mod huff_structs;
-
+use huff_encoding::huff_structs;
 
 // TODO: add tests
 

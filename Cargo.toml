@@ -1,5 +1,5 @@
 [package]
-name = "huffman-encoding"
+name = "huff_encoding"
 version = "0.5.0"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"

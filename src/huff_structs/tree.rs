@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use crate::huff_structs::{leaf::HuffLeaf, leaf_vec::HuffLeafVec};
 
-
+//TODO: make HuffTree an actual tree
 
 #[derive(Debug)]
 pub struct HuffTree{

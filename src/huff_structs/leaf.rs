@@ -4,7 +4,7 @@
 use std::hash::Hash;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-
+//TODO: make leaves contain their code
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct HuffLeaf{
