@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+
+
 use std::collections::HashMap;
 use std::rc::Rc;
 use crate::huff_structs::{HuffBranch, HuffLeaf};
@@ -31,8 +34,8 @@ impl HuffBranchVec{
         return &self.vec[0];
     }
 
-    pub fn min_next(&self) -> &Rc<HuffBranch>{
-        return &self.vec[1];
+    pub fn min_pair(&self) -> (&Rc<HuffBranch>, &Rc<HuffBranch>){
+        return (&self.vec[0], &self.vec[1]);
     }
 
     pub fn len(&self) -> usize{
@@ -52,7 +55,7 @@ impl HuffBranchVec{
 
     fn build(&mut self, chars_to_freq: &HashMap<char, u32>){
         for (c, f) in chars_to_freq{
-            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), None, None, None, None);
+            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), [None, None]);
     
             self.push(Rc::new(new_branch));
         }

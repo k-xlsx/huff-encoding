@@ -1,32 +1,31 @@
+#![allow(dead_code)]
+
+
 use std::rc::Rc;
 use crate::huff_structs::HuffLeaf;
 
 
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct HuffBranch{
     leaf: HuffLeaf,
 
     parent: Option<Rc<HuffBranch>>,
     pos_in_parent: Option<u8>,
-    left: Option<Rc<HuffBranch>>,
     right: Option<Rc<HuffBranch>>,
 }
 
 impl HuffBranch{
     pub fn new(leaf: HuffLeaf, parent: Option<Rc<HuffBranch>>, pos_in_parent: Option<u8>, left: Option<Rc<HuffBranch>>, right: Option<Rc<HuffBranch>>) -> HuffBranch{
 
-        assert_eq!(parent.is_some(), pos_in_parent.is_some(), "provide both parent and pos_to_parent, or neither");
-        assert!(pos_in_parent <= Some(1), "pos_in_parent must be binary");
+    pub fn new(leaf: HuffLeaf, children: [Option<Rc<HuffBranch>>; 2]) -> HuffBranch{
 
-        
         let huff_branch = HuffBranch{
             leaf: leaf,
 
-            parent: parent,
-            pos_in_parent: pos_in_parent,
-            left: left,
-            right: right,
+            parent: None,
+            pos_in_parent: None,
+            children: children
         };
 
         return huff_branch;
@@ -45,12 +44,8 @@ impl HuffBranch{
         return self.pos_in_parent
     }
 
-    pub fn left(&self) -> Option<&Rc<HuffBranch>>{
-        return self.left.as_ref();
-    }
-
-    pub fn right(&self) -> Option<&Rc<HuffBranch>>{
-        return self.right.as_ref();
+    pub fn children(&self) -> [Option<&Rc<HuffBranch>>; 2]{
+        return [self.children[0].as_ref(), self.children[1].as_ref()]
     }
 
 
@@ -61,9 +56,8 @@ impl HuffBranch{
         self.pos_in_parent = Some(pos_in_parent);
     }
 
-    pub fn set_children(&mut self, left: Rc<HuffBranch>, right: Rc<HuffBranch>){
-        self.left = Some(left);
-        self.right = Some(right);
+    pub fn set_children(&mut self, children: [Option<Rc<HuffBranch>>; 2]){
+        self.children = children
     }
 
     pub fn set_leaf_code(&mut self){

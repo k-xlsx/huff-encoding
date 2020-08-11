@@ -1,24 +1,20 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+#![allow(dead_code)]
 
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct HuffLeaf{
     character: Option<char>,
     frequency: u32,
-    id: u128,
     code: Option<String>,
 }
 
 impl HuffLeaf{
     pub fn new(character: Option<char>, frequency: u32) -> HuffLeaf{
-        let mut huff_leaf = HuffLeaf{
+        let huff_leaf = HuffLeaf{
             character: character,
             frequency: frequency,
-            id: 0,
             code: None,
         };
-
-        huff_leaf.id = HuffLeaf::calc_id();
 
         return huff_leaf;
     }
@@ -49,12 +45,5 @@ impl HuffLeaf{
                 panic!("given code String is not binary");
             }
         }
-    }
-
-    fn calc_id() -> u128{
-        return SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_micros();
     }
 }
