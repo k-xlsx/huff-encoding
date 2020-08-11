@@ -12,12 +12,10 @@ pub struct HuffBranch{
 
     parent: Option<Rc<HuffBranch>>,
     pos_in_parent: Option<u8>,
-    right: Option<Rc<HuffBranch>>,
+    children: [Option<Rc<HuffBranch>>; 2]
 }
 
 impl HuffBranch{
-    pub fn new(leaf: HuffLeaf, parent: Option<Rc<HuffBranch>>, pos_in_parent: Option<u8>, left: Option<Rc<HuffBranch>>, right: Option<Rc<HuffBranch>>) -> HuffBranch{
-
     pub fn new(leaf: HuffLeaf, children: [Option<Rc<HuffBranch>>; 2]) -> HuffBranch{
 
         let huff_branch = HuffBranch{
