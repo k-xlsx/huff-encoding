@@ -1,12 +1,16 @@
-//
 
 mod leaf;
+mod branch;
+mod branch_vec;
 mod tree;
-mod leaf_vec;
+
 
 
 pub use self::leaf::HuffLeaf;
+pub use self::branch::HuffBranch;
+pub use self::branch_vec::HuffBranchVec;
 pub use self::tree::HuffTree;
+
 
 use std::collections::HashMap;
 

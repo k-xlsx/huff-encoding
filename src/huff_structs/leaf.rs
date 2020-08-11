@@ -1,46 +1,60 @@
-#![allow(dead_code)]
-
-
-use std::hash::Hash;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-//TODO: make leaves contain their code
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct HuffLeaf{
     character: Option<char>,
     frequency: u32,
-    id: u128
+    id: u128,
+    code: Option<String>,
 }
 
 impl HuffLeaf{
     pub fn new(character: Option<char>, frequency: u32) -> HuffLeaf{
-    
-        let mut leaf = HuffLeaf{
-            character: character, 
-            frequency: frequency, 
-            id: 0
+        let mut huff_leaf = HuffLeaf{
+            character: character,
+            frequency: frequency,
+            id: 0,
+            code: None,
         };
 
-        leaf.id = HuffLeaf::calc_id();
+        huff_leaf.id = HuffLeaf::calc_id();
 
-        return leaf
+        return huff_leaf;
     }
 
-    pub fn get_character(&self) -> Option<char>{
-        return self.character
-    }
 
-    pub fn get_frequency(&self) -> u32{
+    pub fn character(&self) -> Option<char>{
+        return self.character;
+    }
+    
+    pub fn frequency(&self) -> u32{
         return self.frequency
     }
-
-    pub fn get_id(&self) -> u128{
-        return self.id
+    
+    pub fn code(&self) -> &Option<String>{
+        return &self.code;
     }
 
 
+    pub fn set_code(&mut self, code: &str){
+        HuffLeaf::check_code(&code);
+        self.code = Some(code.to_string());
+    }
+
+
+    fn check_code(code: &str){
+        for c in code.chars(){
+            if c != '1' || c != '0'{
+                panic!("given code String is not binary");
+            }
+        }
+    }
+
     fn calc_id() -> u128{
-        return SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_micros();
+        return SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_micros();
     }
 }

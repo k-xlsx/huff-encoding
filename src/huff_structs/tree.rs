@@ -1,55 +1,76 @@
-#![allow(dead_code)]
+use std::collections::{HashSet, HashMap};
+use std::rc::Rc;
+use crate::huff_structs::{HuffBranch, HuffLeaf};
+use crate::huff_structs::branch_vec::HuffBranchVec;
 
-
-use std::collections::HashMap;
-use crate::huff_structs::{leaf::HuffLeaf, leaf_vec::HuffLeafVec};
-
-//TODO: make HuffTree an actual tree
 
 #[derive(Debug)]
 pub struct HuffTree{
-    tree: HashMap<HuffLeaf, [HuffLeaf; 2]>,
-    root: Option<HuffLeaf>
+    root: Option<Rc<HuffBranch>>,
+    branches: HashSet<Rc<HuffBranch>>
 }
 
 impl HuffTree{
-    pub fn new(chars_to_freq: HashMap<char, u32>) -> HuffTree{
-        assert!(chars_to_freq.len() > 1, "no huffman tree for single char");
-
-        let mut huff_tree = HuffTree{
-            tree: HashMap::new(),
-            root: None
+    pub fn new() -> HuffTree{
+        let huff_tree = HuffTree{
+            root: None,
+            branches: HashSet::new(),
         };
-        huff_tree.build_tree(chars_to_freq);
 
         return huff_tree;
     }
 
-    pub fn add(&mut self, root: HuffLeaf, branches: [HuffLeaf; 2]){
-        self.tree.insert(root, branches);
-        self.root = Some(root);
-    }
+    pub fn from(chars_to_freq: &HashMap<char, u32>) -> HuffTree{
+        let mut huff_tree = HuffTree::new();
 
-    pub fn get_root(&self) -> Option<HuffLeaf>{
-        return self.root;
-    }
+        huff_tree.build(chars_to_freq);
 
-    pub fn get_tree(self) -> HashMap<HuffLeaf, [HuffLeaf; 2]>{
-        return self.tree;
+        return huff_tree;
     }
 
 
-    fn build_tree(&mut self, chars_to_freq: HashMap<char, u32>){   
-        let mut leaf_vec = HuffLeafVec::new(&chars_to_freq);
-        
-        while leaf_vec.len() > 1{
-            let min_pair = leaf_vec.get_min_pair().unwrap();
-            leaf_vec.drain_min_pair();
-        
-            let joint_leaf = HuffLeaf::new(None, min_pair[0].get_frequency() + min_pair[1].get_frequency());
-            leaf_vec.push(joint_leaf);
-                
-            self.add(joint_leaf, min_pair)
+    pub fn root(&self) -> Option<&Rc<HuffBranch>>{
+        match self.root{
+            Some(_) =>
+                return self.root.as_ref(),
+            None =>
+                return None,
+        }
+    }
+
+    pub fn branches(&self) -> &HashSet<Rc<HuffBranch>>{
+        return &self.branches;
+    }
+
+
+    fn add(&mut self, branch: Rc<HuffBranch>){
+        let r = self.branches.insert(branch);
+        println!("{}", r)
+    }
+
+    fn build(&mut self, chars_to_freq: &HashMap<char, u32>){
+        let mut branch_vec = HuffBranchVec::from(&chars_to_freq);
+
+        while branch_vec.len() > 1{
+            let min = branch_vec.min();
+            let min_next = branch_vec.min_next();
+
+            let branch = HuffBranch::new(
+                HuffLeaf::new(
+                    None,
+                    min.leaf().frequency() + min_next.leaf().frequency()
+                ),
+                None,
+                None,
+                Some(min.clone()),
+                Some(min_next.clone()),
+            );
+            branch_vec.drain_min_pair();
+            self.add(Rc::new(branch.clone()));
+            self.root = Some(Rc::new(branch.clone()));
+            branch_vec.push(Rc::new(branch))
+
+            
         }
     }
 }

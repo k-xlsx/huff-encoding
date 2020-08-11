@@ -3,4 +3,3 @@
 [[package]]
 name = "huff_encoding"
 version = "0.5.0"
-
