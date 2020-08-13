@@ -2,27 +2,27 @@
 
 
 use std::collections::HashMap;
+use std::collections::BinaryHeap;
 use crate::huff_structs::{HuffBranch, HuffLeaf};
 
 
 
-pub struct HuffBranchVec{
-    vec: Vec<HuffBranch>,
+pub struct HuffBranchHeap{
+    heap: BinaryHeap<HuffBranch>,
 }
 
-impl HuffBranchVec{
-    pub fn from(chars_to_freq: &HashMap<char, u32>) -> HuffBranchVec{
-        let mut leaf_vec = HuffBranchVec::new();
+impl HuffBranchHeap{
+    pub fn from(chars_to_freq: &HashMap<char, u32>) -> HuffBranchHeap{
+        let mut leaf_vec = HuffBranchHeap::new();
 
         leaf_vec.build(chars_to_freq);
-        leaf_vec.sort();
 
         return leaf_vec;
     }
 
-    pub fn new() -> HuffBranchVec{
-        let leaf_vec = HuffBranchVec{
-            vec: Vec::new(),
+    pub fn new() -> HuffBranchHeap{
+        let leaf_vec = HuffBranchHeap{
+            heap: BinaryHeap::new(),
         };
 
         return leaf_vec;
@@ -31,17 +31,16 @@ impl HuffBranchVec{
 
 
     pub fn len(&self) -> usize{
-        return self.vec.len();
+        return self.heap.len();
     }
 
 
     pub fn push(&mut self, branch: HuffBranch){
-        self.vec.push(branch);
-        self.sort();
+        self.heap.push(branch);
     }
 
     pub fn pop_min(&mut self) -> HuffBranch{
-        return self.vec.pop().unwrap();
+        return self.heap.pop().unwrap();
     }
 
 
@@ -51,9 +50,5 @@ impl HuffBranchVec{
     
             self.push(new_branch);
         }
-    }
-
-    fn sort(&mut self){
-        self.vec.sort_by(|a, b| b.leaf().frequency().cmp(&a.leaf().frequency()));
     }
 }

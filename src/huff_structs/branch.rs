@@ -2,16 +2,35 @@
 
 
 use std::rc::Rc;
+use std::cmp::Ordering;
 use crate::huff_structs::HuffLeaf;
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct HuffBranch{
     leaf: HuffLeaf,
 
     pos_in_parent: Option<u8>,
     children: [Option<Rc<HuffBranch>>; 2]
+}
+
+impl Ord for HuffBranch {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.leaf().frequency().cmp(&self.leaf().frequency())
+    }
+}
+
+impl PartialOrd for HuffBranch {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for HuffBranch {
+    fn eq(&self, other: &Self) -> bool {
+        self.leaf().frequency() == other.leaf().frequency()
+    }
 }
 
 impl HuffBranch{

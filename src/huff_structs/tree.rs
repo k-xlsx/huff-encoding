@@ -2,31 +2,33 @@
 
 
 use std::rc::Rc;
+use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use crate::huff_structs::{HuffBranch, HuffLeaf};
-use crate::huff_structs::branch_vec::HuffBranchVec;
+use crate::huff_structs::branch_heap::HuffBranchHeap;
 
 
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<HuffBranch>,
-    branches: Vec<HuffBranch>
+    branches: BinaryHeap<HuffBranch>
 }
 
 impl HuffTree{
-    pub fn new() -> HuffTree{
-        let huff_tree = HuffTree{
-            root: None,
-            branches: Vec::new(),
-        };
-
-        return huff_tree;
-    }
 
     pub fn from(chars_to_freq: &HashMap<char, u32>) -> HuffTree{
         let mut huff_tree = HuffTree::new();
 
         huff_tree.build(chars_to_freq);
+
+        return huff_tree;
+    }
+
+    fn new() -> HuffTree{
+        let huff_tree = HuffTree{
+            root: None,
+            branches: BinaryHeap::new(),
+        };
 
         return huff_tree;
     }
@@ -41,17 +43,13 @@ impl HuffTree{
         }
     }
 
-    pub fn branches(&self) -> &Vec<HuffBranch>{
-        return &self.branches;
-    }
-
 
     fn add(&mut self, branch: HuffBranch){
         self.branches.push(branch);
     }
 
     fn build(&mut self, chars_to_freq: &HashMap<char, u32>){
-        let mut branch_vec = HuffBranchVec::from(&chars_to_freq);
+        let mut branch_vec = HuffBranchHeap::from(&chars_to_freq);
 
 
         while branch_vec.len() > 1{

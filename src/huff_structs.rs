@@ -1,14 +1,14 @@
 
 mod leaf;
 mod branch;
-mod branch_vec;
+mod branch_heap;
 mod tree;
 
 
 
 pub use self::leaf::HuffLeaf;
 pub use self::branch::HuffBranch;
-pub use self::branch_vec::HuffBranchVec;
+pub use self::branch_heap::HuffBranchHeap;
 pub use self::tree::HuffTree;
 
 

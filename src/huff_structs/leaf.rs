@@ -1,11 +1,17 @@
 #![allow(dead_code)]
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
     character: Option<char>,
     frequency: u32,
     code: Option<String>,
+}
+
+impl PartialEq for HuffLeaf {
+    fn eq(&self, other: &Self) -> bool {
+        self.frequency() == other.frequency()
+    }
 }
 
 impl HuffLeaf{

@@ -2,4 +2,4 @@
 # It is not intended for manual editing.
 [[package]]
 name = "huff_encoding"
-version = "0.5.0"
+version = "0.0.5"
