@@ -1,9 +1,5 @@
 [package]
 name = "huff_encoding"
-version = "0.5.0"
+version = "0.0.5"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]

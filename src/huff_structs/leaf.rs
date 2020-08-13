@@ -1,46 +1,82 @@
 #![allow(dead_code)]
 
 
-use std::hash::Hash;
-use std::time::{SystemTime, UNIX_EPOCH};
-
-//TODO: make leaves contain their code
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+/// Struct used to store HuffBranch data:
+/// ```
+/// character: Option<char>;         // get
+/// frequency: u32                   // get
+/// code: Option<String>;            // get/set
+/// ```
+#[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
     character: Option<char>,
     frequency: u32,
-    id: u128
+    code: Option<String>,
+}
+
+impl PartialEq for HuffLeaf {
+    fn eq(&self, other: &Self) -> bool {
+        self.frequency() == other.frequency()
+    }
 }
 
 impl HuffLeaf{
+    /// Initialize the HuffLeaf.
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::HuffLeaf;
+    /// 
+    /// let hf = HuffLeaf::new('s', 3);
+    /// ```
     pub fn new(character: Option<char>, frequency: u32) -> HuffLeaf{
-    
-        let mut leaf = HuffLeaf{
-            character: character, 
-            frequency: frequency, 
-            id: 0
+        let huff_leaf = HuffLeaf{
+            character: character,
+            frequency: frequency,
+            code: None,
         };
 
-        leaf.id = HuffLeaf::calc_id();
-
-        return leaf
+        return huff_leaf;
     }
 
-    pub fn get_character(&self) -> Option<char>{
-        return self.character
+    /// Returns the stored character.
+    pub fn character(&self) -> Option<char>{
+        return self.character;
     }
-
-    pub fn get_frequency(&self) -> u32{
+    
+    /// Returns the stored frequency.
+    pub fn frequency(&self) -> u32{
         return self.frequency
     }
+    
+    /// Returns a reference to the stored code.
+    pub fn code(&self) -> Option<&String>{
+        return self.code.as_ref();
+    }
 
-    pub fn get_id(&self) -> u128{
-        return self.id
+    /// Sets the given code.
+    /// 
+    /// Panics if code is not binary.
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::HuffLeaf;
+    /// 
+    /// huff_leaf.set_code("101001");
+    /// ```
+    pub fn set_code(&mut self, code: &str){
+        HuffLeaf::check_code(&code);
+        self.code = Some(code.to_string());
     }
 
 
-    fn calc_id() -> u128{
-        return SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_micros();
+    fn check_code(code: &str){
+        for c in code.chars(){
+            if c != '1' || c != '0'{
+                panic!("given code String is not binary");
+            }
+        }
     }
 }
