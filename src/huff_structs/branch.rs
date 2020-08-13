@@ -10,7 +10,6 @@ use crate::huff_structs::HuffLeaf;
 pub struct HuffBranch{
     leaf: HuffLeaf,
 
-    parent: Option<Rc<HuffBranch>>,
     pos_in_parent: Option<u8>,
     children: [Option<Rc<HuffBranch>>; 2]
 }
@@ -21,7 +20,6 @@ impl HuffBranch{
         let huff_branch = HuffBranch{
             leaf: leaf,
 
-            parent: None,
             pos_in_parent: None,
             children: children
         };
@@ -34,8 +32,8 @@ impl HuffBranch{
         return &self.leaf;
     }
 
-    pub fn parent(&self) -> Option<&Rc<HuffBranch>>{
-        return self.parent.as_ref();
+    pub fn mut_leaf(&mut self) -> &mut HuffLeaf{
+        return &mut self.leaf;
     }
 
     pub fn pos_in_parent(&self) -> Option<u8>{
@@ -47,45 +45,37 @@ impl HuffBranch{
     }
 
 
-    pub fn set_parent(&mut self, parent: Rc<HuffBranch>, pos_in_parent: u8){
-        assert!(pos_in_parent <= 1, "pos_in_parent must be binary");
-
-        self.parent = Some(parent);
+    pub fn set_pos_in_parent(&mut self, pos_in_parent: u8){
         self.pos_in_parent = Some(pos_in_parent);
-    }
+    } 
 
-    pub fn set_children(&mut self, children: [Option<Rc<HuffBranch>>; 2]){
-        self.children = children
-    }
-
-    pub fn set_leaf_code(&mut self){
+    pub fn set_leaf_code(&mut self, parent_code: Option<&String>){
         let mut code = String::new();
-        match self.parent(){
-            Some(_) => {
-                let parent_code = self.parent().unwrap().leaf().code();
+
+        match self.pos_in_parent(){
+            Some(_) =>{        
                 match parent_code{
-                    Some(_) => {
-                        code.push_str(&parent_code.as_ref().unwrap())
+                    Some(_) =>{
+                        code.push_str(&parent_code.unwrap().chars().rev().collect::<String>());
                     }
                     None =>
                         (),
                 }
+                match self.pos_in_parent().unwrap(){
+                    0 =>
+                        code.push('0'),
+                    1 =>
+                        code.push('1'),
+                    _ =>
+                        panic!("pos_in_parent not binary"),
+                }
 
-                code.push(match self.pos_in_parent().unwrap(){
-                        0 => '0',
-                        1 => '1',
-                        _ => panic!("pos_in_parent not binary")
-                });
-                
-                code = code.chars().rev().collect();
-                let code = &code[..];
-
-                self.leaf.set_code(code)
+                code = code.chars().rev().collect::<String>();
+                self.mut_leaf().set_code(&code);
             }
             None =>
                 (),
         }
-
     }
 }
 

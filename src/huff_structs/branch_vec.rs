@@ -2,13 +2,12 @@
 
 
 use std::collections::HashMap;
-use std::rc::Rc;
 use crate::huff_structs::{HuffBranch, HuffLeaf};
 
 
-#[derive(Debug)]
+
 pub struct HuffBranchVec{
-    vec: Vec<Rc<HuffBranch>>,
+    vec: Vec<HuffBranch>,
 }
 
 impl HuffBranchVec{
@@ -16,7 +15,7 @@ impl HuffBranchVec{
         let mut leaf_vec = HuffBranchVec::new();
 
         leaf_vec.build(chars_to_freq);
-        leaf_vec.sort_by_freq();
+        leaf_vec.sort();
 
         return leaf_vec;
     }
@@ -30,26 +29,19 @@ impl HuffBranchVec{
     }
 
 
-    pub fn min(&self) -> &Rc<HuffBranch>{
-        return &self.vec[0];
-    }
-
-    pub fn min_pair(&self) -> (&Rc<HuffBranch>, &Rc<HuffBranch>){
-        return (&self.vec[0], &self.vec[1]);
-    }
 
     pub fn len(&self) -> usize{
         return self.vec.len();
     }
 
 
-    pub fn push(&mut self, branch: Rc<HuffBranch>){
+    pub fn push(&mut self, branch: HuffBranch){
         self.vec.push(branch);
-        self.sort_by_freq();
+        self.sort();
     }
 
-    pub fn drain_min_pair(&mut self){
-        self.vec.drain(0..2);
+    pub fn pop_min(&mut self) -> HuffBranch{
+        return self.vec.pop().unwrap();
     }
 
 
@@ -57,12 +49,11 @@ impl HuffBranchVec{
         for (c, f) in chars_to_freq{
             let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), [None, None]);
     
-            self.push(Rc::new(new_branch));
+            self.push(new_branch);
         }
     }
 
-    fn sort_by_freq(&mut self){
+    fn sort(&mut self){
         self.vec.sort_by(|a, b| b.leaf().frequency().cmp(&a.leaf().frequency()));
-        self.vec.reverse();
     }
 }
