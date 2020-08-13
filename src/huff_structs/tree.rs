@@ -2,7 +2,6 @@
 
 
 use std::rc::Rc;
-use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use crate::huff_structs::{HuffBranch, HuffLeaf};
 use crate::huff_structs::branch_heap::HuffBranchHeap;
@@ -11,23 +10,21 @@ use crate::huff_structs::branch_heap::HuffBranchHeap;
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<HuffBranch>,
-    branches: BinaryHeap<HuffBranch>
 }
 
 impl HuffTree{
 
-    pub fn from(chars_to_freq: &HashMap<char, u32>) -> HuffTree{
-        let mut huff_tree = HuffTree::new();
+    pub fn from(ctf: &HashMap<char, u32>) -> HuffTree{
+        let mut huff_tree = HuffTree::new(None);
 
-        huff_tree.build(chars_to_freq);
+        huff_tree.grow(ctf);
 
         return huff_tree;
     }
 
-    fn new() -> HuffTree{
+    pub fn new(root: Option<HuffBranch>) -> HuffTree{
         let huff_tree = HuffTree{
-            root: None,
-            branches: BinaryHeap::new(),
+            root: root,
         };
 
         return huff_tree;
@@ -44,12 +41,8 @@ impl HuffTree{
     }
 
 
-    fn add(&mut self, branch: HuffBranch){
-        self.branches.push(branch);
-    }
-
-    fn build(&mut self, chars_to_freq: &HashMap<char, u32>){
-        let mut branch_vec = HuffBranchHeap::from(&chars_to_freq);
+    pub fn grow(&mut self, ctf: &HashMap<char, u32>){
+        let mut branch_vec = HuffBranchHeap::from(&ctf);
 
 
         while branch_vec.len() > 1{
@@ -67,7 +60,6 @@ impl HuffTree{
                 [Some(Rc::new(min)), Some(Rc::new(next_min))]
             );
 
-            self.add(branch.clone());
             branch_vec.push(branch);
         }
 

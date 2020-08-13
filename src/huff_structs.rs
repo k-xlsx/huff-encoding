@@ -17,12 +17,12 @@ use std::collections::HashMap;
 
 
 pub fn get_chars_to_freq(s: &String) -> HashMap<char, u32>{
-    let mut chars_to_freq: HashMap<char, u32> = HashMap::new();
+    let mut ctf: HashMap<char, u32> = HashMap::new();
 
     for c in s.chars(){
-        let cf_entry = chars_to_freq.entry(c).or_insert(0);
+        let cf_entry = ctf.entry(c).or_insert(0);
         *cf_entry += 1;
     }
 
-    return chars_to_freq;
+    return ctf;
 }

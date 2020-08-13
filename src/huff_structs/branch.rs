@@ -51,10 +51,6 @@ impl HuffBranch{
         return &self.leaf;
     }
 
-    pub fn mut_leaf(&mut self) -> &mut HuffLeaf{
-        return &mut self.leaf;
-    }
-
     pub fn pos_in_parent(&self) -> Option<u8>{
         return self.pos_in_parent
     }
@@ -73,12 +69,14 @@ impl HuffBranch{
 
         match self.pos_in_parent(){
             Some(_) =>{        
+                println!("has parent");
                 match parent_code{
                     Some(_) =>{
                         code.push_str(&parent_code.unwrap().chars().rev().collect::<String>());
+                        println!("parent has parent, code: {}", code);
                     }
                     None =>
-                        (),
+                        println!("parent is root")
                 }
                 match self.pos_in_parent().unwrap(){
                     0 =>
@@ -90,11 +88,11 @@ impl HuffBranch{
                 }
 
                 code = code.chars().rev().collect::<String>();
-                self.mut_leaf().set_code(&code);
+                self.leaf.set_code(&code);
+                println!("{}", code);
             }
             None =>
-                (),
+                println!("no parent")
         }
     }
 }
-
