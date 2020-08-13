@@ -8,7 +8,6 @@ mod tree;
 
 pub use self::leaf::HuffLeaf;
 pub use self::branch::HuffBranch;
-pub use self::branch_heap::HuffBranchHeap;
 pub use self::tree::HuffTree;
 
 
@@ -16,7 +15,7 @@ use std::collections::HashMap;
 
 
 
-pub fn get_chars_to_freq(s: &String) -> HashMap<char, u32>{
+pub fn get_chars_to_freq(s: &str) -> HashMap<char, u32>{
     let mut ctf: HashMap<char, u32> = HashMap::new();
 
     for c in s.chars(){

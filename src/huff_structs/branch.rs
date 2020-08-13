@@ -6,7 +6,14 @@ use std::cmp::Ordering;
 use crate::huff_structs::HuffLeaf;
 
 
-
+/// Struct representing a node in the Huffman Tree.
+/// 
+/// Stores its children as:
+/// ```
+/// [Option<Rc<HuffBranch>>; 2]
+/// ```
+/// Also stores its position in the parent's children Array, and 
+/// data represented as a HuffLeaf.
 #[derive(Debug, Clone, Eq)]
 pub struct HuffBranch{
     leaf: HuffLeaf,
@@ -34,6 +41,15 @@ impl PartialEq for HuffBranch {
 }
 
 impl HuffBranch{
+    /// Initializes a new HuffBranch.
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::{HuffBranch, HuffLeaf};
+    /// 
+    /// let hb = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
+    /// ```
     pub fn new(leaf: HuffLeaf, children: [Option<Rc<HuffBranch>>; 2]) -> HuffBranch{
 
         let huff_branch = HuffBranch{
@@ -47,23 +63,28 @@ impl HuffBranch{
     }
 
 
+    /// Returns a reference to the stored HuffLeaf.
     pub fn leaf(&self) -> &HuffLeaf{
         return &self.leaf;
     }
 
+    /// Returns its position in the parent's children Array
     pub fn pos_in_parent(&self) -> Option<u8>{
         return self.pos_in_parent
     }
 
+    /// Returns the stored Array of the branch's children
     pub fn children(&self) -> [Option<&Rc<HuffBranch>>; 2]{
         return [self.children[0].as_ref(), self.children[1].as_ref()]
     }
 
-
+    /// Sets the stored position in parent's children Array
     pub fn set_pos_in_parent(&mut self, pos_in_parent: u8){
         self.pos_in_parent = Some(pos_in_parent);
     } 
 
+    /// Sets its leaf's code based on the give parent_code and its
+    /// pos_in_parent.
     pub fn set_leaf_code(&mut self, parent_code: Option<&String>){
         let mut code = String::new();
 

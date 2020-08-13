@@ -3,25 +3,81 @@
 
 use std::rc::Rc;
 use std::collections::HashMap;
-use crate::huff_structs::{HuffBranch, HuffLeaf};
+use crate::huff_structs::{HuffBranch, HuffLeaf, get_chars_to_freq};
 use crate::huff_structs::branch_heap::HuffBranchHeap;
 
 
+
+/// Struct representing a Huffman Tree.
+/// 
+/// A HuffTree is comprised of HuffBranches, each having
+/// 2 or 0 children, with root being the top one and 
+/// every bottom one containing a char.
+/// 
+/// Can be grown from: 
+/// ```
+/// HashMap<char, u32>
+/// ```
+/// or 
+/// ```
+/// &str
+/// ```
+/// or even initialized empty and grown afterwards.
+/// 
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<HuffBranch>,
 }
 
 impl HuffTree{
+    /// Creates a HuffTree from:
+    /// ```
+    /// &str
+    /// ```
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::HuffTree;
+    /// 
+    /// let ht = HuffTree::from("Hello, World!");
+    /// ```
+    pub fn from(s: &str) -> HuffTree{
+        let huff_tree = HuffTree::from_ctf(&get_chars_to_freq(s));
+        return huff_tree
+    } 
 
-    pub fn from(ctf: &HashMap<char, u32>) -> HuffTree{
+    /// Creates a HuffTree from:
+    /// ```
+    /// HashMap<char, u32>
+    /// ```
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::{HuffTree, get_chars_to_freq};
+    /// 
+    /// let ht = HuffTree::from(get_chars_to_freq("Hello, World!"));
+    /// ```
+    pub fn from_ctf(ctf: &HashMap<char, u32>) -> HuffTree{
         let mut huff_tree = HuffTree::new(None);
 
-        huff_tree.grow(ctf);
+        huff_tree.grow_ctf(ctf);
 
         return huff_tree;
     }
 
+    /// Initializes an empty HuffTree.
+    /// 
+    /// Can be grown later with .grow or .grow_ctf
+    /// 
+    /// # Example
+    /// ```
+    /// use huff_encoding::huff_structs::HuffTree;
+    /// 
+    /// let ht = HuffTree::new();
+    /// ht.grow("Hello, World!");
+    /// ```
     pub fn new(root: Option<HuffBranch>) -> HuffTree{
         let huff_tree = HuffTree{
             root: root,
@@ -30,7 +86,8 @@ impl HuffTree{
         return huff_tree;
     }
 
-
+    
+    /// Returns the root of the tree.
     pub fn root(&self) -> Option<&HuffBranch>{
         match self.root{
             Some(_) =>
@@ -41,7 +98,19 @@ impl HuffTree{
     }
 
 
-    pub fn grow(&mut self, ctf: &HashMap<char, u32>){
+    /// Grows the tree from the given:HuffTree
+    /// ```
+    /// &str
+    /// ```
+    pub fn grow(&mut self, s: &str){
+        self.grow_ctf(&get_chars_to_freq(s));
+    }
+
+    /// Grows the tree from the given:HuffTree
+    /// ```
+    /// &HashMap<char, u32>
+    /// ```
+    pub fn grow_ctf(&mut self, ctf: &HashMap<char, u32>){
         let mut branch_vec = HuffBranchHeap::from(&ctf);
 
 
