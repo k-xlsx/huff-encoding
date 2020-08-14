@@ -1,6 +1,8 @@
-mod huff_structs;
+use huff_encoding::huff_structs;
 
 fn main(){
-    let tree = huff_structs::HuffTree::from(&String::from("aaaaabbbbbbbbbccccccccccccdddddddddddddeeeeeeeeeeeeeeeefffffffffffffffffffffffffffffffffffffffffffff"));
-    println!("{:?}", tree.root());
+    let s = "";
+
+    let tree = huff_structs::HuffTree::from(s);
+    println!("{:#?}", tree);
 }

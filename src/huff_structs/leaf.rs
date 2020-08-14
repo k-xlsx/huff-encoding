@@ -74,7 +74,7 @@ impl HuffLeaf{
 
     fn check_code(code: &str){
         for c in code.chars(){
-            if c != '1' || c != '0'{
+            if c != '1' && c != '0'{
                 panic!("given code String is not binary");
             }
         }

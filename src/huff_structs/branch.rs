@@ -2,6 +2,7 @@
 
 
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use crate::huff_structs::HuffLeaf;
 
@@ -10,7 +11,7 @@ use crate::huff_structs::HuffLeaf;
 /// 
 /// Stores its children as:
 /// ```
-/// [Option<Rc<HuffBranch>>; 2]
+/// [Option<Rc<RefCell<HuffBranch>>>; 2]
 /// ```
 /// Also stores its position in the parent's children Array, and 
 /// data represented as a HuffLeaf.
@@ -19,7 +20,7 @@ pub struct HuffBranch{
     leaf: HuffLeaf,
 
     pos_in_parent: Option<u8>,
-    children: [Option<Rc<HuffBranch>>; 2]
+    children: [Option<Rc<RefCell<HuffBranch>>>; 2]
 }
 
 impl Ord for HuffBranch {
@@ -50,7 +51,7 @@ impl HuffBranch{
     /// 
     /// let hb = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
     /// ```
-    pub fn new(leaf: HuffLeaf, children: [Option<Rc<HuffBranch>>; 2]) -> HuffBranch{
+    pub fn new(leaf: HuffLeaf, children: [Option<Rc<RefCell<HuffBranch>>>; 2]) -> HuffBranch{
 
         let huff_branch = HuffBranch{
             leaf: leaf,
@@ -74,7 +75,7 @@ impl HuffBranch{
     }
 
     /// Returns the stored Array of the branch's children
-    pub fn children(&self) -> [Option<&Rc<HuffBranch>>; 2]{
+    pub fn children(&self) -> [Option<&Rc<RefCell<HuffBranch>>>; 2]{
         return [self.children[0].as_ref(), self.children[1].as_ref()]
     }
 
@@ -85,35 +86,32 @@ impl HuffBranch{
 
     /// Sets its leaf's code based on the give parent_code and its
     /// pos_in_parent.
-    pub fn set_leaf_code(&mut self, parent_code: Option<&String>){
+    pub fn set_code(&mut self, parent_code: Option<&String>){
         let mut code = String::new();
 
         match self.pos_in_parent(){
-            Some(_) =>{        
-                println!("has parent");
+            Some(_) =>{
                 match parent_code{
                     Some(_) =>{
-                        code.push_str(&parent_code.unwrap().chars().rev().collect::<String>());
-                        println!("parent has parent, code: {}", code);
+                        code.push_str(&parent_code.unwrap());
                     }
                     None =>
-                        println!("parent is root")
+                        (),
                 }
+                
                 match self.pos_in_parent().unwrap(){
-                    0 =>
+                    0u8 =>
                         code.push('0'),
-                    1 =>
+                    1u8 =>
                         code.push('1'),
                     _ =>
                         panic!("pos_in_parent not binary"),
                 }
 
-                code = code.chars().rev().collect::<String>();
                 self.leaf.set_code(&code);
-                println!("{}", code);
             }
             None =>
-                println!("no parent")
+                (),
         }
     }
 }
