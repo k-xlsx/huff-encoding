@@ -98,6 +98,7 @@ impl HuffTree{
                 return None,
         }
     }
+    
 
 
     /// Grows the tree from the given:HuffTree
@@ -116,12 +117,12 @@ impl HuffTree{
     pub fn grow_ctf(&mut self, ctf: &HashMap<char, u32>){
         assert!(ctf.len() > 0, "ctf is empty");
 
-        let mut branch_vec = HuffBranchHeap::from(&ctf);
+        let mut branch_heap = HuffBranchHeap::from(&ctf);
 
 
-        while branch_vec.len() > 1{
-            let mut min = branch_vec.pop_min();
-            let mut next_min = branch_vec.pop_min();
+        while branch_heap.len() > 1{
+            let mut min = branch_heap.pop_min();
+            let mut next_min = branch_heap.pop_min();
 
             min.set_pos_in_parent(0);
             next_min.set_pos_in_parent(1);
@@ -133,11 +134,10 @@ impl HuffTree{
                 ),
                 [Some(Rc::new(RefCell::new(min))), Some(Rc::new(RefCell::new(next_min)))]
             );
-
-            branch_vec.push(branch);
+            branch_heap.push(branch);
         }
 
-        self.root = Some(branch_vec.pop_min());
+        self.root = Some(branch_heap.pop_min());
 
         HuffTree::set_codes(RefCell::new(self.root.clone().unwrap()).borrow_mut());
     }
