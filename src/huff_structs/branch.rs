@@ -42,16 +42,17 @@ impl PartialEq for HuffBranch {
 }
 
 impl HuffBranch{
-    /// Initializes a new HuffBranch.
-    /// 
-    /// # Example
-    /// ---
-    /// ```
-    /// use huff_encoding::huff_structs::{HuffBranch, HuffLeaf};
-    /// 
-    /// let hb = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
-    /// ```
     pub fn new(leaf: HuffLeaf, children: [Option<Rc<RefCell<HuffBranch>>>; 2]) -> HuffBranch{
+        //! Initializes a new HuffBranch.
+        //! 
+        //! # Example
+        //! ---
+        //! ```
+        //! use huff_encoding::huff_structs::{HuffBranch, HuffLeaf};
+        //! 
+        //! let hb = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
+        //! ```
+
 
         let huff_branch = HuffBranch{
             leaf: leaf,
@@ -64,29 +65,39 @@ impl HuffBranch{
     }
 
 
-    /// Returns a reference to the stored HuffLeaf.
     pub fn leaf(&self) -> &HuffLeaf{
+        //! Returns a reference to the stored HuffLeaf.
+
+
         return &self.leaf;
     }
 
-    /// Returns its position in the parent's children Array
     pub fn pos_in_parent(&self) -> Option<u8>{
+        //! Returns its position in the parent's children Array
+
+
         return self.pos_in_parent
     }
 
-    /// Returns the stored Array of the branch's children
     pub fn children(&self) -> [Option<&Rc<RefCell<HuffBranch>>>; 2]{
+        //! Returns the stored Array of the branch's children
+
         return [self.children[0].as_ref(), self.children[1].as_ref()]
     }
 
-    /// Sets the stored position in parent's children Array
+
     pub fn set_pos_in_parent(&mut self, pos_in_parent: u8){
+        //! Sets the stored position in parent's children Array
+
+
         self.pos_in_parent = Some(pos_in_parent);
     } 
 
-    /// Sets its leaf's code based on the give parent_code and its
-    /// pos_in_parent.
     pub fn set_code(&mut self, parent_code: Option<&String>){
+        //! Sets its leaf's code based on the give parent_code and its
+        //! pos_in_parent.
+
+
         let mut code = String::new();
 
         match self.pos_in_parent(){
