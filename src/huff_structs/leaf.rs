@@ -1,16 +1,17 @@
 #![allow(dead_code)]
 
 
+
 /// Struct used to store HuffBranch data:
 /// ```
 /// character: Option<char>;         // get
-/// frequency: u32                   // get
+/// frequency: usize                   // get
 /// code: Option<String>;            // get/set
 /// ```
 #[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
     character: Option<char>,
-    frequency: u32,
+    frequency: usize,
     code: Option<String>,
 }
 
@@ -21,7 +22,7 @@ impl PartialEq for HuffLeaf {
 }
 
 impl HuffLeaf{
-    pub fn new(character: Option<char>, frequency: u32) -> HuffLeaf{
+    pub fn new(character: Option<char>, frequency: usize) -> HuffLeaf{
         //! Initialize the HuffLeaf.
         //! 
         //! # Example
@@ -50,7 +51,7 @@ impl HuffLeaf{
         return self.character;
     }
     
-    pub fn frequency(&self) -> u32{
+    pub fn frequency(&self) -> usize{
         //! Returns the stored frequency.
 
 

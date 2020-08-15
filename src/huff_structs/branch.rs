@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 use crate::huff_structs::HuffLeaf;
 
 
+
 /// Struct representing a node in the Huffman Tree.
 /// 
 /// Stores its children as:

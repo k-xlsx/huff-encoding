@@ -6,21 +6,22 @@ use std::collections::BinaryHeap;
 use crate::huff_structs::{HuffBranch, HuffLeaf};
 
 
+
 /// A BinaryHeap of HuffBranches, ordered by frequency(greatest to lowest), 
 /// used to grow the HuffTree.
 /// 
 /// Can be either initialized empty, or made from:
 /// ```
-/// HashMap<char, u32>
+/// HashMap<char, usize>
 /// ```
 pub struct HuffBranchHeap{
     heap: BinaryHeap<HuffBranch>,
 }
 
 impl HuffBranchHeap{
-    pub fn from(cfg: &HashMap<char, u32>) -> HuffBranchHeap{
+    pub fn from(cfg: &HashMap<char, usize>) -> HuffBranchHeap{
         //! Creates a HuffBranchHeap from a HashMap of chars as
-        //! keys and their frequencies(u32) as values.
+        //! keys and their frequencies(usize) as values.
         //! 
         //! # Example
         //! ---
@@ -81,7 +82,7 @@ impl HuffBranchHeap{
     }
 
 
-    fn build(&mut self, cfg: &HashMap<char, u32>){
+    fn build(&mut self, cfg: &HashMap<char, usize>){
         for (c, f) in cfg{
             let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), [None, None]);
     

@@ -4,7 +4,7 @@
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
-use crate::huff_structs::{HuffBranch, HuffLeaf, get_chars_to_freq};
+use crate::huff_structs::{HuffBranch, HuffLeaf, chars_to_freq};
 use crate::huff_structs::branch_heap::HuffBranchHeap;
 
 
@@ -17,7 +17,7 @@ use crate::huff_structs::branch_heap::HuffBranchHeap;
 /// 
 /// Can be grown from: 
 /// ```
-/// HashMap<char, u32>
+/// HashMap<char, usize>
 /// ```
 /// or 
 /// ```
@@ -53,10 +53,10 @@ impl HuffTree{
         return huff_tree
     } 
 
-    pub fn from_ctf(ctf: &HashMap<char, u32>) -> HuffTree{
+    pub fn from_ctf(ctf: &HashMap<char, usize>) -> HuffTree{
         //! Creates a HuffTree from:
         //! ```
-        //! HashMap<char, u32>
+        //! HashMap<char, usize>
         //! ```
         //! 
         //! # Example
@@ -126,13 +126,13 @@ impl HuffTree{
 
 
         assert!(s.len() > 0, "slice is empty");
-        self.grow_ctf(&get_chars_to_freq(s));
+        self.grow_ctf(&chars_to_freq(s));
     }
 
-    pub fn grow_ctf(&mut self, ctf: &HashMap<char, u32>){
+    pub fn grow_ctf(&mut self, ctf: &HashMap<char, usize>){
         //! Grows the tree from the given:HuffTree
         //! ```
-        //! &HashMap<char, u32>
+        //! &HashMap<char, usize>
         //! ```
 
 
@@ -161,8 +161,10 @@ impl HuffTree{
         let root = Some(Rc::new(RefCell::new(branch_heap.pop_min())));
         self.root = root;
 
+        // set codes for all branches recursively
         HuffTree::set_branch_codes(self.root().unwrap().borrow_mut());
 
+        // set chard_codes recursively
         let mut char_codes: HashMap<char, String> = HashMap::new();
         self.set_char_codes(&mut char_codes, self.root().unwrap().borrow());
         self.char_codes = char_codes;
@@ -191,10 +193,12 @@ impl HuffTree{
         let children = root.children();
 
         for child in children.iter(){
-            let c = child.unwrap().borrow().leaf().character();
+            let branch = child.unwrap().borrow();
+            let leaf = branch.leaf();
+            let c = leaf.character();
             match c{
                 Some(_) =>{
-                    char_codes.insert(c.unwrap(), child.unwrap().borrow().leaf().code().unwrap().clone());
+                    char_codes.insert(c.unwrap(), leaf.code().unwrap().clone());
                 }
                 None =>{
                     self.set_char_codes(char_codes, child.unwrap().borrow());
