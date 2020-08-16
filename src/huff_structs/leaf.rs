@@ -5,7 +5,7 @@
 /// Struct used to store HuffBranch data:
 /// ```
 /// character: Option<char>;         // get
-/// frequency: usize                   // get
+/// frequency: usize                 // get
 /// code: Option<String>;            // get/set
 /// ```
 #[derive(Debug, Clone, Eq)]
@@ -30,7 +30,7 @@ impl HuffLeaf{
         //! ```
         //! use huff_encoding::huff_structs::HuffLeaf;
         //! 
-        //! let hf = HuffLeaf::new('s', 3);
+        //! let foo = HuffLeaf::new('s', 3);
         //! ```
 
 
@@ -76,7 +76,7 @@ impl HuffLeaf{
         //! ```
         //! use huff_encoding::huff_structs::HuffLeaf;
         //! 
-        //! huff_leaf.set_code("101001");
+        //! foo.set_code("101001");
         //! ```
 
         

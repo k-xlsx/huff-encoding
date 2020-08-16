@@ -28,7 +28,7 @@ impl HuffBranchHeap{
         //! ```
         //! use huff_encoding::huff_structs::{HuffBranchHeap, chars_to_freq}
         //! 
-        //! let hbh = HuffBranchHeap::from(get_chars_to_freq("Hello, World!"));
+        //! let foo = HuffBranchHeap::from(get_chars_to_freq("Hello, World!"));
         //! ```
 
 
@@ -47,7 +47,7 @@ impl HuffBranchHeap{
         //! ```
         //! use huff_encoding::huff_structs::HuffBranchHeap
         //! 
-        //! let hbh = HuffBranchHeap::new();
+        //! let foo = HuffBranchHeap::new();
         //! ```
 
 

@@ -51,7 +51,7 @@ impl HuffBranch{
         //! ```
         //! use huff_encoding::huff_structs::{HuffBranch, HuffLeaf};
         //! 
-        //! let hb = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
+        //! let foo = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
         //! ```
 
 

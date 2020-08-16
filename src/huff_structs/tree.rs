@@ -43,7 +43,7 @@ impl HuffTree{
         //! ```
         //! use huff_encoding::huff_structs::HuffTree;
         //! 
-        //! let ht = HuffTree::from("Hello, World!");
+        //! let foo = HuffTree::from("Hello, World!");
         //! ```
 
 
@@ -64,7 +64,7 @@ impl HuffTree{
         //! ```
         //! use huff_encoding::huff_structs::{HuffTree, get_chars_to_freq};
         //! 
-        //! let ht = HuffTree::from(get_chars_to_freq("Hello, World!"));
+        //! let foo = HuffTree::from(get_chars_to_freq("Hello, World!"));
         //! ```
 
 
@@ -83,8 +83,8 @@ impl HuffTree{
         //! ```
         //! use huff_encoding::huff_structs::HuffTree;
         //! 
-        //! let ht = HuffTree::new();
-        //! ht.grow("Hello, World!");
+        //! let foo = HuffTree::new();
+        //! foo.grow("Hello, World!");
         //! ```
 
 
@@ -115,6 +115,40 @@ impl HuffTree{
 
 
         return &self.char_codes;
+    }
+
+
+    pub fn as_bin(&self) -> String{
+        //! Returns the tree represented in binary
+        //! to be stored as a header to an encoded file:
+        //! 
+        //! * 0 being a character leaf
+        //! ..* after a 0 you can expect a 32b char.
+        //! * 1 being a joint leaf.
+        //! 
+        //! ---
+        //! ## DOES NOT STORE FREQUENCIES.
+        //! It's only meant to construct a same
+        //! shaped tree for decoding a file.
+        //! 
+        //! ---
+        //! 
+        //! # Examples
+        //! ---
+        //! ```
+        //! use huff_encoding::huff_structs::HuffTree;
+        //! 
+        //! let foo = HuffTree::from("abbccc");
+        //! 
+        //! // does not panic
+        //! assert!(&foo.as_bin()[..] == 
+        //!     "10000000000000000000000000011000111000000000000000000000000001100001000000000000000000000000001100010")
+        //! ```
+
+        let mut bin = String::new();
+        HuffTree::set_bin(&mut bin, self.root().unwrap().borrow());
+
+        return bin;
     }
 
 
@@ -192,17 +226,43 @@ impl HuffTree{
         let root = root;
         let children = root.children();
 
-        for child in children.iter(){
-            let branch = child.unwrap().borrow();
-            let leaf = branch.leaf();
-            let c = leaf.character();
-            match c{
-                Some(_) =>{
-                    char_codes.insert(c.unwrap(), leaf.code().unwrap().clone());
+        match children{
+            [Some(_), Some(_)] =>{   
+                for child in children.iter(){
+                    let branch = child.unwrap().borrow();
+                    let leaf = branch.leaf();
+                    let c = leaf.character();
+                    match c{
+                        Some(_) =>{
+                            char_codes.insert(c.unwrap(), leaf.code().unwrap().clone());
+                        }
+                        None =>{
+                            self.set_char_codes(char_codes, child.unwrap().borrow());
+                        }
+                    }
                 }
-                None =>{
-                    self.set_char_codes(char_codes, child.unwrap().borrow());
+            }
+            _ =>{
+                char_codes.insert(root.leaf().character().unwrap(), String::from("0"));
+            }
+        }
+
+    }
+
+    fn set_bin(bin: &mut String, root: Ref<HuffBranch>){
+        let root = root;
+        let children = root.children();
+
+        match children{
+            [Some(_), Some(_)] =>{
+                bin.push('1');
+                for child in children.iter(){
+                    HuffTree::set_bin(bin, child.unwrap().borrow());
                 }
+            }
+            _ =>{
+                bin.push('0');
+                bin.push_str(&format!("{:032b}", root.leaf().character().unwrap() as u32));
             }
         }
     }
