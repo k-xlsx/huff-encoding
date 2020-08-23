@@ -4,6 +4,7 @@
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
+use bit_vec::BitVec;
 use crate::huff_structs::{HuffBranch, HuffLeaf, chars_to_freq};
 use crate::huff_structs::branch_heap::HuffBranchHeap;
 
@@ -28,7 +29,7 @@ use crate::huff_structs::branch_heap::HuffBranchHeap;
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<Rc<RefCell<HuffBranch>>>,
-    char_codes: HashMap<char, String>,
+    char_codes: HashMap<char, BitVec>,
 }
 
 impl HuffTree{
@@ -74,6 +75,7 @@ impl HuffTree{
         return huff_tree;
     }
 
+
     pub fn new(root: Option<Rc<RefCell<HuffBranch>>>) -> HuffTree{
         //! Initializes a HuffTree with the given root.
         //! 
@@ -109,7 +111,7 @@ impl HuffTree{
         }
     }
 
-    pub fn char_codes(&self) -> &HashMap<char, String>{
+    pub fn char_codes(&self) -> &HashMap<char, BitVec>{
         //! Returns a HashMaps of chars with their
         //! corresponding Huffman codes.
 
@@ -118,12 +120,12 @@ impl HuffTree{
     }
 
 
-    pub fn as_bin(&self) -> String{
+    pub fn as_bit_vec(&self) -> BitVec{
         //! Returns the tree represented in binary
         //! to be stored as a header to an encoded file:
         //! 
         //! * 0 being a character leaf
-        //! ..* after a 0 you can expect a 32b char.
+        //! ..* after a 0 you can expect an utf-8 32b char.
         //! * 1 being a joint leaf.
         //! 
         //! ---
@@ -140,15 +142,17 @@ impl HuffTree{
         //! 
         //! let foo = HuffTree::from("abbccc");
         //! 
-        //! // does not panic
-        //! assert!(&foo.as_bin()[..] == 
-        //!     "10000000000000000000000000011000111000000000000000000000000001100001000000000000000000000000001100010")
+        //! // doesn't panic
+        //! print!("{}", &foo.as_bin()[..])
+        //! /*outputs:
+        //!     10000000000000000000000000011000111000000000000000000000000001100001000000000000000000000000001100010
+        //! */
         //! ```
 
-        let mut bin = String::new();
-        HuffTree::set_bin(&mut bin, self.root().unwrap().borrow());
-
-        return bin;
+        let mut bit_vec = BitVec::new();
+        HuffTree::set_bin(&mut bit_vec, self.root().unwrap().borrow());
+        
+        return bit_vec;
     }
 
 
@@ -198,31 +202,14 @@ impl HuffTree{
         // set codes for all branches recursively
         HuffTree::set_branch_codes(self.root().unwrap().borrow_mut());
 
-        // set chard_codes recursively
-        let mut char_codes: HashMap<char, String> = HashMap::new();
+        // set char_codes recursively
+        let mut char_codes: HashMap<char, BitVec> = HashMap::new();
         self.set_char_codes(&mut char_codes, self.root().unwrap().borrow());
         self.char_codes = char_codes;
     }
 
 
-    fn set_branch_codes(root: RefMut<HuffBranch>){
-        let root = root;
-        let children = root.children();
-
-        match children{
-            [Some(_), Some(_)] =>{
-                let root_code = root.leaf().code();
-                for child in children.iter(){
-                    child.unwrap().borrow_mut().set_code(root_code);
-                    HuffTree::set_branch_codes(child.unwrap().borrow_mut());
-                }
-            }
-            _ =>
-                (),
-        }
-    }
-
-    fn set_char_codes(&self, char_codes: &mut HashMap<char, String>, root: Ref<HuffBranch>){
+    fn set_char_codes(&self, char_codes: &mut HashMap<char, BitVec>, root: Ref<HuffBranch>){
         let root = root;
         let children = root.children();
 
@@ -243,26 +230,49 @@ impl HuffTree{
                 }
             }
             _ =>{
-                char_codes.insert(root.leaf().character().unwrap(), String::from("0"));
+                char_codes.insert(root.leaf().character().unwrap(), {let mut b = BitVec::new(); b.push(false); b});
             }
         }
 
     }
 
-    fn set_bin(bin: &mut String, root: Ref<HuffBranch>){
+    fn set_branch_codes(root: RefMut<HuffBranch>){
         let root = root;
         let children = root.children();
 
         match children{
             [Some(_), Some(_)] =>{
-                bin.push('1');
+                let root_code = root.leaf().code();
                 for child in children.iter(){
-                    HuffTree::set_bin(bin, child.unwrap().borrow());
+                    child.unwrap().borrow_mut().set_code(root_code);
+                    HuffTree::set_branch_codes(child.unwrap().borrow_mut());
+                }
+            }
+            _ =>
+                (),
+        }
+    }
+
+    fn set_bin(bit_vec: &mut BitVec, root: Ref<HuffBranch>){
+        let root = root;
+        let children = root.children();
+
+        match children{
+            [Some(_), Some(_)] =>{
+                bit_vec.push(true);
+                for child in children.iter(){
+                    HuffTree::set_bin(bit_vec, child.unwrap().borrow());
                 }
             }
             _ =>{
-                bin.push('0');
-                bin.push_str(&format!("{:032b}", root.leaf().character().unwrap() as u32));
+                bit_vec.push(false);
+                for bit in format!("{:032b}", root.leaf().character().unwrap() as u32).chars(){
+                    match bit{
+                        '0' => bit_vec.push(false),
+                        '1' => bit_vec.push(true),
+                        _ => (),
+                    }
+                }
             }
         }
     }

@@ -3,8 +3,8 @@ use huff_encoding::huff_structs;
 
 
 fn main(){
-    let s = "abbccc";
+    let s = "aaaaabbbbbbbbbccccccccccccdddddddddddddeeeeeeeeeeeeeeeefffffffffffffffffffffffffffffffffffffffffffff";
 
     let tree = huff_structs::HuffTree::from(s);
-    println!("{:#?}", tree.as_bin());
+    println!("{:#?}", tree.as_bit_vec());
 }

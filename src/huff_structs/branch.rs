@@ -4,6 +4,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use bit_vec::BitVec;
 use crate::huff_structs::HuffLeaf;
 
 
@@ -94,33 +95,28 @@ impl HuffBranch{
         self.pos_in_parent = Some(pos_in_parent);
     } 
 
-    pub fn set_code(&mut self, parent_code: Option<&String>){
+    pub fn set_code(&mut self, parent_code: Option<&BitVec>){
         //! Sets its leaf's code based on the give parent_code and its
         //! pos_in_parent.
 
 
-        let mut code = String::new();
+        let mut code = BitVec::new();
 
         match self.pos_in_parent(){
             Some(_) =>{
                 match parent_code{
                     Some(_) =>{
-                        code.push_str(&parent_code.unwrap());
+                        for bit in parent_code.unwrap(){
+                            code.push(bit);
+                        }
                     }
                     None =>
                         (),
                 }
                 
-                match self.pos_in_parent().unwrap(){
-                    0u8 =>
-                        code.push('0'),
-                    1u8 =>
-                        code.push('1'),
-                    _ =>
-                        panic!("pos_in_parent not binary"),
-                }
+                code.push(self.pos_in_parent().unwrap() >= 1);
 
-                self.leaf.set_code(&code);
+                self.leaf.set_code(code);
             }
             None =>
                 (),

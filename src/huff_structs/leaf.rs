@@ -1,18 +1,21 @@
 #![allow(dead_code)]
 
 
+use bit_vec::BitVec;
+
+
 
 /// Struct used to store HuffBranch data:
 /// ```
 /// character: Option<char>;         // get
 /// frequency: usize                 // get
-/// code: Option<String>;            // get/set
+/// code: Option<bit_vec::BitVec>;            // get/set
 /// ```
 #[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
     character: Option<char>,
     frequency: usize,
-    code: Option<String>,
+    code: Option<BitVec>,
 }
 
 impl PartialEq for HuffLeaf {
@@ -58,7 +61,7 @@ impl HuffLeaf{
         return self.frequency
     }
     
-    pub fn code(&self) -> Option<&String>{
+    pub fn code(&self) -> Option<&BitVec>{
         //! Returns a reference to the stored code.
         
 
@@ -66,30 +69,21 @@ impl HuffLeaf{
     }
 
 
-    pub fn set_code(&mut self, code: &str){
-        //! Sets the given code.
-        //! 
-        //! Panics if code is not binary.
+    pub fn set_code(&mut self, code: BitVec){
+        //! Sets the given BitVec as code.
         //! 
         //! # Examples
         //! ---
         //! ```
         //! use huff_encoding::huff_structs::HuffLeaf;
         //! 
-        //! foo.set_code("101001");
+        //! let b = bit_vec::BitVec::new();
+        //! b.push(true) 
+        //! 
+        //! foo.set_code(b);
         //! ```
 
         
-        HuffLeaf::check_code(&code);
-        self.code = Some(code.to_string());
-    }
-
-
-    fn check_code(code: &str){
-        for c in code.chars(){
-            if c != '1' && c != '0'{
-                panic!("given code String is not binary");
-            }
-        }
+        self.code = Some(code);
     }
 }
