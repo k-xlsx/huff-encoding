@@ -122,6 +122,21 @@ impl HuffTree{
         //! // }
         //! ```
 
+        fn revert_branch_code(branch_code: &mut BitVec, prev_branch: bool){
+            match prev_branch{
+                // prev branch was joint -> you're its first child
+                true =>{
+                    branch_code.push(false);
+                }
+                // prev branch was char -> you're someones second child
+                false =>{
+                    // back up if prev char was last child of some branch
+                    while branch_code.pop().unwrap(){}
+                    branch_code.push(true);
+                }
+            }
+        }
+
         let mut char_codes: HashMap<char, BitVec> = HashMap::new();
 
         let mut branch_code = BitVec::new();
@@ -148,18 +163,7 @@ impl HuffTree{
                         char_bin.clear();
     
                         char_codes.insert(c,{
-                            match prev_branch{
-                                // prev branch was joint -> you're its first child
-                                true =>{
-                                    branch_code.push(false);
-                                }
-                                // prev branch was char -> you're someones second child
-                                false =>{
-                                    // back up if prev char was last child of some branch
-                                    while branch_code.pop().unwrap(){}
-                                    branch_code.push(true);
-                                }
-                            }
+                            revert_branch_code(&mut branch_code, prev_branch);
                             branch_code.clone()
                         });
     
@@ -172,17 +176,7 @@ impl HuffTree{
                     match b{
                         // found a joint branch
                         true =>{
-                            match prev_branch{
-                                // prev branch was joint -> you're it's first child
-                                true =>{
-                                    branch_code.push(false);
-                                }
-                                // prev branch was char -> you're someones first child
-                                false =>{
-                                    while branch_code.pop().unwrap(){}
-                                    branch_code.push(true);
-                                }
-                            }
+                            revert_branch_code(&mut branch_code, prev_branch);
     
                             // set yourself as prev child
                             prev_branch = true;
@@ -227,8 +221,8 @@ impl HuffTree{
         //! to be stored as a header to an encoded file:
         //! 
         //! 
-        //! * 0 being a character leaf (after a 0 you can expect an utf-8 32b char.)
-        //! * 1 being a joint leaf.
+        //! * 0 being a character branch (after a 0 you can expect an utf-8 32b char.)
+        //! * 1 being a joint branch.
         //! 
         //! To decode use:
         //! ```
@@ -257,7 +251,7 @@ impl HuffTree{
 
 
         let mut bit_vec = BitVec::new();
-        HuffTree::set_bin(&mut bit_vec, self.root().unwrap().borrow());
+        HuffTree::set_tree_as_bin(&mut bit_vec, self.root().unwrap().borrow());
         
         return bit_vec;
     }
@@ -308,7 +302,7 @@ impl HuffTree{
         self.root = root;
 
         // set codes for all branches recursively
-        HuffTree::set_branch_codes(self.root().unwrap().borrow_mut());
+        HuffTree::set_codes_in_branches(self.root().unwrap().borrow_mut());
 
         // set char_codes recursively
         let mut char_codes: HashMap<char, BitVec> = HashMap::new();
@@ -347,7 +341,7 @@ impl HuffTree{
 
     }
 
-    fn set_branch_codes(root: RefMut<HuffBranch>){
+    fn set_codes_in_branches(root: RefMut<HuffBranch>){
         //! Recursively set codes on every branch
 
 
@@ -361,7 +355,7 @@ impl HuffTree{
                 // set codes on children and call set_branch_codes on them
                 for child in children.unwrap().iter(){
                     child.borrow_mut().set_code(root_code);
-                    HuffTree::set_branch_codes(child.borrow_mut());
+                    HuffTree::set_codes_in_branches(child.borrow_mut());
                 }
             }
             None =>
@@ -369,9 +363,11 @@ impl HuffTree{
         }
     }
 
-    fn set_bin(bit_vec: &mut BitVec, root: Ref<HuffBranch>){
-        //! Recursively set the given bit_vec
-        //! used by as_bit_vec
+    fn set_tree_as_bin(tree_as_bin: &mut BitVec, root: Ref<HuffBranch>){
+        //! Recursively push bits to the given BitVec
+        //! depending on the branches you encounter:
+        //! * 0 being a char branch (followed by a 32b utf-8 char)
+        //! * 1 being a joint branch
 
 
         let root = root;
@@ -381,23 +377,23 @@ impl HuffTree{
             // children -> joint branch
             Some(_) =>{
                 // 1 means joint branch
-                bit_vec.push(true);
+                tree_as_bin.push(true);
 
                 // call set_bin on children
                 for child in children.unwrap().iter(){
-                    HuffTree::set_bin(bit_vec, child.borrow());
+                    HuffTree::set_tree_as_bin(tree_as_bin, child.borrow());
                 }
             }
             // no children -> char branch
             None =>{
                 // 0 means char branch
-                bit_vec.push(false);
+                tree_as_bin.push(false);
 
                 // convert stored char to utf-8 bin code and write it after the 0
                 for bit in format!("{:032b}", root.leaf().character().unwrap() as u32).chars(){
                     match bit{
-                        '0' => bit_vec.push(false),
-                        '1' => bit_vec.push(true),
+                        '0' => tree_as_bin.push(false),
+                        '1' => tree_as_bin.push(true),
                         _ => (),
                     }
                 }
