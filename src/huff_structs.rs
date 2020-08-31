@@ -13,6 +13,22 @@ use std::collections::HashMap;
 
 
 pub fn chars_to_freq(s: &str) -> HashMap<char, usize>{
+    //! Returns a HashMap of chars to their corresponding
+    //! frequencies in the given &str
+    //! 
+    //! # Examples
+    //! ```
+    //! use huff_structs::chars_to_freq;
+    //! 
+    //! let foo = chars_to_freq("Hello World");
+    //! print!("{:?}", foo);
+    //! 
+    //! /* outputs something like:
+    //! {' ': 1, 'l': 3, 'o': 2, 'H': 1, 'd': 1, 'e': 1, 'W': 1, 'r': 1}
+    //! */
+    //! ```
+
+
     let mut ctf: HashMap<char, usize> = HashMap::new();
 
     for c in s.chars(){
