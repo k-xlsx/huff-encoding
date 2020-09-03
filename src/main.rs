@@ -14,10 +14,12 @@ fn main(){
     
     Nullam placerat imperdiet dui, et pulvinar erat venenatis iaculis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum aliquam dolor augue, id elementum nibh volutpat non. Donec id odio augue. Maecenas aliquam, sapien eget finibus luctus, arcu urna aliquet libero, ac tincidunt nibh lectus eu erat. Vivamus pharetra nisl sit amet neque commodo sollicitudin. Aenean efficitur pulvinar risus quis faucibus. Mauris sit amet fringilla quam. Etiam vel bibendum dolor, sit amet tempus felis.";
 
+    
     let tree = huff_structs::HuffTree::from(s);
 
     let h = file_io::get_header(&mut tree.as_bin());
     let es = file_io::get_encoded_string(s, tree.char_codes());
     println!("{:?}\n", h);
     println!("{:?}", es);
+    println!("{:#?}", tree.char_codes())
 }
