@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-
-
 use bit_vec::BitVec;
 
 

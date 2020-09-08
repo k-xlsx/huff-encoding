@@ -21,11 +21,19 @@ pub fn chars_to_freq(s: &str) -> HashMap<char, usize>{
     //! use huff_structs::chars_to_freq;
     //! 
     //! let foo = chars_to_freq("Hello World");
-    //! print!("{:?}", foo);
+    //! print!("{:#?}", foo);
     //! 
-    //! /* outputs something like:
-    //! {' ': 1, 'l': 3, 'o': 2, 'H': 1, 'd': 1, 'e': 1, 'W': 1, 'r': 1}
-    //! */
+    //! /// outputs something like:
+    //! /// {
+    //! ///     ' ': 1,
+    //! ///     'l': 3,
+    //! ///     'o': 2,
+    //! ///     'H': 1,
+    //! ///     'd': 1,
+    //! ///     'e': 1,
+    //! ///     'W': 1,
+    //! ///     'r': 1
+    //! /// }
     //! ```
 
 

@@ -1,9 +1,6 @@
-#![allow(dead_code)]
-
-
 use std::collections::HashMap;
 use std::collections::BinaryHeap;
-use crate::huff_structs::{HuffBranch, HuffLeaf};
+use crate::structs::{HuffBranch, HuffLeaf};
 
 
 

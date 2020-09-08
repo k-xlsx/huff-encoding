@@ -1,13 +1,12 @@
-#![allow(dead_code)]
-
-
 use std::{char, str};
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
+
 use bit_vec::BitVec;
-use crate::huff_structs::{HuffBranch, HuffLeaf, chars_to_freq};
-use crate::huff_structs::branch_heap::HuffBranchHeap;
+
+use crate::structs::{HuffBranch, HuffLeaf, chars_to_freq};
+use crate::structs::branch_heap::HuffBranchHeap;
 
 
 
@@ -137,6 +136,9 @@ impl HuffTree{
             }
         }
 
+        // this whole thing is probably atrocious, but it works?
+
+        
         let mut char_codes: HashMap<char, BitVec> = HashMap::new();
 
         // current branch code and previous branch bit
@@ -152,7 +154,9 @@ impl HuffTree{
         let mut max_char_bits = 0;
 
         let mut char_bin = BitVec::new();
-        for b in bin.iter().skip(1){
+
+        let bin_iter = bin.iter().skip(match bin[0]{true => 1, false => 0});
+        for b in bin_iter{
             match read_char{
                 // read char
                 true => {
@@ -248,7 +252,7 @@ impl HuffTree{
     }
 
 
-    pub fn as_bin(&self) -> BitVec{
+    pub fn to_bin(&self) -> BitVec{
         //! Returns the tree represented in binary
         //! to be stored as a header to an encoded file:
         //! 

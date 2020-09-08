@@ -1,11 +1,8 @@
-#![allow(dead_code)]
-
-
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use bit_vec::BitVec;
-use crate::huff_structs::HuffLeaf;
+use crate::structs::HuffLeaf;
 
 
 
