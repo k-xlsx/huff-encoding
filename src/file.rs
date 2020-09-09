@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::io;
-use std::fs;
+use std::{fs, io};
 
 use bit_vec::BitVec;
 
@@ -27,11 +26,11 @@ pub fn write_as_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, s: &str) -> io
     //! # Examples
     //! ---
     //! ```
-    //! use huff_encoding::file; 
+    //! use huff_encoding::file::write_as_hfe; 
     //! 
     //! fn main() -> std::io::Result<()> {
-    //!     file::write_as_hfe("C:\\", "foo", "Lorem ipsum")?;
-    //!     file::write_as_hfe("/home/user/", "bar", "dolor sit")?;
+    //!     write_as_hfe("C:\\", "foo", "Lorem ipsum")?;
+    //!     write_as_hfe("/home/user/", "bar", "dolor sit")?;
     //!     Ok(())
     //! }
     //! ```
