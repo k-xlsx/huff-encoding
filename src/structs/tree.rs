@@ -98,8 +98,8 @@ impl HuffTree{
         return huff_tree;
     }
 
-    pub fn char_codes_from_bin(bin: &BitVec) -> Result<HashMap<char, BitVec>, &str>{
-        //! Returns char codes read from a tree represented in binary
+    pub fn coded_chars_from_bin(bin: &BitVec) -> Result<HashMap<BitVec, char>, &str>{
+        //! Returns coded_chars read from a tree represented in binary
         //! (BitVec)
         //! 
         //! To get a tree as binary use as_bin.
@@ -115,9 +115,9 @@ impl HuffTree{
         //! print!("{:?}", bar)
         //! // Prints something like:
         //! // {
-        //! //      'a': 10,
-        //! //      'c': 0,
-        //! //      'b': 11,
+        //! //      10: 'a',
+        //! //      0: 'c',
+        //! //      11: 'b',
         //! // }
         //! ```
 
@@ -139,7 +139,7 @@ impl HuffTree{
         // this whole thing is probably atrocious, but it works?
 
         
-        let mut char_codes: HashMap<char, BitVec> = HashMap::new();
+        let mut coded_chars: HashMap<BitVec, char> = HashMap::new();
 
         // current branch code and previous branch bit
         let mut branch_code = BitVec::new();
@@ -195,10 +195,10 @@ impl HuffTree{
                                 max_char_bits = 0;
                                 char_bin = BitVec::new();
             
-                                char_codes.insert(c,{
+                                coded_chars.insert({
                                     revert_branch_code(&mut branch_code, prev_branch);
                                     branch_code.clone()
-                                });
+                                }, c);
             
                                 // set yourself as prev_child
                                 prev_branch = false;
@@ -227,7 +227,7 @@ impl HuffTree{
             }
         }
 
-        return Ok(char_codes);
+        return Ok(coded_chars);
     }
 
 
@@ -300,7 +300,7 @@ impl HuffTree{
         //! ```
 
 
-        assert!(s.len() > 0, "slice is empty");
+        assert!(s.len() > 0, "string slice is empty");
         self.grow_ctf(&chars_to_freq(s));
     }
 
