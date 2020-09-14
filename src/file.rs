@@ -14,7 +14,7 @@ const EXTENSION: &str = "hfe";
 
 
 
-pub fn write_as_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, text: &str) -> io::Result<()>{
+pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, text: &str) -> io::Result<()>{
     //! Encode the string slice as Huffman code and write it to
     //! a .hfe file with the given name in the given dir_path
     //! 
@@ -67,7 +67,7 @@ pub fn write_as_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, text: &str) ->
     inner(&path, text.as_ref())
 }
 
-pub fn read_from_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
+pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
     //! Read text from a .hfe file
     //! 
     //! ## .hfe file structure

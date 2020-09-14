@@ -65,7 +65,7 @@ impl HuffTree{
         //! ```
         //! use huff_encoding::huff_structs::{HuffTree, get_chars_to_freq};
         //! 
-        //! let foo = HuffTree::from(get_chars_to_freq("Hello, World!"));
+        //! let foo = HuffTree::from_ctf(get_chars_to_freq("Hello, World!"));
         //! ```
 
 
@@ -305,7 +305,7 @@ impl HuffTree{
     }
 
     pub fn grow_ctf(&mut self, ctf: &HashMap<char, usize>){
-        //! Grows the tree from the given:HuffTree
+        //! Grows the tree from the given
         //! ```
         //! &HashMap<char, usize>
         //! ```
