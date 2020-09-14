@@ -1,11 +1,8 @@
-#![allow(dead_code)]
-
-
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use bit_vec::BitVec;
-use crate::huff_structs::HuffLeaf;
+use crate::structs::HuffLeaf;
 
 
 
@@ -22,7 +19,7 @@ pub struct HuffBranch{
     leaf: HuffLeaf,
 
     pos_in_parent: Option<u8>,
-    children: [Option<Rc<RefCell<HuffBranch>>>; 2]
+    children: Option<[Rc<RefCell<HuffBranch>>; 2]>
 }
 
 impl Ord for HuffBranch {
@@ -44,7 +41,7 @@ impl PartialEq for HuffBranch {
 }
 
 impl HuffBranch{
-    pub fn new(leaf: HuffLeaf, children: [Option<Rc<RefCell<HuffBranch>>>; 2]) -> HuffBranch{
+    pub fn new(leaf: HuffLeaf, children: Option<[Rc<RefCell<HuffBranch>>; 2]>) -> HuffBranch{
         //! Initializes a new HuffBranch.
         //! 
         //! # Example
@@ -81,12 +78,24 @@ impl HuffBranch{
         return self.pos_in_parent
     }
 
-    pub fn children(&self) -> [Option<&Rc<RefCell<HuffBranch>>>; 2]{
+    pub fn children(&self) -> Option<&[Rc<RefCell<HuffBranch>>; 2]>{
         //! Returns the stored Array of the branch's children
 
-        return [self.children[0].as_ref(), self.children[1].as_ref()]
+        match self.children{
+            None => 
+                return None,
+            Some(_) => {
+                return self.children.as_ref();
+            }
+        }
     }
 
+
+    pub fn set_children(&mut self, children: Option<[Rc<RefCell<HuffBranch>>; 2]>){
+        //! Sets the given children array
+
+        self.children = children;
+    }
 
     pub fn set_pos_in_parent(&mut self, pos_in_parent: u8){
         //! Sets the stored position in parent's children Array
@@ -96,7 +105,7 @@ impl HuffBranch{
     } 
 
     pub fn set_code(&mut self, parent_code: Option<&BitVec>){
-        //! Sets its leaf's code based on the give parent_code and its
+        //! Sets its leaf's code based on the given parent_code and its
         //! pos_in_parent.
 
 

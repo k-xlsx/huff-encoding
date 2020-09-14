@@ -7,15 +7,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f0dc55f2d8a1a85650ac47858bb001b4c0dd73d79e3c455a842925e68d29cd3"
 
 [[package]]
-name = "bitbit"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "341ee439c53e593fa7de26dead9515601539b6cf9a53e3368c1405471e3ea322"
-
-[[package]]
 name = "huff_encoding"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "bit-vec",
- "bitbit",
 ]

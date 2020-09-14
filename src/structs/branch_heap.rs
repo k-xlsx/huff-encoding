@@ -1,9 +1,6 @@
-#![allow(dead_code)]
-
-
 use std::collections::HashMap;
 use std::collections::BinaryHeap;
-use crate::huff_structs::{HuffBranch, HuffLeaf};
+use crate::structs::{HuffBranch, HuffLeaf};
 
 
 
@@ -84,7 +81,7 @@ impl HuffBranchHeap{
 
     fn build(&mut self, cfg: &HashMap<char, usize>){
         for (c, f) in cfg{
-            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), [None, None]);
+            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), None);
     
             self.push(new_branch);
         }

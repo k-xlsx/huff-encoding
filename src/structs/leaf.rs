@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-
-
 use bit_vec::BitVec;
 
 
@@ -9,7 +6,7 @@ use bit_vec::BitVec;
 /// ```
 /// character: Option<char>;         // get
 /// frequency: usize                 // get
-/// code: Option<bit_vec::BitVec>;            // get/set
+/// code: Option<bit_vec::BitVec>;   // get&set
 /// ```
 #[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{

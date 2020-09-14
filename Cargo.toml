@@ -1,9 +1,8 @@
 [package]
 name = "huff_encoding"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-bitbit = "0.2.0"
 bit-vec = "0.6.2"
