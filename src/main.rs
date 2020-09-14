@@ -1,4 +1,4 @@
-use huff_encoding::file::{write_as_hfe, read_from_hfe};
+use huff_encoding::file::{write_hfe, read_hfe};
 use std::fs;
 
 
@@ -16,7 +16,7 @@ fn main(){
     Nullam placerat imperdiet dui, et pulvinar erat venenatis iaculis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum aliquam dolor augue, id elementum nibh volutpat non. Donec id odio augue. Maecenas aliquam, sapien eget finibus luctus, arcu urna aliquet libero, ac tincidunt nibh lectus eu erat. Vivamus pharetra nisl sit amet neque commodo sollicitudin. Aenean efficitur pulvinar risus quis faucibus. Mauris sit amet fringilla quam. Etiam vel bibendum dolor, sit amet tempus felis.";
 
 
-    write_as_hfe(".\\", "test", s).expect("Failed writing to file.");
-    let rs = read_from_hfe("test.hfe").expect("Failed reading from file");
+    write_hfe(".\\", "test", s).expect("Failed writing to file.");
+    let rs = read_hfe("test.hfe").expect("Failed reading from file");
     fs::write("test.txt", rs).expect("Failed writing to file");
 }
