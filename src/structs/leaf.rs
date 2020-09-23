@@ -4,13 +4,13 @@ use bit_vec::BitVec;
 
 /// Struct used to store HuffBranch data:
 /// ```
-/// character: Option<char>;         // get
+/// byte: Option<u8>;                // get
 /// frequency: usize                 // get
 /// code: Option<bit_vec::BitVec>;   // get&set
 /// ```
 #[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
-    character: Option<char>,
+    byte: Option<u8>,
     frequency: usize,
     code: Option<BitVec>,
 }
@@ -22,20 +22,20 @@ impl PartialEq for HuffLeaf {
 }
 
 impl HuffLeaf{
-    pub fn new(character: Option<char>, frequency: usize) -> HuffLeaf{
+    pub fn new(byte: Option<u8>, frequency: usize) -> HuffLeaf{
         //! Initialize the HuffLeaf.
         //! 
         //! # Example
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::HuffLeaf;
+        //! use huff_encoding::HuffLeaf;
         //! 
-        //! let foo = HuffLeaf::new('s', 3);
+        //! let foo = HuffLeaf::new(0xc4, 3);
         //! ```
 
 
         let huff_leaf = HuffLeaf{
-            character: character,
+            byte: byte,
             frequency: frequency,
             code: None,
         };
@@ -44,11 +44,11 @@ impl HuffLeaf{
     }
 
     
-    pub fn character(&self) -> Option<char>{
-        //! Returns the stored character.
+    pub fn byte(&self) -> Option<u8>{
+        //! Returns the stored byte.
 
 
-        return self.character;
+        return self.byte;
     }
     
     pub fn frequency(&self) -> usize{
@@ -72,10 +72,10 @@ impl HuffLeaf{
         //! # Examples
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::HuffLeaf;
+        //! use huff_encoding::HuffLeaf;
         //! 
         //! let b = bit_vec::BitVec::new();
-        //! b.push(true) 
+        //! b.push(true)
         //! 
         //! foo.set_code(b);
         //! ```

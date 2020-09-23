@@ -1,11 +1,10 @@
-use std::{char, str};
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
 
 use bit_vec::BitVec;
 
-use crate::structs::{HuffBranch, HuffLeaf, chars_to_freq};
+use crate::{HuffBranch, HuffLeaf, ByteFreqs};
 use crate::structs::branch_heap::HuffBranchHeap;
 
 
@@ -14,11 +13,11 @@ use crate::structs::branch_heap::HuffBranchHeap;
 /// 
 /// A HuffTree is comprised of HuffBranches, each having
 /// 2 or 0 children, with root being the top one and 
-/// every bottom one containing a char.
+/// every bottom one containing a byte.
 /// 
 /// Can be grown from: 
 /// ```
-/// HashMap<char, usize>
+/// HashMap<u8, usize>
 /// ```
 /// or 
 /// ```
@@ -29,50 +28,24 @@ use crate::structs::branch_heap::HuffBranchHeap;
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<Rc<RefCell<HuffBranch>>>,
-    char_codes: HashMap<char, BitVec>,
+    byte_codes: HashMap<u8, BitVec>,
 }
 
 impl HuffTree{
-    pub fn from(s: &str) -> HuffTree{
-        //! Creates a HuffTree from:
-        //! ```
-        //! &str
-        //! ```
+    pub fn from(bytes: &[u8]) -> HuffTree{
+        //! Initialize the tree from given bytes
         //! 
         //! # Examples
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::HuffTree;
+        //! use huff_encoding::HuffTree;
         //! 
-        //! let foo = HuffTree::from("Hello, World!");
+        //! let foo = HuffTree::from("bar".as_bytes());
         //! ```
 
-
-        let mut huff_tree = HuffTree::new(None);
-        huff_tree.grow(s);
-
-        return huff_tree
-    } 
-
-    pub fn from_ctf(ctf: &HashMap<char, usize>) -> HuffTree{
-        //! Creates a HuffTree from:
-        //! ```
-        //! HashMap<char, usize>
-        //! ```
-        //! 
-        //! # Examples
-        //! ---
-        //! ```
-        //! use huff_encoding::huff_structs::{HuffTree, get_chars_to_freq};
-        //! 
-        //! let foo = HuffTree::from_ctf(get_chars_to_freq("Hello, World!"));
-        //! ```
-
-
-        let mut huff_tree = HuffTree::new(None);
-        huff_tree.grow_ctf(ctf);
-
-        return huff_tree;
+        let mut tree = HuffTree::new(None);
+        tree.grow(&ByteFreqs::threaded_from(&bytes));
+        tree
     }
 
     pub fn new(root: Option<Rc<RefCell<HuffBranch>>>) -> HuffTree{
@@ -83,7 +56,7 @@ impl HuffTree{
         //! # Examples
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::HuffTree;
+        //! use huff_encoding::HuffTree;
         //! 
         //! let foo = HuffTree::new();
         //! foo.grow("Hello, World!");
@@ -92,13 +65,13 @@ impl HuffTree{
 
         let huff_tree = HuffTree{
             root: root,
-            char_codes: HashMap::new(),
+            byte_codes: HashMap::new(),
         };
 
         return huff_tree;
     }
 
-    pub fn coded_chars_from_bin(bin: &BitVec) -> Result<HashMap<BitVec, char>, &str>{
+    pub fn coded_chars_from_bin(bin: &BitVec) -> HashMap<BitVec, u8>{
         //! Returns coded_chars read from a tree represented in binary
         //! (BitVec)
         //! 
@@ -109,17 +82,18 @@ impl HuffTree{
         //! ```
         //! use huff_encoding::huff_structs::HuffTree;
         //! 
-        //! let foo = HuffTree::from("abbccc");
+        //! let foo = HuffTree::from("abbccc".as_bytes());
         //! let bar = HuffTree::char_codes_from_bin(&foo.as_bin());
         //! 
         //! print!("{:?}", bar)
         //! // Prints something like:
         //! // {
-        //! //      10: 'a',
-        //! //      0: 'c',
-        //! //      11: 'b',
+        //! //      10: 97,
+        //! //      0:  99,
+        //! //      11: 98,
         //! // }
         //! ```
+        
 
         fn revert_branch_code(branch_code: &mut BitVec, prev_branch: bool){
             match prev_branch{
@@ -139,71 +113,41 @@ impl HuffTree{
         // this whole thing is probably atrocious, but it works?
 
         
-        let mut coded_chars: HashMap<BitVec, char> = HashMap::new();
+        let mut coded_bytes: HashMap<BitVec, u8> = HashMap::new();
 
         // current branch code and previous branch bit
         let mut branch_code = BitVec::new();
         let mut prev_branch = true;
     
-        // flags indicating whether you're reading a char, and reading how many bits to read
-        let mut read_char = false;
-        let mut read_utf8_negative = false;
+        let mut read_byte = false;
+        let mut read_byte_counter = 0;
 
-        // how many char bits you've read and how many you're supposed to
-        let mut char_bit_counter = 0;
-        let mut max_char_bits = 0;
-
-        let mut char_bin = BitVec::new();
+        let mut byte_bvec = BitVec::new();
 
         let bin_iter = bin.iter().skip(match bin[0]{true => 1, false => 0});
         for b in bin_iter{
-            match read_char{
-                // read char
+            match read_byte{
+                // read byte
                 true => {
-                    char_bin.push(b);
-                    char_bit_counter += 1;
+                    byte_bvec.push(b);
+                    read_byte_counter += 1;
 
-                    match read_utf8_negative{
-                        // read how many bits to read
-                        true =>{
-                            if b && char_bit_counter != 0{
-                                max_char_bits += 8;
-                            }
-                            else if !b{
-                                if max_char_bits == 0{
-                                    max_char_bits += 8;
-                                }
-                                read_utf8_negative = false;
-                            }
-                        }
-                        // just read bits
-                        false =>{
-                            // when read all char bits.
-                            if char_bit_counter == max_char_bits{
-                                // convert c_code String to u32 and then to char
-                                let c_bytes = &char_bin.to_bytes();
-                                let c = str::from_utf8(c_bytes);
-                                match c{
-                                    Err(_) => return Err("non utf-8 char in tree"),
-                                    _ => (),
-                                }
-                                let c = c.unwrap().chars().next().unwrap();
+                    // when read all byte bits.
+                    if read_byte_counter == 8{
+                        let byte = &byte_bvec.to_bytes()[0];
                                 
-                                // set all flags and counters to start
-                                read_char = false;
-                                char_bit_counter = 0;
-                                max_char_bits = 0;
-                                char_bin = BitVec::new();
+                        // reset reading byte params
+                        read_byte = false;
+                        read_byte_counter = 0;
+                        byte_bvec = BitVec::new();
             
-                                coded_chars.insert({
-                                    revert_branch_code(&mut branch_code, prev_branch);
-                                    branch_code.clone()
-                                }, c);
+                        coded_bytes.insert({
+                            revert_branch_code(&mut branch_code, prev_branch);
+                            branch_code.clone()
+                        }, *byte);
             
-                                // set yourself as prev_child
-                                prev_branch = false;
-                            }
-                        }
+                        // set yourself as prev_child
+                        prev_branch = false;
                     }
                 }
                 // read branches
@@ -216,18 +160,17 @@ impl HuffTree{
                             // set yourself as prev child
                             prev_branch = true;
                         }
-                        // found a char branch
+                        // found a byte branch
                         false =>{
-                        // start reading char when a char branch is found
-                        read_char = true;
-                        read_utf8_negative = true;
+                        // start reading byte when a byte branch is found
+                        read_byte = true;
                         }
                     }
                 }
             }
         }
 
-        return Ok(coded_chars);
+        return coded_bytes;
     }
 
 
@@ -243,12 +186,20 @@ impl HuffTree{
         }
     }
 
-    pub fn char_codes(&self) -> &HashMap<char, BitVec>{
-        //! Returns a HashMaps of chars with their
+    pub fn byte_codes(&self) -> &HashMap<u8, BitVec>{
+        //! Returns reference to a HashMap of bytes with their
         //! corresponding Huffman codes.
 
 
-        return &self.char_codes;
+        return &self.byte_codes;
+    }
+
+    pub fn byte_codes_mut(&mut self) -> &mut HashMap<u8, BitVec>{
+        //! Returns a mutable reference HashMaps of bytes with their
+        //! corresponding Huffman codes.
+
+
+        return &mut self.byte_codes;
     }
 
 
@@ -257,7 +208,7 @@ impl HuffTree{
         //! to be stored as a header to an encoded file:
         //! 
         //! 
-        //! * 0 being a character branch (after a 0 you can expect an utf-8 encoded char.)
+        //! * 0 being a byte branch (after a 0 you can expect a byte of data)
         //! * 1 being a joint branch.
         //! 
         //! To decode use:
@@ -277,13 +228,12 @@ impl HuffTree{
         //! ```
         //! use huff_encoding::huff_structs::HuffTree;
         //! 
-        //! let foo = HuffTree::from("abbccc");
+        //! let foo = HuffTree::from("abbccc".as_bytes());
         //! 
         //! print!("{:?}", &foo.as_bit_vec()[..])
         //! // outputs:
-        //! // 10000000000000000000000000011000111000000000000000000000000001100001000000000000000000000000001100010
+        //! // 10011000111001100001001100010
         //! ```
-
 
 
         let mut bit_vec = BitVec::new();
@@ -293,28 +243,17 @@ impl HuffTree{
     }
 
 
-    pub fn grow(&mut self, s: &str){
-        //! Grows the tree from the given:HuffTree
-        //! ```
-        //! &str
-        //! ```
-
-
-        assert!(s.len() > 0, "string slice is empty");
-        self.grow_ctf(&chars_to_freq(s));
-    }
-
-    pub fn grow_ctf(&mut self, ctf: &HashMap<char, usize>){
+    pub fn grow(&mut self, byte_freqs: &ByteFreqs){
         //! Grows the tree from the given
         //! ```
-        //! &HashMap<char, usize>
+        //! &ByteFreqs
         //! ```
 
 
-        assert!(ctf.len() > 0, "ctf is empty");
+        assert!(byte_freqs.len() > 0, "byte_freqs is empty");
 
-
-        let mut branch_heap = HuffBranchHeap::from(&ctf);
+        
+        let mut branch_heap = HuffBranchHeap::from(&byte_freqs);
 
         while branch_heap.len() > 1{
             let mut min = branch_heap.pop_min();
@@ -340,15 +279,15 @@ impl HuffTree{
         // set codes for all branches recursively
         HuffTree::set_codes_in_branches(self.root().unwrap().borrow_mut());
 
-        // set char_codes recursively
-        let mut char_codes: HashMap<char, BitVec> = HashMap::new();
-        self.set_char_codes(&mut char_codes, self.root().unwrap().borrow());
-        self.char_codes = char_codes;
+        // set byte_codes recursively
+        let mut byte_codes: HashMap<u8, BitVec> = HashMap::new();
+        self.set_byte_codes(&mut byte_codes, self.root().unwrap().borrow());
+        self.byte_codes = byte_codes;
     }
 
 
-    fn set_char_codes(&self, char_codes: &mut HashMap<char, BitVec>, root: Ref<HuffBranch>){
-        //! Recursively insert chars to codes into the given char_codes HashMap<char, BitVec>
+    fn set_byte_codes(&self, byte_codes: &mut HashMap<u8, BitVec>, root: Ref<HuffBranch>){
+        //! Recursively insert bytes to codes into the given byte_codes HashMap<u8, BitVec>
 
 
         let root = root;
@@ -359,19 +298,19 @@ impl HuffTree{
                 for child in children.unwrap().iter(){
                     let branch = child.borrow();
                     let leaf = branch.leaf();
-                    let c = leaf.character();
-                    match c{
+                    let b = leaf.byte();
+                    match b{
                         Some(_) =>{
-                            char_codes.insert(c.unwrap(), leaf.code().unwrap().clone());
+                            byte_codes.insert(b.unwrap(), leaf.code().unwrap().clone());
                         }
                         None =>{
-                            self.set_char_codes(char_codes, child.borrow());
+                            self.set_byte_codes(byte_codes, child.borrow());
                         }
                     }
                 }
             }
             None =>{
-                char_codes.insert(root.leaf().character().unwrap(), {let mut b = BitVec::new(); b.push(false); b});
+                byte_codes.insert(root.leaf().byte().unwrap(), {let mut b = BitVec::new(); b.push(false); b});
             }
         }
 
@@ -402,7 +341,7 @@ impl HuffTree{
     fn set_tree_as_bin(tree_bvec: &mut BitVec, root: Ref<HuffBranch>){
         //! Recursively push bits to the given BitVec
         //! depending on the branches you encounter:
-        //! * 0 being a char branch (followed by a utf-8 encoded char)
+        //! * 0 being a byte branch (followed by a byte of data, duh)
         //! * 1 being a joint branch
 
 
@@ -420,25 +359,15 @@ impl HuffTree{
                     HuffTree::set_tree_as_bin(tree_bvec, child.borrow());
                 }
             }
-            // no children -> char branch
+            // no children -> byte branch
             None =>{
-                // 0 means char branch
+                // 0 means byte branch
                 tree_bvec.push(false);
 
-                // convert stored char to utf-8 bin code and write it after the 0
-                let c = root.leaf().character().unwrap();
-                let mut c_buffer = vec![0; 4];
-                c.encode_utf8(&mut c_buffer);
-
-                let mut cleaned_c_buffer: Vec<u8> = Vec::new();
-                for (i, byte) in c_buffer.iter().enumerate(){
-                    if *byte != 0 || i == 0{
-                        cleaned_c_buffer.push(*byte)
-                    }
-                }
+                let b = root.leaf().byte().unwrap();
                 
-                let c_bvec = BitVec::from_bytes(&cleaned_c_buffer);
-                for b in c_bvec{
+                let byte_bvec = BitVec::from_bytes(&[b]);
+                for b in byte_bvec{
                     tree_bvec.push(b);
                 }
             }

@@ -1,8 +1,10 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
+
 use bit_vec::BitVec;
-use crate::structs::HuffLeaf;
+
+use crate::HuffLeaf;
 
 
 
@@ -47,9 +49,9 @@ impl HuffBranch{
         //! # Example
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::{HuffBranch, HuffLeaf};
+        //! use huff_encoding::{HuffBranch, HuffLeaf};
         //! 
-        //! let foo = HuffBranch::new(HuffLeaf::new('s', 3), [None, None]);
+        //! let foo = HuffBranch::new(HuffLeaf::new(0xc4, 3), [None, None]);
         //! ```
 
 

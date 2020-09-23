@@ -1,8 +1,9 @@
 use std::collections::HashMap;
+use std::thread;
 use std::convert::TryInto;
 use std::path::Path;
 use std::{fs, io};
-use io::Write;
+use io::{BufWriter, Write};
 
 use bit_vec::BitVec;
 
@@ -14,17 +15,19 @@ const EXTENSION: &str = "hfe";
 
 
 
-pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, text: &str) -> io::Result<()>{
+pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> io::Result<()>{
     //! Encode the string slice as Huffman code and write it to
     //! a .hfe file with the given name in the given dir_path
     //! 
     //! ## .hfe file structure
     //! ---
     //! * Byte containing the number of padding bits
+    //!   * first 4 digits -> header padding bits
+    //!   * next 4 digits -> encoded contents padding bits
     //! * Header comprised of:
     //!   * 8 byte header length
-    //!   * tree encoded in binary
-    //! * Encoded text
+    //!   * HuffTree encoded in binary
+    //! * Encoded bytes
     //! 
     //! # Examples
     //! ---
@@ -32,41 +35,36 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, text: &str) -> io
     //! use huff_encoding::file::write_as_hfe; 
     //! 
     //! fn main() -> std::io::Result<()> {
-    //!     write_as_hfe("C:\\", "foo", "Lorem ipsum")?;
-    //!     write_as_hfe("/home/user/", "bar", "dolor sit")?;
+    //!     write_hfe("C:\\", "foo", "Lorem ipsum")?;
+    //!     write_hfe("/home/user/", "bar", "dolor sit")?;
     //!     Ok(())
     //! }
     //! ```
 
     
-    fn inner(path: &Path, s: &str) -> io::Result<()>{
+    fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
         // construct huffman tree
-        let tree = HuffTree::from(s);
+        let tree = HuffTree::from(bytes);
         
-        // encode string and get file header
-        let mut h = get_header(&mut tree.to_bin());
-        let mut es = get_encoded_string(s, tree.char_codes());
+        // encode string, get file header and calc their padding bits
+        let h = get_header(&mut tree.to_bin());
+        let es = get_encoded_bytes(bytes, tree.byte_codes().clone());
+        let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
 
-        let padding_bits: u8 = {
-            let n = (8 - (h.len() + es.len()) % 8) as u8; 
-            match n{8 => 0, _ => n}
-        };
-
-        // header followed by encoded text, as bytes
-        let contents_buffer = {h.append(&mut es); h.to_bytes()};
-
-        // write padding bits, followed by the actual contents
-        let mut file = fs::File::create(path)?;
-        file.write_all(&[padding_bits])?;
-        file.write_all(&contents_buffer)
+        let file = fs::File::create(path)?;
+        let mut buf_writer = BufWriter::new(file);
+        buf_writer.write_all(&[padding_bits])?;
+        buf_writer.write_all(&h.to_bytes())?;
+        buf_writer.write_all(&es.to_bytes())
     }
     
-    // ad name and extension to dir path
+    // add name and extension to dir path
     let path = dir_path.as_ref().join(format!("{}.{}", file_name, EXTENSION));
 
-    inner(&path, text.as_ref())
+    inner(&path, bytes.as_ref())
 }
-
+/*
+//TODO: Optimize this A LOT
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
     //! Read text from a .hfe file
     //! 
@@ -84,8 +82,8 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
     //! use huff_encoding::file::{write_as_hfe, read_from_hfe}; 
     //! 
     //! fn main() -> std::io::Result<()> {
-    //!     write_as_hfe("/home/user/", "bar", "dolor sit")?;
-    //!     let foo = read_from_hfe("/home/user/bar.hfe")?;
+    //!     write_hfe("/home/user/", "bar", "dolor sit")?;
+    //!     let foo = read_hfe("/home/user/bar.hfe")?;
     //!     assert_eq!(&foo[..], "dolor sit");
     //!
     //!     Ok(())
@@ -136,34 +134,84 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
 
     return inner(&path.as_ref())
 }
-
+*/
 
 fn get_header(tree_bin: &mut BitVec) -> BitVec{
+    // get tree_bin.len() and add at the front of tree_bin
     let tree_len: u64 = tree_bin.len() as u64;
-
-    let mut bin_len = BitVec::new();
-    for i in (0..64).rev(){
-        let a = tree_len & (1 << i);
-        match a > 0{
-            true =>
-                bin_len.push(true),
-            false =>
-                bin_len.push(false)
-        }
-    }
+    let mut bin_len = BitVec::from_bytes(&tree_len.to_be_bytes());
+    
     bin_len.append(tree_bin);
     return bin_len;
 }
 
-fn get_encoded_string(s: &str, char_codes: &HashMap<char, BitVec>) -> BitVec{
-    let mut encoded_str = BitVec::new();
+fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
+    // allocate byte_codes onto the heap
+    let byte_codes = Box::new(byte_codes);
+
+    // divide the bytes into rations for threads to deal with 
+    let thread_count = num_cpus::get();
+    let mut bytes_left = bytes.len();
+    let bytes_per_thread = bytes_left / thread_count;
+    let mut current_byte = 0;
+
+    let mut byte_rations: Vec<Vec<u8>> = Vec::new();
+    if bytes_per_thread == 0{
+        byte_rations.push(bytes[..].to_vec());
+    }
+    else{
+        for _ in 0..thread_count{
+            if bytes_left < bytes_per_thread{
+                byte_rations.push(bytes[current_byte..].to_vec());
+                break;
+            }
     
-    for c in s.chars(){
-        let c_code = char_codes.get(&c).unwrap();
-        for b in c_code{
-            encoded_str.push(b);
+            byte_rations.push(bytes[current_byte..current_byte + bytes_per_thread].to_vec());
+            current_byte += bytes_per_thread;
+            bytes_left -= bytes_per_thread;
         }
     }
 
-    return encoded_str;
+    // spawn threads encoding given bytes in ration
+    let mut handles = vec![];
+    for ration in byte_rations{
+        let codes = byte_codes.clone();
+        let handle = thread::spawn(move || {
+            let mut encoded = BitVec::new();
+            for byte in ration{
+                let b_code = codes.get(&byte).unwrap();
+                for bit in b_code{
+                    encoded.push(bit);
+                }
+            }
+            encoded
+
+        });
+        handles.push(handle);
+    }
+
+    // concatenate every encoded ration into encoded_bytes
+    let mut encoded_bytes = BitVec::new();
+    let mut encoded_to_concat: Vec<BitVec> = Vec::new();
+
+    let mut i = 0;
+    for handle in handles{
+        if i == 0{
+            encoded_bytes = handle.join().unwrap();
+        }
+        else{
+            encoded_to_concat.push(handle.join().unwrap());
+        }
+        i += 1   
+    }
+    for encoded in encoded_to_concat.iter_mut(){
+        encoded_bytes.append(encoded);
+    }
+
+    return encoded_bytes;
+}
+
+fn calc_padding_bits(bit_num: usize) -> u8{
+    let n = (8 - bit_num % 8) as u8; 
+    match n{8 => 0, _ => n}
 }

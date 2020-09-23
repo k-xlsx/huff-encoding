@@ -3,9 +3,9 @@ pub mod file;
 mod structs;
 
 
-pub use structs::{
+pub use crate::structs::{
     HuffLeaf, 
     HuffBranch, 
     HuffTree, 
-    chars_to_freq
+    ByteFreqs,
 };

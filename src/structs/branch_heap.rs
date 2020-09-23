@@ -1,37 +1,37 @@
-use std::collections::HashMap;
 use std::collections::BinaryHeap;
-use crate::structs::{HuffBranch, HuffLeaf};
+
+use crate::{HuffBranch, HuffLeaf, ByteFreqs};
 
 
 
-/// A BinaryHeap of HuffBranches, ordered by frequency(greatest to lowest), 
+/// A BinaryHeap of HuffBranches, ordered by frequency (greatest to lowest), 
 /// used to grow the HuffTree.
 /// 
 /// Can be either initialized empty, or made from:
 /// ```
-/// HashMap<char, usize>
+/// HashMap<u8, usize>
 /// ```
 pub struct HuffBranchHeap{
     heap: BinaryHeap<HuffBranch>,
 }
 
 impl HuffBranchHeap{
-    pub fn from(cfg: &HashMap<char, usize>) -> HuffBranchHeap{
-        //! Creates a HuffBranchHeap from a HashMap of chars as
-        //! keys and their frequencies(usize) as values.
+    pub fn from(byte_freqs: &ByteFreqs) -> HuffBranchHeap{
+        //! Creates a HuffBranchHeap from a HashMap of u8 as
+        //! keys and their frequencies (usize) as values.
         //! 
         //! # Example
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::{HuffBranchHeap, chars_to_freq}
+        //! use huff_encoding::{HuffBranchHeap, get_byte_freqs}
         //! 
-        //! let foo = HuffBranchHeap::from(get_chars_to_freq("Hello, World!"));
+        //! let foo = HuffBranchHeap::from(get_byte_freqs("Hello, World!".as_bytes()));
         //! ```
 
 
         let mut leaf_vec = HuffBranchHeap::new();
 
-        leaf_vec.build(cfg);
+        leaf_vec.build(byte_freqs);
 
         return leaf_vec;
     }
@@ -42,7 +42,7 @@ impl HuffBranchHeap{
         //! # Example
         //! ---
         //! ```
-        //! use huff_encoding::huff_structs::HuffBranchHeap
+        //! use huff_encoding::HuffBranchHeap
         //! 
         //! let foo = HuffBranchHeap::new();
         //! ```
@@ -79,9 +79,9 @@ impl HuffBranchHeap{
     }
 
 
-    fn build(&mut self, cfg: &HashMap<char, usize>){
-        for (c, f) in cfg{
-            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*c), *f), None);
+    fn build(&mut self, byte_freqs: &ByteFreqs){
+        for (b, f) in byte_freqs.iter(){
+            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*b), *f), None);
     
             self.push(new_branch);
         }
