@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::thread;
 
+use crate::utils::ration_vec;
+
 
 
 #[derive(Debug)]
@@ -9,6 +11,16 @@ pub struct ByteFreqs{
 } 
 
 impl ByteFreqs{
+    /// Count all bytes in given slice and organize them
+    /// into ByteFreqs (internally a Hashmap<u8, usize>)
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::ByteFreqs;
+    /// 
+    /// let foo = ByteFreqs::from("bar".as_bytes());
+    /// ```
     pub fn from(bytes: &[u8]) -> ByteFreqs{
         // count bytes into an array
         let mut byte_freqs: [usize; 256] = [0;256];
@@ -30,30 +42,21 @@ impl ByteFreqs{
         };
     }
 
+    /// Count all bytes in given slice and organize them
+    /// into ByteFreqs (internally a Hashmap<u8, usize>)
+    ///   
+    /// ### Uses multiple threads to count bytes faster 
+    /// ---
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::ByteFreqs;
+    /// 
+    /// let foo = ByteFreqs::from("bar".as_bytes());
+    /// ```
     pub fn threaded_from(bytes: &[u8]) -> ByteFreqs{
         // divide the bytes into rations per thread
-        let thread_count = num_cpus::get();
-    
-        let mut bytes_left = bytes.len();
-        let bytes_per_thread = bytes_left / thread_count;
-        let mut current_byte = 0;
-    
-        let mut byte_rations: Vec<Vec<u8>> = Vec::new();
-        if bytes_per_thread == 0{
-            byte_rations.push(bytes[..].to_vec());
-        }
-        else{
-            for _ in 0..thread_count{
-                if bytes_left < bytes_per_thread{
-                    byte_rations.push(bytes[current_byte..].to_vec());
-                    break;
-                }
-        
-                byte_rations.push(bytes[current_byte..current_byte + bytes_per_thread].to_vec());
-                current_byte += bytes_per_thread;
-                bytes_left -= bytes_per_thread;
-            }
-        }
+        let byte_rations = ration_vec(bytes.to_vec(), num_cpus::get());
         
         // create ByteFreqs from every ration
         let mut handles = vec![];
@@ -82,27 +85,36 @@ impl ByteFreqs{
     }
 
 
+    /// Return a reference to the frequency corresponding
+    /// to the given byte.
     pub fn get(&self, b: &u8) -> Option<&usize>{
         return self.freqs.get(b);
     }
 
+    /// Return a mutable reference to the frequency corresponding
+    /// to the given byte.
     pub fn get_mut(&mut self, b:&u8) -> Option<&mut usize>{
         return self.freqs.get_mut(b);
     }
 
+    /// Return the length of the wrapped Hashmap<u8; usize>.
     pub fn len(&self) -> usize{
         return self.freqs.len();
     }
 
+
+    /// Return an Iterator over the contents of ByteFreqs
     pub fn iter(&self) -> std::collections::hash_map::Iter<'_, u8, usize>{
         return self.freqs.iter();
     }
 
+    /// Return a mutable Iterator over the contents of ByteFreqs
     pub fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, u8, usize>{
         return self.freqs.iter_mut();
     }
 
-  
+
+    /// Add another ByteFreqs to self
     pub fn add_bfreq(&mut self, other: &ByteFreqs){
         for (b, f) in other.iter(){
             let self_entry = self.get_mut(b);

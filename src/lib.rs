@@ -1,5 +1,6 @@
 pub mod file;
 
+mod utils;
 mod structs;
 
 

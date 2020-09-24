@@ -8,40 +8,38 @@ use io::{BufWriter, Write};
 use bit_vec::BitVec;
 
 use crate::HuffTree;
-
+use crate::utils::ration_vec;
 
 
 const EXTENSION: &str = "hfe";
 
 
 
+/// Encode the string slice as Huffman code and write it to
+/// a .hfe file with the given name in the given dir_path
+/// 
+/// ## .hfe file structure
+/// ---
+/// * Byte containing the number of padding bits
+///   * first 4 digits -> header padding bits
+///   * next 4 digits -> encoded contents padding bits
+/// * Header comprised of:
+///   * 8 byte header length
+///   * HuffTree encoded in binary
+/// * Encoded bytes
+/// 
+/// # Examples
+/// ---
+/// ```
+/// use huff_encoding::file::write_as_hfe; 
+/// 
+/// fn main() -> std::io::Result<()> {
+///     write_hfe("C:\\", "foo", "Lorem ipsum")?;
+///     write_hfe("/home/user/", "bar", "dolor sit")?;
+///     Ok(())
+/// }
+/// ```
 pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> io::Result<()>{
-    //! Encode the string slice as Huffman code and write it to
-    //! a .hfe file with the given name in the given dir_path
-    //! 
-    //! ## .hfe file structure
-    //! ---
-    //! * Byte containing the number of padding bits
-    //!   * first 4 digits -> header padding bits
-    //!   * next 4 digits -> encoded contents padding bits
-    //! * Header comprised of:
-    //!   * 8 byte header length
-    //!   * HuffTree encoded in binary
-    //! * Encoded bytes
-    //! 
-    //! # Examples
-    //! ---
-    //! ```
-    //! use huff_encoding::file::write_as_hfe; 
-    //! 
-    //! fn main() -> std::io::Result<()> {
-    //!     write_hfe("C:\\", "foo", "Lorem ipsum")?;
-    //!     write_hfe("/home/user/", "bar", "dolor sit")?;
-    //!     Ok(())
-    //! }
-    //! ```
-
-    
     fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
         // construct huffman tree
         let tree = HuffTree::from(bytes);
@@ -51,6 +49,7 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
         let es = get_encoded_bytes(bytes, tree.byte_codes().clone());
         let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
 
+    
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
         buf_writer.write_all(&[padding_bits])?;
@@ -63,6 +62,7 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
 
     inner(&path, bytes.as_ref())
 }
+
 /*
 //TODO: Optimize this A LOT
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
@@ -136,6 +136,8 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<String>{
 }
 */
 
+/// Return a tree_bin preceded by its length
+/// to be used as a .hfe file header.
 fn get_header(tree_bin: &mut BitVec) -> BitVec{
     // get tree_bin.len() and add at the front of tree_bin
     let tree_len: u64 = tree_bin.len() as u64;
@@ -145,32 +147,13 @@ fn get_header(tree_bin: &mut BitVec) -> BitVec{
     return bin_len;
 }
 
+/// Return given bytes encoded with the given byte_codes HashMap
 fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
     // allocate byte_codes onto the heap
     let byte_codes = Box::new(byte_codes);
 
     // divide the bytes into rations for threads to deal with 
-    let thread_count = num_cpus::get();
-    let mut bytes_left = bytes.len();
-    let bytes_per_thread = bytes_left / thread_count;
-    let mut current_byte = 0;
-
-    let mut byte_rations: Vec<Vec<u8>> = Vec::new();
-    if bytes_per_thread == 0{
-        byte_rations.push(bytes[..].to_vec());
-    }
-    else{
-        for _ in 0..thread_count{
-            if bytes_left < bytes_per_thread{
-                byte_rations.push(bytes[current_byte..].to_vec());
-                break;
-            }
-    
-            byte_rations.push(bytes[current_byte..current_byte + bytes_per_thread].to_vec());
-            current_byte += bytes_per_thread;
-            bytes_left -= bytes_per_thread;
-        }
-    }
+    let byte_rations = ration_vec(bytes.to_vec(), num_cpus::get());
 
     // spawn threads encoding given bytes in ration
     let mut handles = vec![];
@@ -211,7 +194,9 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
     return encoded_bytes;
 }
 
-fn calc_padding_bits(bit_num: usize) -> u8{
-    let n = (8 - bit_num % 8) as u8; 
+/// Return how many bits will be used as padding
+/// with given the bit_count.
+fn calc_padding_bits(bit_count: usize) -> u8{
+    let n = (8 - bit_count % 8) as u8; 
     match n{8 => 0, _ => n}
 }

@@ -22,18 +22,16 @@ impl PartialEq for HuffLeaf {
 }
 
 impl HuffLeaf{
+    /// Initialize the HuffLeaf.
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::HuffLeaf;
+    /// 
+    /// let foo = HuffLeaf::new(0xc4, 3);
+    /// ```
     pub fn new(byte: Option<u8>, frequency: usize) -> HuffLeaf{
-        //! Initialize the HuffLeaf.
-        //! 
-        //! # Example
-        //! ---
-        //! ```
-        //! use huff_encoding::HuffLeaf;
-        //! 
-        //! let foo = HuffLeaf::new(0xc4, 3);
-        //! ```
-
-
         let huff_leaf = HuffLeaf{
             byte: byte,
             frequency: frequency,
@@ -43,44 +41,25 @@ impl HuffLeaf{
         return huff_leaf;
     }
 
-    
+
+    /// Returns the stored byte.
     pub fn byte(&self) -> Option<u8>{
-        //! Returns the stored byte.
-
-
         return self.byte;
     }
     
+    /// Returns the stored frequency.
     pub fn frequency(&self) -> usize{
-        //! Returns the stored frequency.
-
-
         return self.frequency
     }
     
+    /// Returns a reference to the stored code.
     pub fn code(&self) -> Option<&BitVec>{
-        //! Returns a reference to the stored code.
-        
-
         return self.code.as_ref();
     }
 
 
-    pub fn set_code(&mut self, code: BitVec){
-        //! Sets the given BitVec as code.
-        //! 
-        //! # Examples
-        //! ---
-        //! ```
-        //! use huff_encoding::HuffLeaf;
-        //! 
-        //! let b = bit_vec::BitVec::new();
-        //! b.push(true)
-        //! 
-        //! foo.set_code(b);
-        //! ```
-
-        
+    /// Sets the given BitVec as code.
+    pub fn set_code(&mut self, code: BitVec){    
         self.code = Some(code);
     }
 }

@@ -32,37 +32,34 @@ pub struct HuffTree{
 }
 
 impl HuffTree{
+    /// Initialize the tree from given bytes
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::HuffTree;
+    /// 
+    /// let foo = HuffTree::from("bar".as_bytes());
+    /// ```
     pub fn from(bytes: &[u8]) -> HuffTree{
-        //! Initialize the tree from given bytes
-        //! 
-        //! # Examples
-        //! ---
-        //! ```
-        //! use huff_encoding::HuffTree;
-        //! 
-        //! let foo = HuffTree::from("bar".as_bytes());
-        //! ```
-
         let mut tree = HuffTree::new(None);
         tree.grow(&ByteFreqs::threaded_from(&bytes));
         tree
     }
 
+    /// Initializes a HuffTree with the given root.
+    /// 
+    /// Can be grown later with .grow or .grow_ctf
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::HuffTree;
+    /// 
+    /// let foo = HuffTree::new();
+    /// foo.grow("Hello, World/");
+    /// ```
     pub fn new(root: Option<Rc<RefCell<HuffBranch>>>) -> HuffTree{
-        //! Initializes a HuffTree with the given root.
-        //! 
-        //! Can be grown later with .grow or .grow_ctf
-        //! 
-        //! # Examples
-        //! ---
-        //! ```
-        //! use huff_encoding::HuffTree;
-        //! 
-        //! let foo = HuffTree::new();
-        //! foo.grow("Hello, World!");
-        //! ```
-
-
         let huff_tree = HuffTree{
             root: root,
             byte_codes: HashMap::new(),
@@ -71,30 +68,28 @@ impl HuffTree{
         return huff_tree;
     }
 
+    /// Returns coded_chars read from a tree represented in binary
+    /// (BitVec)
+    /// 
+    /// To get a tree as binary use as_bin.
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::HuffTree;
+    /// 
+    /// let foo = HuffTree::from("abbccc".as_bytes());
+    /// let bar = HuffTree::char_codes_from_bin(&foo.as_bin());
+    /// 
+    /// print!("{:?}", bar)
+    /// // Prints something like:
+    /// // {
+    /// //      10: 97,
+    /// //      0:  99,
+    /// //      11: 98,
+    /// // }
+    /// ```
     pub fn coded_chars_from_bin(bin: &BitVec) -> HashMap<BitVec, u8>{
-        //! Returns coded_chars read from a tree represented in binary
-        //! (BitVec)
-        //! 
-        //! To get a tree as binary use as_bin.
-        //! 
-        //! # Examples
-        //! ---
-        //! ```
-        //! use huff_encoding::huff_structs::HuffTree;
-        //! 
-        //! let foo = HuffTree::from("abbccc".as_bytes());
-        //! let bar = HuffTree::char_codes_from_bin(&foo.as_bin());
-        //! 
-        //! print!("{:?}", bar)
-        //! // Prints something like:
-        //! // {
-        //! //      10: 97,
-        //! //      0:  99,
-        //! //      11: 98,
-        //! // }
-        //! ```
-        
-
         fn revert_branch_code(branch_code: &mut BitVec, prev_branch: bool){
             match prev_branch{
                 // prev branch was joint -> you're its first child
@@ -174,10 +169,8 @@ impl HuffTree{
     }
 
 
+    /// Returns the root of the tree.
     pub fn root(&self) -> Option<&Rc<RefCell<HuffBranch>>>{
-        //! Returns the root of the tree.
-        
-
         match self.root{
             Some(_) =>
                 return self.root.as_ref(),
@@ -186,56 +179,49 @@ impl HuffTree{
         }
     }
 
+    /// Returns reference to a HashMap of bytes with their
+    /// corresponding Huffman codes.
     pub fn byte_codes(&self) -> &HashMap<u8, BitVec>{
-        //! Returns reference to a HashMap of bytes with their
-        //! corresponding Huffman codes.
-
-
         return &self.byte_codes;
     }
 
+    /// Returns a mutable reference HashMaps of bytes with their
+    /// corresponding Huffman codes.
     pub fn byte_codes_mut(&mut self) -> &mut HashMap<u8, BitVec>{
-        //! Returns a mutable reference HashMaps of bytes with their
-        //! corresponding Huffman codes.
-
-
         return &mut self.byte_codes;
     }
 
-
+    /// Returns the tree represented in binary
+    /// to be stored as a header to an encoded file:
+    /// 
+    /// 
+    /// * 0 being a byte branch (after a 0 you can expect a byte of data)
+    /// * 1 being a joint branch.
+    /// 
+    /// To decode use:
+    /// ```
+    /// HuffTree::char_codes_from_bin(bin);
+    /// ```
+    /// 
+    /// ---
+    /// ## DOES NOT STORE FREQUENCIES.
+    /// It's only meant to construct a same
+    /// shaped tree for decoding a file.
+    /// 
+    /// ---
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::huff_structs::HuffTree;
+    /// 
+    /// let foo = HuffTree::from("abbccc".as_bytes());
+    /// 
+    /// print!("{:?}", &foo.as_bit_vec()[..])
+    /// // outputs:
+    /// // 10011000111001100001001100010
+    /// ```
     pub fn to_bin(&self) -> BitVec{
-        //! Returns the tree represented in binary
-        //! to be stored as a header to an encoded file:
-        //! 
-        //! 
-        //! * 0 being a byte branch (after a 0 you can expect a byte of data)
-        //! * 1 being a joint branch.
-        //! 
-        //! To decode use:
-        //! ```
-        //! HuffTree::char_codes_from_bin(bin);
-        //! ```
-        //! 
-        //! ---
-        //! ## DOES NOT STORE FREQUENCIES.
-        //! It's only meant to construct a same
-        //! shaped tree for decoding a file.
-        //! 
-        //! ---
-        //! 
-        //! # Examples
-        //! ---
-        //! ```
-        //! use huff_encoding::huff_structs::HuffTree;
-        //! 
-        //! let foo = HuffTree::from("abbccc".as_bytes());
-        //! 
-        //! print!("{:?}", &foo.as_bit_vec()[..])
-        //! // outputs:
-        //! // 10011000111001100001001100010
-        //! ```
-
-
         let mut bit_vec = BitVec::new();
         HuffTree::set_tree_as_bin(&mut bit_vec, self.root().unwrap().borrow());
         
@@ -243,13 +229,11 @@ impl HuffTree{
     }
 
 
+    /// Grows the tree from the given
+    /// ```
+    /// &ByteFreqs
+    /// ```
     pub fn grow(&mut self, byte_freqs: &ByteFreqs){
-        //! Grows the tree from the given
-        //! ```
-        //! &ByteFreqs
-        //! ```
-
-
         assert!(byte_freqs.len() > 0, "byte_freqs is empty");
 
         
@@ -286,10 +270,8 @@ impl HuffTree{
     }
 
 
+    /// Recursively insert bytes to codes into the given byte_codes HashMap<u8, BitVec>
     fn set_byte_codes(&self, byte_codes: &mut HashMap<u8, BitVec>, root: Ref<HuffBranch>){
-        //! Recursively insert bytes to codes into the given byte_codes HashMap<u8, BitVec>
-
-
         let root = root;
         let children = root.children();
 
@@ -316,10 +298,8 @@ impl HuffTree{
 
     }
 
+    /// Recursively set codes on every branch
     fn set_codes_in_branches(root: RefMut<HuffBranch>){
-        //! Recursively set codes on every branch
-
-
         let root = root;
         let children = root.children();
 
@@ -338,13 +318,11 @@ impl HuffTree{
         }
     }
 
+    /// Recursively push bits to the given BitVec
+    /// depending on the branches you encounter:
+    /// * 0 being a byte branch (followed by a byte of data, duh)
+    /// * 1 being a joint branch
     fn set_tree_as_bin(tree_bvec: &mut BitVec, root: Ref<HuffBranch>){
-        //! Recursively push bits to the given BitVec
-        //! depending on the branches you encounter:
-        //! * 0 being a byte branch (followed by a byte of data, duh)
-        //! * 1 being a joint branch
-
-
         let root = root;
         let children = root.children();
 

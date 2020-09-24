@@ -16,19 +16,17 @@ pub struct HuffBranchHeap{
 }
 
 impl HuffBranchHeap{
+    /// Creates a HuffBranchHeap from a HashMap of u8 as
+    /// keys and their frequencies (usize) as values.
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::{HuffBranchHeap, get_byte_freqs}
+    /// 
+    /// let foo = HuffBranchHeap::from(get_byte_freqs("Hello, World/".as_bytes()));
+    /// ```
     pub fn from(byte_freqs: &ByteFreqs) -> HuffBranchHeap{
-        //! Creates a HuffBranchHeap from a HashMap of u8 as
-        //! keys and their frequencies (usize) as values.
-        //! 
-        //! # Example
-        //! ---
-        //! ```
-        //! use huff_encoding::{HuffBranchHeap, get_byte_freqs}
-        //! 
-        //! let foo = HuffBranchHeap::from(get_byte_freqs("Hello, World!".as_bytes()));
-        //! ```
-
-
         let mut leaf_vec = HuffBranchHeap::new();
 
         leaf_vec.build(byte_freqs);
@@ -36,18 +34,16 @@ impl HuffBranchHeap{
         return leaf_vec;
     }
 
+    /// Initializes an empty HuffBranchHeap.
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_encoding::HuffBranchHeap
+    /// 
+    /// let foo = HuffBranchHeap::new();
+    /// ```
     pub fn new() -> HuffBranchHeap{
-        //! Initializes an empty HuffBranchHeap.
-        //! 
-        //! # Example
-        //! ---
-        //! ```
-        //! use huff_encoding::HuffBranchHeap
-        //! 
-        //! let foo = HuffBranchHeap::new();
-        //! ```
-
-
         let leaf_vec = HuffBranchHeap{
             heap: BinaryHeap::new(),
         };
@@ -56,25 +52,18 @@ impl HuffBranchHeap{
     }
 
 
+    /// Returns the length of the heap.
     pub fn len(&self) -> usize{
-        //! Returns the length of the heap.
-
-
         return self.heap.len();
     }
 
-    
+    /// Pushes the branch onto the heap.
     pub fn push(&mut self, branch: HuffBranch){
-        //! Pushes the branch onto the heap.
-
-
         self.heap.push(branch);
     }
 
+    /// Pops a branch (which is always the lowest frequency one) of the heap.
     pub fn pop_min(&mut self) -> HuffBranch{
-        //! Pops a branch (which is always the lowest frequency one) of the heap.
-
-
         return self.heap.pop().unwrap();
     }
 
