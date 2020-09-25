@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 
@@ -12,7 +11,7 @@ use crate::HuffLeaf;
 /// 
 /// Stores its children as:
 /// ```
-/// [Option<Rc<RefCell<HuffBranch>>>; 2]
+/// [Option<Box<RefCell<HuffBranch>>>; 2]
 /// ```
 /// Also stores its position in the parent's children Array, and 
 /// data represented as a HuffLeaf.
@@ -21,7 +20,7 @@ pub struct HuffBranch{
     leaf: HuffLeaf,
 
     pos_in_parent: Option<u8>,
-    children: Option<[Rc<RefCell<HuffBranch>>; 2]>
+    children: Option<[Box<RefCell<HuffBranch>>; 2]>
 }
 
 impl Ord for HuffBranch {
@@ -52,7 +51,7 @@ impl HuffBranch{
     /// 
     /// let foo = HuffBranch::new(HuffLeaf::new(0xc4, 3), [None, None]);
     /// ```
-    pub fn new(leaf: HuffLeaf, children: Option<[Rc<RefCell<HuffBranch>>; 2]>) -> HuffBranch{
+    pub fn new(leaf: HuffLeaf, children: Option<[Box<RefCell<HuffBranch>>; 2]>) -> HuffBranch{
         let huff_branch = HuffBranch{
             leaf: leaf,
 
@@ -74,7 +73,7 @@ impl HuffBranch{
     }
 
     /// Returns the stored Array of the branch's children
-    pub fn children(&self) -> Option<&[Rc<RefCell<HuffBranch>>; 2]>{
+    pub fn children(&self) -> Option<&[Box<RefCell<HuffBranch>>; 2]>{
         match self.children{
             None => 
                 return None,
@@ -86,7 +85,7 @@ impl HuffBranch{
 
 
     /// Sets the given children array
-    pub fn set_children(&mut self, children: Option<[Rc<RefCell<HuffBranch>>; 2]>){
+    pub fn set_children(&mut self, children: Option<[Box<RefCell<HuffBranch>>; 2]>){
         self.children = children;
     }
 

@@ -1,7 +1,9 @@
-
-/// Try to ration a Vec<T> into ration_count sized rations.
-/// If cannot ration equally, add the remainder into the last ration.
-pub fn ration_vec<T: Clone>(vec: Vec<T>, ration_count: usize) -> Vec<Vec<T>>{
+/// Ration a Vec<T> into ration_count sized rations.
+/// 
+/// Edge cases:
+/// * If cannot ration equally -> adds the remainder into the last ration.
+/// * If Vec is to small -> returns just one ration with the whole Vec in it.
+pub fn ration_vec<T: Clone>(vec: &Vec<T>, ration_count: usize) -> Vec<Vec<T>>{
     let mut elements_left = vec.len();
     let elements_per_ration = elements_left / ration_count;
     let mut current_element = 0;

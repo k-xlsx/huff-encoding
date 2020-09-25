@@ -1,4 +1,5 @@
 # huffman-encoding
+
 **WORK IN PROGRESS**
 
 An implementation of the Huffman Encoding algorithm in Rust.

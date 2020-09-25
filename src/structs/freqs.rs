@@ -56,7 +56,7 @@ impl ByteFreqs{
     /// ```
     pub fn threaded_from(bytes: &[u8]) -> ByteFreqs{
         // divide the bytes into rations per thread
-        let byte_rations = ration_vec(bytes.to_vec(), num_cpus::get());
+        let byte_rations = ration_vec(&bytes.to_vec(), num_cpus::get());
         
         // create ByteFreqs from every ration
         let mut handles = vec![];

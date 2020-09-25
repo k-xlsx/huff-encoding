@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
 
@@ -27,7 +26,7 @@ use crate::structs::branch_heap::HuffBranchHeap;
 /// 
 #[derive(Debug)]
 pub struct HuffTree{
-    root: Option<Rc<RefCell<HuffBranch>>>,
+    root: Option<Box<RefCell<HuffBranch>>>,
     byte_codes: HashMap<u8, BitVec>,
 }
 
@@ -59,7 +58,7 @@ impl HuffTree{
     /// let foo = HuffTree::new();
     /// foo.grow("Hello, World/");
     /// ```
-    pub fn new(root: Option<Rc<RefCell<HuffBranch>>>) -> HuffTree{
+    pub fn new(root: Option<Box<RefCell<HuffBranch>>>) -> HuffTree{
         let huff_tree = HuffTree{
             root: root,
             byte_codes: HashMap::new(),
@@ -170,7 +169,7 @@ impl HuffTree{
 
 
     /// Returns the root of the tree.
-    pub fn root(&self) -> Option<&Rc<RefCell<HuffBranch>>>{
+    pub fn root(&self) -> Option<&Box<RefCell<HuffBranch>>>{
         match self.root{
             Some(_) =>
                 return self.root.as_ref(),
@@ -251,13 +250,13 @@ impl HuffTree{
                     None,
                     min.leaf().frequency() + next_min.leaf().frequency()
                 ),
-                Some([Rc::new(RefCell::new(min)), Rc::new(RefCell::new(next_min))])
+                Some([Box::new(RefCell::new(min)), Box::new(RefCell::new(next_min))])
             );
             branch_heap.push(branch);
         }
 
         // last branch in branch_heap is root
-        let root = Some(Rc::new(RefCell::new(branch_heap.pop_min())));
+        let root = Some(Box::new(RefCell::new(branch_heap.pop_min())));
         self.root = root;
 
         // set codes for all branches recursively
