@@ -49,7 +49,6 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
         let es = get_encoded_bytes(bytes, tree.byte_codes().clone());
         let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
 
-        
         // TODO: speed up to_bytes()
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
@@ -110,7 +109,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
             hb
         };
         let coded_bytes = HuffTree::coded_chars_from_bin(&header);
-        
+
         let encoded_file = {
             let mut fb = BitVec::from_bytes(&raw_bytes[5 + header_len as usize..]);
             pop_padding_bits(&mut fb, file_padding_bits);
@@ -180,18 +179,14 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
     let mut encoded_bytes = BitVec::new();
     let mut encoded_to_concat: Vec<BitVec> = Vec::new();
 
-    let mut i = 0;
+
     for handle in handles{
-        if i == 0{
-            encoded_bytes = handle.join().unwrap();
-        }
-        else{
-            encoded_to_concat.push(handle.join().unwrap());
-        }
-        i += 1   
+        encoded_to_concat.push(handle.join().unwrap());
     }
     for encoded in encoded_to_concat.iter_mut(){
-        encoded_bytes.append(encoded);
+        for bit in encoded.iter(){
+            encoded_bytes.push(bit);
+        }
     }
 
     return encoded_bytes;
