@@ -26,7 +26,7 @@ impl HuffBranchHeap{
     /// 
     /// let foo = HuffBranchHeap::from(get_byte_freqs("Hello, World/".as_bytes()));
     /// ```
-    pub fn from(byte_freqs: &ByteFreqs) -> HuffBranchHeap{
+    pub fn from_byte_freqs(byte_freqs: &ByteFreqs) -> HuffBranchHeap{
         let mut leaf_vec = HuffBranchHeap::new();
 
         leaf_vec.build(byte_freqs);

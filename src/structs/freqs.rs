@@ -21,7 +21,7 @@ impl ByteFreqs{
     /// 
     /// let foo = ByteFreqs::from("bar".as_bytes());
     /// ```
-    pub fn from(bytes: &[u8]) -> ByteFreqs{
+    pub fn from_bytes(bytes: &[u8]) -> ByteFreqs{
         // count bytes into an array
         let mut byte_freqs: [usize; 256] = [0;256];
         for b in bytes{
@@ -54,7 +54,7 @@ impl ByteFreqs{
     /// 
     /// let foo = ByteFreqs::from("bar".as_bytes());
     /// ```
-    pub fn threaded_from(bytes: &[u8]) -> ByteFreqs{
+    pub fn threaded_from_bytes(bytes: &[u8]) -> ByteFreqs{
         // divide the bytes into rations per thread
         let byte_rations = ration_vec(&bytes.to_vec(), num_cpus::get());
 
@@ -62,7 +62,7 @@ impl ByteFreqs{
         let mut handles = vec![];
         for ration in byte_rations{
             let handle = thread::spawn(move || {
-                ByteFreqs::from(&ration)
+                ByteFreqs::from_bytes(&ration)
             });
             handles.push(handle);
         }

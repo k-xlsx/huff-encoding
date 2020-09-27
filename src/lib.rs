@@ -1,6 +1,6 @@
 pub mod file;
 
-pub mod utils;
+mod utils;
 mod structs;
 
 

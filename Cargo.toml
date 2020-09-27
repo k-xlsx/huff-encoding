@@ -14,5 +14,5 @@ path = "src/main.rs"
 
 
 [dependencies]
-bit-vec = "0.6.2"
+bitvec = "0.19.2"
 num_cpus = "1.13.0"

@@ -1,4 +1,4 @@
-use bit_vec::BitVec;
+use bitvec::prelude::*;
 
 
 
@@ -12,7 +12,7 @@ use bit_vec::BitVec;
 pub struct HuffLeaf{
     byte: Option<u8>,
     frequency: usize,
-    code: Option<BitVec>,
+    code: Option<BitVec::<LocalBits, usize>>,
 }
 
 impl PartialEq for HuffLeaf {

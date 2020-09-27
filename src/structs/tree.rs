@@ -1,7 +1,7 @@
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
 
-use bit_vec::BitVec;
+use bitvec::prelude::*;
 
 use crate::{HuffBranch, HuffLeaf, ByteFreqs};
 use crate::structs::branch_heap::HuffBranchHeap;
@@ -27,7 +27,7 @@ use crate::structs::branch_heap::HuffBranchHeap;
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<Box<RefCell<HuffBranch>>>,
-    byte_codes: HashMap<u8, BitVec>,
+    byte_codes: HashMap<u8, BitVec::<LocalBits, usize>>,
 }
 
 impl HuffTree{
@@ -40,9 +40,9 @@ impl HuffTree{
     /// 
     /// let foo = HuffTree::from("bar".as_bytes());
     /// ```
-    pub fn from(bytes: &[u8]) -> HuffTree{
+    pub fn from_bytes(bytes: &[u8]) -> HuffTree{
         let mut tree = HuffTree::new(None);
-        tree.grow(&ByteFreqs::threaded_from(&bytes));
+        tree.grow(&ByteFreqs::threaded_from_bytes(&bytes));
         tree
     }
 
@@ -88,7 +88,7 @@ impl HuffTree{
     /// //      11: 98,
     /// // }
     /// ```
-    pub fn coded_chars_from_bin(bin: &BitVec) -> HashMap<BitVec, u8>{
+    pub fn coded_chars_from_bin(bin: &BitVec<LocalBits, u8>) -> HashMap<BitVec, u8>{
         fn revert_branch_code(branch_code: &mut BitVec, prev_branch: bool){
             match prev_branch{
                 // prev branch was joint -> you're its first child
@@ -110,30 +110,30 @@ impl HuffTree{
         let mut coded_bytes: HashMap<BitVec, u8> = HashMap::new();
 
         // current branch code and previous branch bit
-        let mut branch_code = BitVec::new();
+        let mut branch_code = BitVec::<LocalBits, usize>::new();
         let mut prev_branch = true;
     
         let mut read_byte = false;
         let mut read_byte_counter = 0;
 
-        let mut byte_bvec = BitVec::new();
+        let mut byte_bit_vec = BitVec::<LocalBits, u8>::new();
 
         let bin_iter = bin.iter().skip(match bin[0]{true => 1, false => 0});
         for b in bin_iter{
             match read_byte{
                 // read byte
                 true => {
-                    byte_bvec.push(b);
+                    byte_bit_vec.push(*b);
                     read_byte_counter += 1;
 
                     // when read all byte bits.
                     if read_byte_counter == 8{
-                        let byte = &byte_bvec.to_bytes()[0];
+                        let byte = &byte_bit_vec.into_vec()[0];
                                 
                         // reset reading byte params
                         read_byte = false;
                         read_byte_counter = 0;
-                        byte_bvec = BitVec::new();
+                        byte_bit_vec = BitVec::new();
             
                         coded_bytes.insert({
                             revert_branch_code(&mut branch_code, prev_branch);
@@ -220,9 +220,43 @@ impl HuffTree{
     /// // outputs:
     /// // 10011000111001100001001100010
     /// ```
-    pub fn to_bin(&self) -> BitVec{
-        let mut bit_vec = BitVec::new();
-        HuffTree::set_tree_as_bin(&mut bit_vec, self.root().unwrap().borrow());
+    pub fn to_bin(&self) -> BitVec<LocalBits, u8>{
+        /// Recursively push bits to the given BitVec
+        /// depending on the branches you encounter:
+        /// * 0 being a byte branch (followed by a byte of data, duh)
+        /// * 1 being a joint branch
+        fn set_tree_as_bin(tree_bvec: &mut BitVec<LocalBits, u8>, root: Ref<HuffBranch>){
+            let root = root;
+            let children = root.children();
+
+            match children{
+                // children -> joint branch
+                Some(_) =>{
+                    // 1 means joint branch
+                    tree_bvec.push(true);
+
+                    // call set_bin on children
+                    for child in children.unwrap().iter(){
+                        set_tree_as_bin(tree_bvec, child.borrow());
+                    }
+                }
+                // no children -> byte branch
+                None =>{
+                    // 0 means byte branch
+                    tree_bvec.push(false);
+
+                    let byte = root.leaf().byte().unwrap();
+                    
+                    let byte_bvec = BitVec::<LocalBits, u8>::from_vec([byte].to_vec());
+                    for byte in byte_bvec{
+                        tree_bvec.push(byte);
+                    }
+                }
+            }
+        }
+
+        let mut bit_vec: BitVec<LocalBits, u8> = BitVec::new();
+        set_tree_as_bin(&mut bit_vec, self.root().unwrap().borrow());
         
         return bit_vec;
     }
@@ -236,7 +270,7 @@ impl HuffTree{
         assert!(byte_freqs.len() > 0, "byte_freqs is empty");
 
         
-        let mut branch_heap = HuffBranchHeap::from(&byte_freqs);
+        let mut branch_heap = HuffBranchHeap::from_byte_freqs(&byte_freqs);
 
         while branch_heap.len() > 1{
             let mut min = branch_heap.pop_min();
@@ -279,10 +313,10 @@ impl HuffTree{
                 for child in children.unwrap().iter(){
                     let branch = child.borrow();
                     let leaf = branch.leaf();
-                    let b = leaf.byte();
-                    match b{
+                    let byte = leaf.byte();
+                    match byte{
                         Some(_) =>{
-                            byte_codes.insert(b.unwrap(), leaf.code().unwrap().clone());
+                            byte_codes.insert(byte.unwrap(), leaf.code().unwrap().clone());
                         }
                         None =>{
                             self.set_byte_codes(byte_codes, child.borrow());
@@ -314,40 +348,6 @@ impl HuffTree{
             }
             None =>
                 (),
-        }
-    }
-
-    /// Recursively push bits to the given BitVec
-    /// depending on the branches you encounter:
-    /// * 0 being a byte branch (followed by a byte of data, duh)
-    /// * 1 being a joint branch
-    fn set_tree_as_bin(tree_bvec: &mut BitVec, root: Ref<HuffBranch>){
-        let root = root;
-        let children = root.children();
-
-        match children{
-            // children -> joint branch
-            Some(_) =>{
-                // 1 means joint branch
-                tree_bvec.push(true);
-
-                // call set_bin on children
-                for child in children.unwrap().iter(){
-                    HuffTree::set_tree_as_bin(tree_bvec, child.borrow());
-                }
-            }
-            // no children -> byte branch
-            None =>{
-                // 0 means byte branch
-                tree_bvec.push(false);
-
-                let b = root.leaf().byte().unwrap();
-                
-                let byte_bvec = BitVec::from_bytes(&[b]);
-                for b in byte_bvec{
-                    tree_bvec.push(b);
-                }
-            }
         }
     }
 }

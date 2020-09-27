@@ -5,7 +5,7 @@ use std::path::Path;
 use std::{fs, io};
 use io::{BufWriter, Write};
 
-use bit_vec::BitVec;
+use bitvec::prelude::*;
 
 use crate::HuffTree;
 use crate::utils::ration_vec;
@@ -42,19 +42,21 @@ const EXTENSION: &str = "hfe";
 pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> io::Result<()>{
     fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
         // construct huffman tree
-        let tree = HuffTree::from(bytes);
+        let tree = HuffTree::from_bytes(bytes);
         
         // encode string, get file header and calc their padding bits
         let h = get_header(&mut tree.to_bin());
         let es = get_encoded_bytes(bytes, tree.byte_codes().clone());
         let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
 
-        // TODO: speed up to_bytes()
+
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
         buf_writer.write_all(&[padding_bits])?;
-        buf_writer.write_all(&h.to_bytes())?;
-        buf_writer.write_all(&es.to_bytes())
+        buf_writer.write_all(&h.into_vec())?;
+        buf_writer.write_all(&es.into_vec())?;
+
+        Ok(())
     }
     
     // add name and extension to dir path
@@ -90,7 +92,7 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
 /// ```
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
     fn inner(path: &Path) -> io::Result<Vec<u8>>{
-        fn pop_padding_bits(bit_vec: &mut BitVec, padding_bits: u8){
+        fn pop_padding_bits(bit_vec: &mut BitVec<LocalBits, u8>, padding_bits: u8){
             for _ in 0..padding_bits{
                 bit_vec.pop();
             }
@@ -104,14 +106,14 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
 
         let header_len = u32::from_be_bytes(raw_bytes[1..5].try_into().unwrap());
         let header = {
-            let mut hb = BitVec::from_bytes(&raw_bytes[5..5 + header_len as usize]);
+            let mut hb = BitVec::from_vec(raw_bytes[5..5 + header_len as usize].to_vec());
             pop_padding_bits(&mut hb, header_padding_bits);
             hb
         };
         let coded_bytes = HuffTree::coded_chars_from_bin(&header);
 
         let encoded_file = {
-            let mut fb = BitVec::from_bytes(&raw_bytes[5 + header_len as usize..]);
+            let mut fb = BitVec::from_vec(raw_bytes[5 + header_len as usize..].to_vec());
             pop_padding_bits(&mut fb, file_padding_bits);
             fb
         };
@@ -140,17 +142,17 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
 
 /// Return a tree_bin preceded by its length
 /// to be used as a .hfe file header.
-fn get_header(tree_bin: &mut BitVec) -> BitVec{
+fn get_header(tree_bin: &mut BitVec<LocalBits, u8>) -> BitVec<LocalBits, u8>{
     // get tree_bin.len() and add at the front of tree_bin
     let tree_len: u32 = ((tree_bin.len() + calc_padding_bits(tree_bin.len()) as usize) / 8) as u32;
-    let mut bin_len = BitVec::from_bytes(&tree_len.to_be_bytes());
+    let mut bin_len = BitVec::from_vec(tree_len.to_be_bytes().to_vec());
     
-    bin_len.append(tree_bin);
+    bin_len.extend_from_bitslice(&tree_bin[..]);
     return bin_len;
 }
 
 /// Return given bytes encoded with the given byte_codes HashMap
-fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
+fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec<LocalBits, u8>{
     // allocate byte_codes onto the heap
     let byte_codes = Box::new(byte_codes);
 
@@ -166,7 +168,7 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
             for byte in ration{
                 let b_code = codes.get(&byte).unwrap();
                 for bit in b_code{
-                    encoded.push(bit);
+                    encoded.push(*bit);
                 }
             }
             encoded
@@ -176,17 +178,22 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec{
     }
 
     // concatenate every encoded ration into encoded_bytes
-    let mut encoded_bytes = BitVec::new();
-    let mut encoded_to_concat: Vec<BitVec> = Vec::new();
+    let mut encoded_bytes: BitVec<LocalBits, u8> = BitVec::new();
+    let mut encoded_to_concat: Vec<BitVec<LocalBits, u8>> = Vec::new();
 
-
-    for handle in handles{
-        encoded_to_concat.push(handle.join().unwrap());
+    let mut i = 0;	
+    for handle in handles{	   
+        if i == 0{	       
+            encoded_bytes = handle.join().unwrap();	
+        }	
+        else{	
+            encoded_to_concat.push(handle.join().unwrap());	
+        }	
+        i += 1
     }
-    for encoded in encoded_to_concat.iter_mut(){
-        for bit in encoded.iter(){
-            encoded_bytes.push(bit);
-        }
+
+    for encoded in encoded_to_concat.iter(){	   
+        encoded_bytes.extend_from_bitslice(encoded);	        
     }
 
     return encoded_bytes;
