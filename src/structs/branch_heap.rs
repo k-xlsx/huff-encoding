@@ -70,7 +70,7 @@ impl HuffBranchHeap{
 
     fn build(&mut self, byte_freqs: &ByteFreqs){
         for (b, f) in byte_freqs.iter(){
-            let new_branch = HuffBranch::new(HuffLeaf::new(Some(*b), *f), None);
+            let new_branch = HuffBranch::new(HuffLeaf::new(Some(b as u8), *f), None);
     
             self.push(new_branch);
         }

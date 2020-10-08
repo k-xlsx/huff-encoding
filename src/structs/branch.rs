@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::cmp::Ordering;
 
-use bitvec::prelude::*;
+use bitvec::prelude::{BitVec, LocalBits};
 
 use crate::HuffLeaf;
 

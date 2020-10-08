@@ -1,3 +1,4 @@
+
 /// Ration a Vec<T> into ration_count sized rations.
 /// 
 /// Edge cases:
@@ -26,4 +27,11 @@ pub fn ration_vec<T: Clone>(vec: &Vec<T>, ration_count: usize) -> Vec<Vec<T>>{
     }
 
     return rations;
+}
+
+/// Return how many bits will be used as padding
+/// with given the bit_count.
+pub fn calc_padding_bits(bit_count: usize) -> u8{
+    let n = (8 - bit_count % 8) as u8; 
+    match n{8 => 0, _ => n}
 }

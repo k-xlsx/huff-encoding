@@ -5,10 +5,10 @@ use std::path::Path;
 use std::{fs, io};
 use io::{BufWriter, Write};
 
-use bitvec::prelude::*;
+use bitvec::prelude::{BitVec, LocalBits};
 
 use crate::HuffTree;
-use crate::utils::ration_vec;
+use crate::utils::{ration_vec, calc_padding_bits};
 
 
 const EXTENSION: &str = "hfe";
@@ -53,8 +53,8 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
         buf_writer.write_all(&[padding_bits])?;
-        buf_writer.write_all(&h.into_vec())?;
-        buf_writer.write_all(&es.into_vec())?;
+        buf_writer.write_all(&h.into_boxed_slice())?;
+        buf_writer.write_all(&es.into_boxed_slice())?;
 
         Ok(())
     }
@@ -85,19 +85,13 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
 /// fn main() -> std::io::Result<()> {
 ///     write_hfe("/home/user/", "bar", &"abbccc".as_bytes())?;
 ///     let foo = read_hfe("/home/user/bar.hfe")?;
-///     assert_eq/(&foo[..], vec![97, 98, 98, 99, 99, 99]);
+///     assert_eq!(&foo[..], vec![97, 98, 98, 99, 99, 99]);
 ///
 ///     Ok(())
 /// }
 /// ```
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
     fn inner(path: &Path) -> io::Result<Vec<u8>>{
-        fn pop_padding_bits(bit_vec: &mut BitVec<LocalBits, u8>, padding_bits: u8){
-            for _ in 0..padding_bits{
-                bit_vec.pop();
-            }
-        }
-
         let raw_bytes = fs::read(path)?;
 
         let padding_bits = raw_bytes[0];
@@ -106,19 +100,20 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
 
         let header_len = u32::from_be_bytes(raw_bytes[1..5].try_into().unwrap());
         let header = {
-            let mut hb = BitVec::from_vec(raw_bytes[5..5 + header_len as usize].to_vec());
-            pop_padding_bits(&mut hb, header_padding_bits);
-            hb
+            let mut header_bits = BitVec::from_vec(raw_bytes[5..5 + header_len as usize].to_vec());
+            header_bits.drain(header_bits.len() - (header_padding_bits as usize)..);
+            header_bits
         };
         let coded_bytes = HuffTree::coded_chars_from_bin(&header);
 
         let encoded_file = {
-            let mut fb = BitVec::from_vec(raw_bytes[5 + header_len as usize..].to_vec());
-            pop_padding_bits(&mut fb, file_padding_bits);
-            fb
+            let file_bytes = &raw_bytes[5 + header_len as usize..];
+            let mut file_bits: BitVec<bitvec::order::LocalBits, u8> = BitVec::from_vec(file_bytes.to_vec());
+            file_bits.drain(file_bits.len() - (file_padding_bits as usize)..);
+            file_bits
         };
-
-        // TODO: add multithreading 
+        
+        // TODO: Replace hashmap here somehow
         let mut decoded_file: Vec<u8> = Vec::new();
         let mut current_code = BitVec::new();
         for bit in encoded_file{
@@ -164,44 +159,23 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec<Lo
     for ration in byte_rations{
         let codes = byte_codes.clone();
         let handle = thread::spawn(move || {
-            let mut encoded = BitVec::new();
+            let mut encoded_chunk = BitVec::new();
             for byte in ration{
                 let b_code = codes.get(&byte).unwrap();
                 for bit in b_code{
-                    encoded.push(*bit);
+                    encoded_chunk.push(*bit);
                 }
             }
-            encoded
-
+            encoded_chunk
         });
         handles.push(handle);
     }
 
-    // concatenate every encoded ration into encoded_bytes
+    // concatenate every encoded chunk into encoded_bytes
     let mut encoded_bytes: BitVec<LocalBits, u8> = BitVec::new();
-    let mut encoded_to_concat: Vec<BitVec<LocalBits, u8>> = Vec::new();
-
-    let mut i = 0;	
     for handle in handles{	   
-        if i == 0{	       
-            encoded_bytes = handle.join().unwrap();	
-        }	
-        else{	
-            encoded_to_concat.push(handle.join().unwrap());	
-        }	
-        i += 1
-    }
-
-    for encoded in encoded_to_concat.iter(){	   
-        encoded_bytes.extend_from_bitslice(encoded);	        
+        encoded_bytes.extend_from_bitslice(&handle.join().unwrap()[..]);
     }
 
     return encoded_bytes;
-}
-
-/// Return how many bits will be used as padding
-/// with given the bit_count.
-fn calc_padding_bits(bit_count: usize) -> u8{
-    let n = (8 - bit_count % 8) as u8; 
-    match n{8 => 0, _ => n}
 }

@@ -1,18 +1,16 @@
-use std::collections::HashMap;
 use std::thread;
 
 use crate::utils::ration_vec;
 
 
 
-#[derive(Debug)]
 pub struct ByteFreqs{
-    freqs: HashMap<u8, usize>,
+    freqs: [usize; 256],
 } 
 
 impl ByteFreqs{
     /// Count all bytes in given slice and organize them
-    /// into ByteFreqs (internally a Hashmap<u8, usize>)
+    /// into ByteFreqs (internally a lookup table)
     /// 
     /// # Examples
     /// ---
@@ -30,20 +28,12 @@ impl ByteFreqs{
 
         // convert the array into a hashmap
         return ByteFreqs{
-            freqs: {
-                let mut h: HashMap<u8, usize> = HashMap::new();
-                for (b, freq) in byte_freqs.iter().enumerate(){
-                    if *freq != 0{
-                        h.insert(b as u8, *freq);
-                    }
-                }
-                h
-            }
+            freqs: byte_freqs
         };
     }
 
     /// Count all bytes in given slice and organize them
-    /// into ByteFreqs (internally a Hashmap<u8, usize>)
+    /// into ByteFreqs (internally a lookup table)
     ///   
     /// ### Uses multiple threads to count bytes faster 
     /// ---
@@ -87,14 +77,33 @@ impl ByteFreqs{
 
     /// Return a reference to the frequency corresponding
     /// to the given byte.
-    pub fn get(&self, b: &u8) -> Option<&usize>{
-        return self.freqs.get(b);
+    pub fn get(&self, b: usize) -> Option<&usize>{
+        let entry = self.freqs.get(b);
+        match entry{
+            Some(_) =>{
+                if *entry.unwrap() == 0{
+                    return None
+                }
+                return entry
+            }
+            None => return None
+        }
     }
 
     /// Return a mutable reference to the frequency corresponding
     /// to the given byte.
-    pub fn get_mut(&mut self, b:&u8) -> Option<&mut usize>{
-        return self.freqs.get_mut(b);
+    pub fn get_mut(&mut self, b: usize) -> Option<&mut usize>{
+        let entry = self.freqs.get_mut(b);
+        match entry{
+            Some(_) =>{
+                let freq = entry.unwrap(); 
+                if *freq == 0{
+                    return None
+                }
+                return Some(freq)
+            }
+            None => return None
+        }
     }
 
     /// Return the length of the wrapped Hashmap<u8; usize>.
@@ -103,14 +112,14 @@ impl ByteFreqs{
     }
 
 
-    /// Return an Iterator over the contents of ByteFreqs
-    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, u8, usize>{
-        return self.freqs.iter();
+    /// Return an Iterator over the contents of ByteFreqs (yields a tuple (byte, freq))
+    pub fn iter(&self) -> std::iter::Enumerate<std::slice::Iter<'_, usize>>{
+        return self.freqs.iter().enumerate();
     }
 
-    /// Return a mutable Iterator over the contents of ByteFreqs
-    pub fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, u8, usize>{
-        return self.freqs.iter_mut();
+    /// Return a mutable Iterator over the contents of ByteFreqs (yields a tuple (byte, freq))
+    pub fn iter_mut(&mut self) -> std::iter::Enumerate<std::slice::IterMut<'_, usize>>{
+        return self.freqs.iter_mut().enumerate();
     }
 
 
@@ -123,7 +132,7 @@ impl ByteFreqs{
                     *self_entry.unwrap() += f;
                 }
                 None =>{
-                    self.freqs.insert(*b, *f);
+                    self.freqs[b] = *f;
                 }
             }
         }

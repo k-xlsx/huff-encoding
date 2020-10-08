@@ -1,7 +1,7 @@
 use std::cell::{RefCell, Ref, RefMut};
 use std::collections::HashMap;
 
-use bitvec::prelude::*;
+use bitvec::prelude::{BitVec, LocalBits};
 
 use crate::{HuffBranch, HuffLeaf, ByteFreqs};
 use crate::structs::branch_heap::HuffBranchHeap;
@@ -61,7 +61,7 @@ impl HuffTree{
     pub fn new(root: Option<Box<RefCell<HuffBranch>>>) -> HuffTree{
         let huff_tree = HuffTree{
             root: root,
-            byte_codes: HashMap::new(),
+            byte_codes: HashMap::default(),
         };
 
         return huff_tree;
@@ -107,7 +107,7 @@ impl HuffTree{
         // this whole thing is probably atrocious, but it works?
 
         
-        let mut coded_bytes: HashMap<BitVec, u8> = HashMap::new();
+        let mut coded_bytes: HashMap<BitVec, u8> = HashMap::default();
 
         // current branch code and previous branch bit
         let mut branch_code = BitVec::<LocalBits, usize>::new();
@@ -119,11 +119,11 @@ impl HuffTree{
         let mut byte_bit_vec = BitVec::<LocalBits, u8>::new();
 
         let bin_iter = bin.iter().skip(match bin[0]{true => 1, false => 0});
-        for b in bin_iter{
+        for bit in bin_iter{
             match read_byte{
                 // read byte
                 true => {
-                    byte_bit_vec.push(*b);
+                    byte_bit_vec.push(*bit);
                     read_byte_counter += 1;
 
                     // when read all byte bits.
@@ -146,7 +146,7 @@ impl HuffTree{
                 }
                 // read branches
                 false => {
-                    match b{
+                    match bit{
                         // found a joint branch
                         true =>{
                             revert_branch_code(&mut branch_code, prev_branch);
@@ -184,11 +184,6 @@ impl HuffTree{
         return &self.byte_codes;
     }
 
-    /// Returns a mutable reference HashMaps of bytes with their
-    /// corresponding Huffman codes.
-    pub fn byte_codes_mut(&mut self) -> &mut HashMap<u8, BitVec>{
-        return &mut self.byte_codes;
-    }
 
     /// Returns the tree represented in binary
     /// to be stored as a header to an encoded file:
@@ -297,7 +292,7 @@ impl HuffTree{
         HuffTree::set_codes_in_branches(self.root().unwrap().borrow_mut());
 
         // set byte_codes recursively
-        let mut byte_codes: HashMap<u8, BitVec> = HashMap::new();
+        let mut byte_codes: HashMap<u8, BitVec> = HashMap::default();
         self.set_byte_codes(&mut byte_codes, self.root().unwrap().borrow());
         self.byte_codes = byte_codes;
     }
