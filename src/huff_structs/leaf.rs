@@ -1,4 +1,4 @@
-use bitvec::prelude::{BitVec, LocalBits};
+use crate::HuffCode;
 
 
 
@@ -12,7 +12,7 @@ use bitvec::prelude::{BitVec, LocalBits};
 pub struct HuffLeaf{
     byte: Option<u8>,
     frequency: usize,
-    code: Option<BitVec::<LocalBits, usize>>,
+    code: Option<HuffCode>,
 }
 
 impl PartialEq for HuffLeaf {
@@ -53,13 +53,13 @@ impl HuffLeaf{
     }
     
     /// Returns a reference to the stored code.
-    pub fn code(&self) -> Option<&BitVec>{
+    pub fn code(&self) -> Option<&HuffCode>{
         return self.code.as_ref();
     }
 
 
     /// Sets the given BitVec as code.
-    pub fn set_code(&mut self, code: BitVec){    
+    pub fn set_code(&mut self, code: HuffCode){    
         self.code = Some(code);
     }
 }

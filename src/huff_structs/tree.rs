@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use bitvec::prelude::{BitVec, LocalBits};
 
-use crate::{HuffBranch, HuffLeaf, ByteFreqs};
-use crate::structs::branch_heap::HuffBranchHeap;
+use crate::{HuffBranch, HuffLeaf, HuffCode, ByteFreqs};
+use crate::huff_structs::branch_heap::HuffBranchHeap;
 
 
 
@@ -27,7 +27,7 @@ use crate::structs::branch_heap::HuffBranchHeap;
 #[derive(Debug)]
 pub struct HuffTree{
     root: Option<Box<RefCell<HuffBranch>>>,
-    byte_codes: HashMap<u8, BitVec::<LocalBits, usize>>,
+    byte_codes: HashMap<u8, HuffCode>,
 }
 
 impl HuffTree{
@@ -180,7 +180,7 @@ impl HuffTree{
 
     /// Returns reference to a HashMap of bytes with their
     /// corresponding Huffman codes.
-    pub fn byte_codes(&self) -> &HashMap<u8, BitVec>{
+    pub fn byte_codes(&self) -> &HashMap<u8, HuffCode>{
         return &self.byte_codes;
     }
 
@@ -292,14 +292,14 @@ impl HuffTree{
         HuffTree::set_codes_in_branches(self.root().unwrap().borrow_mut());
 
         // set byte_codes recursively
-        let mut byte_codes: HashMap<u8, BitVec> = HashMap::default();
+        let mut byte_codes: HashMap<u8, HuffCode> = HashMap::default();
         self.set_byte_codes(&mut byte_codes, self.root().unwrap().borrow());
         self.byte_codes = byte_codes;
     }
 
 
     /// Recursively insert bytes to codes into the given byte_codes HashMap<u8, BitVec>
-    fn set_byte_codes(&self, byte_codes: &mut HashMap<u8, BitVec>, root: Ref<HuffBranch>){
+    fn set_byte_codes(&self, byte_codes: &mut HashMap<u8, HuffCode>, root: Ref<HuffBranch>){
         let root = root;
         let children = root.children();
 
@@ -320,7 +320,7 @@ impl HuffTree{
                 }
             }
             None =>{
-                byte_codes.insert(root.leaf().byte().unwrap(), {let mut b = BitVec::new(); b.push(false); b});
+                byte_codes.insert(root.leaf().byte().unwrap(), {let mut b = HuffCode::new(); b.push(false); b});
             }
         }
 

@@ -1,9 +1,7 @@
 use std::cell::RefCell;
 use std::cmp::Ordering;
 
-use bitvec::prelude::{BitVec, LocalBits};
-
-use crate::HuffLeaf;
+use crate::{HuffLeaf, HuffCode};
 
 
 
@@ -96,15 +94,15 @@ impl HuffBranch{
 
     /// Sets its leaf's code based on the given parent_code and its
     /// pos_in_parent.
-    pub fn set_code(&mut self, parent_code: Option<&BitVec::<LocalBits, usize>>){
-        let mut code = BitVec::<LocalBits, usize>::new();
+    pub fn set_code(&mut self, parent_code: Option<&HuffCode>){
+        let mut code = HuffCode::new();
 
         match self.pos_in_parent(){
             Some(_) =>{
                 match parent_code{
                     Some(_) =>{
                         for bit in parent_code.unwrap(){
-                            code.push(*bit);
+                            code.push(bit);
                         }
                     }
                     None =>

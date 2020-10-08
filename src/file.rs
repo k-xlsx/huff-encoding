@@ -7,7 +7,7 @@ use io::{BufWriter, Write};
 
 use bitvec::prelude::{BitVec, LocalBits};
 
-use crate::HuffTree;
+use crate::{HuffTree, HuffCode};
 use crate::utils::{ration_vec, calc_padding_bits};
 
 
@@ -147,7 +147,7 @@ fn get_header(tree_bin: &mut BitVec<LocalBits, u8>) -> BitVec<LocalBits, u8>{
 }
 
 /// Return given bytes encoded with the given byte_codes HashMap
-fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec<LocalBits, u8>{
+fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
     // allocate byte_codes onto the heap
     let byte_codes = Box::new(byte_codes);
 
@@ -163,7 +163,7 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, BitVec>) -> BitVec<Lo
             for byte in ration{
                 let b_code = codes.get(&byte).unwrap();
                 for bit in b_code{
-                    encoded_chunk.push(*bit);
+                    encoded_chunk.push(bit);
                 }
             }
             encoded_chunk

@@ -2,9 +2,9 @@
 # It is not intended for manual editing.
 [[package]]
 name = "bitvec"
-version = "0.19.2"
+version = "0.19.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8775e5606af6e145d17376be6d95f98245d393a143b41b7feba50d6b3d8367cd"
+checksum = "11593270830d9b037fbead730bb0c05ef6fbf6be55537a1e8e5892edef7e1f03"
 dependencies = [
  "funty",
  "radium",
@@ -53,9 +53,9 @@ dependencies = [
 
 [[package]]
 name = "radium"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a333b5f6adeff5a89f2e95dc2ea1ecb5319abbb56212afea6a37f87435338a5"
+checksum = "941ba9d78d8e2f7ce474c015eea4d9c6d25b6a3327f9832ee29a4de27f91bbb8"
 
 [[package]]
 name = "tap"

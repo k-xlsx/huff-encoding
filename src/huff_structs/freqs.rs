@@ -4,6 +4,22 @@ use crate::utils::ration_vec;
 
 
 
+/// Struct used to count and store the 
+/// frequencies of bytes in a given &[u8]
+/// ---
+/// 
+/// Can be initialized either linearly:
+/// 
+/// ```
+/// use huff_encoding::ByteFreqs;
+/// let foo = ByteFreqs::from("bar".as_bytes());
+/// ```
+/// or threaded (faster for larger byte collections):
+/// 
+/// ```
+/// use huff_encoding::ByteFreqs;
+/// let foo = ByteFreqs::from("bar".as_bytes());
+/// ```
 pub struct ByteFreqs{
     freqs: [usize; 256],
 } 
