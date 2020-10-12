@@ -113,7 +113,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
             file_bits
         };
         
-        // TODO: Replace hashmap here somehow
+        // TODO: Replace the hashmap here somehow
         let mut decoded_file: Vec<u8> = Vec::new();
         let mut current_code = BitVec::new();
         for bit in encoded_file{
@@ -122,7 +122,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
             match coded_byte{
                 Some(_) =>{
                     decoded_file.push(*coded_byte.unwrap());
-                    current_code = BitVec::new();
+                    current_code.clear();
                 }
                 None => (),
             }
@@ -155,7 +155,7 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<
     let byte_rations = ration_vec(&bytes.to_vec(), num_cpus::get());
 
     // spawn threads encoding given bytes in ration
-    let mut handles = vec![];
+    let mut handles = Vec::with_capacity(num_cpus::get());
     for ration in byte_rations{
         let codes = byte_codes.clone();
         let handle = thread::spawn(move || {
@@ -172,7 +172,9 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<
     }
 
     // concatenate every encoded chunk into encoded_bytes
-    let mut encoded_bytes: BitVec<LocalBits, u8> = BitVec::new();
+    // doing this is slow, but i've got no better idea
+    // still faster than linear
+    let mut encoded_bytes: BitVec<LocalBits, u8> = BitVec::with_capacity(3 * bytes.len() / 4);
     for handle in handles{	   
         encoded_bytes.extend_from_bitslice(&handle.join().unwrap()[..]);
     }

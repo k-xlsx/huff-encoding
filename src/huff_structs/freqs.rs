@@ -65,7 +65,7 @@ impl ByteFreqs{
         let byte_rations = ration_vec(&bytes.to_vec(), num_cpus::get());
 
         // create ByteFreqs from every ration
-        let mut handles = vec![];
+        let mut handles = Vec::with_capacity(num_cpus::get());
         for ration in byte_rations{
             let handle = thread::spawn(move || {
                 ByteFreqs::from_bytes(&ration)
@@ -74,7 +74,7 @@ impl ByteFreqs{
         }
 
         // push all created ByteFreqs into a Vec 
-        let mut bfreq_mult: Vec<ByteFreqs> = Vec::new();
+        let mut bfreq_mult: Vec<ByteFreqs> = Vec::with_capacity(num_cpus::get());
         for handle in handles{
             bfreq_mult.push(handle.join().unwrap());
         }

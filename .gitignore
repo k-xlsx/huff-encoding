@@ -1,3 +1,7 @@
 /target
+
 /.vscode
+
+# test/temp files
 test*
+temp*

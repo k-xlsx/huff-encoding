@@ -116,7 +116,7 @@ impl HuffTree{
         let mut read_byte = false;
         let mut read_byte_counter = 0;
 
-        let mut byte_bit_vec = BitVec::<LocalBits, u8>::new();
+        let mut byte_bit_vec = BitVec::<LocalBits, u8>::with_capacity(8);
 
         let bin_iter = bin.iter().skip(match bin[0]{true => 1, false => 0});
         for bit in bin_iter{
@@ -133,7 +133,7 @@ impl HuffTree{
                         // reset reading byte params
                         read_byte = false;
                         read_byte_counter = 0;
-                        byte_bit_vec = BitVec::new();
+                        byte_bit_vec = BitVec::with_capacity(8);
             
                         coded_bytes.insert({
                             revert_branch_code(&mut branch_code, prev_branch);
