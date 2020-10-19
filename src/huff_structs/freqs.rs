@@ -22,7 +22,39 @@ use crate::utils::ration_vec;
 /// ```
 pub struct ByteFreqs{
     freqs: [usize; 256],
-} 
+}
+
+/// Iterator over the contents of ByteFreqs (byte, freq)2
+pub struct ByteFreqsIter<'a>{
+    freqs: &'a ByteFreqs,
+
+    current_index: u8,
+}
+
+impl Iterator for ByteFreqsIter<'_>{
+    type Item = (u8, usize);
+
+    fn next(&mut self) -> Option<Self::Item>{
+        while let None = self.freqs.get(self.current_index as usize){
+            if self.current_index == 255{
+                return None
+            }
+            self.current_index += 1
+        }
+        let entry = Some((self.current_index , *self.freqs.get(self.current_index as usize).unwrap()));
+        self.current_index += 1;
+        return entry;
+    }
+}
+
+impl <'a> IntoIterator for &'a ByteFreqs{
+    type Item = (u8, usize);
+    type IntoIter = ByteFreqsIter<'a>;
+
+    fn into_iter(self) -> ByteFreqsIter<'a>{
+        return ByteFreqsIter{freqs: &self, current_index: 0}
+    }   
+}
 
 impl ByteFreqs{
     /// Count all bytes in given slice and organize them
@@ -127,28 +159,16 @@ impl ByteFreqs{
         return self.freqs.len();
     }
 
-
-    /// Return an Iterator over the contents of ByteFreqs (yields a tuple (byte, freq))
-    pub fn iter(&self) -> std::iter::Enumerate<std::slice::Iter<'_, usize>>{
-        return self.freqs.iter().enumerate();
-    }
-
-    /// Return a mutable Iterator over the contents of ByteFreqs (yields a tuple (byte, freq))
-    pub fn iter_mut(&mut self) -> std::iter::Enumerate<std::slice::IterMut<'_, usize>>{
-        return self.freqs.iter_mut().enumerate();
-    }
-
-
     /// Add another ByteFreqs to self
     pub fn add_bfreq(&mut self, other: &ByteFreqs){
-        for (b, f) in other.iter(){
-            let self_entry = self.get_mut(b);
+        for (b, f) in other{
+            let self_entry = self.get_mut(b as usize);
             match self_entry{
                 Some(_) =>{
                     *self_entry.unwrap() += f;
                 }
                 None =>{
-                    self.freqs[b] = *f;
+                    self.freqs[b as usize] = f;
                 }
             }
         }

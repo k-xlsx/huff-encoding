@@ -41,12 +41,12 @@ impl HuffTree{
     /// let foo = HuffTree::from("bar".as_bytes());
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> HuffTree{
-        let mut tree = HuffTree::new(None);
+        let mut tree = HuffTree::new();
         tree.grow(&ByteFreqs::threaded_from_bytes(&bytes));
         tree
     }
 
-    /// Initializes a HuffTree with the given root.
+    /// Initializes a HuffTree.
     /// 
     /// Can be grown later with .grow or .grow_ctf
     /// 
@@ -58,9 +58,9 @@ impl HuffTree{
     /// let foo = HuffTree::new();
     /// foo.grow("Hello, World/");
     /// ```
-    pub fn new(root: Option<Box<RefCell<HuffBranch>>>) -> HuffTree{
+    pub fn new() -> HuffTree{
         let huff_tree = HuffTree{
-            root: root,
+            root: None,
             byte_codes: HashMap::default(),
         };
 
@@ -283,6 +283,8 @@ impl HuffTree{
             );
             branch_heap.push(branch);
         }
+
+
 
         // last branch in branch_heap is root
         let root = Some(Box::new(RefCell::new(branch_heap.pop_min())));

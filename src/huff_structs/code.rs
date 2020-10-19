@@ -29,7 +29,7 @@ impl PartialEq for HuffCode{
     }
 }
 
-/// Iterator over the contents of HuffCode.
+/// Iterator over the contents of a HuffCode.
 pub struct HuffCodeIter<'a>{
     code: &'a HuffCode,
 
@@ -54,7 +54,6 @@ impl<'a> IntoIterator for &'a HuffCode{
         return HuffCodeIter{code: &self, current_index: 0}
     }
 }
-
 
 impl HuffCode{
     /// Initializes an empty HuffCode.

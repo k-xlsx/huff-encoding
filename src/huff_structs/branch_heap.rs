@@ -11,6 +11,7 @@ use crate::{HuffBranch, HuffLeaf, ByteFreqs};
 /// ```
 /// HashMap<u8, usize>
 /// ```
+#[derive(Debug)]
 pub struct HuffBranchHeap{
     heap: BinaryHeap<HuffBranch>,
 }
@@ -69,8 +70,8 @@ impl HuffBranchHeap{
 
 
     fn build(&mut self, byte_freqs: &ByteFreqs){
-        for (b, f) in byte_freqs.iter(){
-            let new_branch = HuffBranch::new(HuffLeaf::new(Some(b as u8), *f), None);
+        for (b, f) in byte_freqs{
+            let new_branch = HuffBranch::new(HuffLeaf::new(Some(b as u8), f), None);
     
             self.push(new_branch);
         }
