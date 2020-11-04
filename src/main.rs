@@ -13,8 +13,8 @@ fn main(){
 
     let s = String::from("Hello, World!aaąŁ");
 
-    huff_encoding::file::write_hfe("", "temp.hfe", &s.as_bytes()).expect("file write error");
-    let decoded_bytes = huff_encoding::file::read_hfe("temp.hfe").expect("file read error");
+    huff_encoding::write_hfe("", "temp.hfe", &s.as_bytes()).expect("file write error");
+    let decoded_bytes = huff_encoding::read_hfe("temp.hfe").expect("file read error");
 
     println!("{:?}", s);
     println!("{:?}", s.as_bytes());
@@ -25,8 +25,8 @@ fn main(){
 
     let s = String::from("Hello, World!aaąŁ");
 
-    huff_encoding::file::threaded_write_hfe("", "temp.hfe", &s.as_bytes()).expect("file write error");
-    let decoded_bytes = huff_encoding::file::read_hfe("temp.hfe").expect("file read error");
+    huff_encoding::threaded_write_hfe("", "temp.hfe", &s.as_bytes()).expect("file write error");
+    let decoded_bytes = huff_encoding::read_hfe("temp.hfe").expect("file read error");
 
     println!("{:?}", s);
     println!("{:?}", s.as_bytes());

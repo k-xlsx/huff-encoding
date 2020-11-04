@@ -9,7 +9,7 @@ pub fn ration_vec<T: Clone>(vec: &Vec<T>, ration_count: usize) -> Vec<Vec<T>>{
     let elements_per_ration = elements_left / ration_count;
     let mut current_element = 0;
 
-    let mut rations: Vec<Vec<T>> = Vec::new();
+    let mut rations: Vec<Vec<T>> = Vec::with_capacity(ration_count);
     if elements_per_ration == 0{
         rations.push(vec[..].to_vec());
     }

@@ -40,20 +40,7 @@ use crate::utils::{ration_vec, calc_padding_bits};
 /// }
 /// ```
 pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -> io::Result<()>{
-    fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
-        let compressed_bytes = compress(bytes);
-
-        let file = fs::File::create(path)?;
-        let mut buf_writer = BufWriter::new(file);
-        buf_writer.write(&compressed_bytes)?;
-
-        Ok(())
-    }
-    
-    // add name and extension to dir path
-    let path = dir_path.as_ref().join(file_name);
-
-    inner(&path, bytes.as_ref())
+    return generic_write_hfe(dir_path, file_name, bytes, compress);
 }
 
 /// Compress the string slice as Huffman code and write it to
@@ -84,8 +71,13 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -
 /// }
 /// ```
 pub fn threaded_write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -> io::Result<()>{
-    fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
-        let compressed_bytes = threaded_compress(bytes);
+    return generic_write_hfe(dir_path, file_name, bytes, threaded_compress);
+}
+
+/// A generic version of write_hfe functions that accepts the used compress function as arg
+fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>(dir_path: P, file_name: &str, bytes: &[u8], compress_func: F) -> io::Result<()>{
+    fn inner<F: FnOnce(&[u8]) -> Vec<u8>>(path: &Path, bytes: &[u8], compress_func: F) -> io::Result<()>{
+        let compressed_bytes = compress_func(bytes);
 
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
@@ -97,7 +89,7 @@ pub fn threaded_write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &
     // add name and extension to dir path
     let path = dir_path.as_ref().join(file_name);
 
-    inner(&path, bytes.as_ref())
+    inner(&path, bytes.as_ref(), compress_func)
 }
 
 
@@ -157,21 +149,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
 /// 
 /// let foo = compress_hfe(&[255, 255, 255, 255, 255, 255]);
 pub fn compress(bytes: &[u8]) -> Vec<u8>{
-    // construct huffman tree
-    let tree = HuffTree::from_bytes(bytes);
-        
-    // compress bytes, get file header and calc their padding bits
-    let h = get_header(&mut tree.to_bin());
-    let es = get_compressed_bytes(bytes, tree.byte_codes().clone());
-    let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
-
-
-    let mut compressed_bytes: Vec<u8> = Vec::new();
-    compressed_bytes.extend(&[padding_bits]);
-    compressed_bytes.extend(h.into_boxed_slice().to_vec());
-    compressed_bytes.extend(es.into_boxed_slice().to_vec());
-
-    return compressed_bytes;
+    return generic_compress(bytes, HuffTree::from_bytes(bytes), get_compressed_bytes);
 }
 
 /// Returns given bytes compresses using 
@@ -197,12 +175,14 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// let foo = threaded_compress_hfe(&[255, 255, 255, 255, 255, 255]);
 /// ```
 pub fn threaded_compress(bytes: &[u8]) -> Vec<u8>{
-    // construct huffman tree
-    let tree = HuffTree::threaded_from_bytes(bytes);
-        
+    return generic_compress(bytes, HuffTree::threaded_from_bytes(bytes), threaded_get_compressed_bytes);
+}
+
+// A generic version of the compress functions that accepts the tree and get_compressed_bytes func as arguments
+fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>>(bytes: &[u8], tree: HuffTree, get_compressed_bytes_func: F) -> Vec<u8>{
     // compress bytes, get file header and calc their padding bits
     let h = get_header(&mut tree.to_bin());
-    let es = threaded_get_compressed_bytes(bytes, tree.byte_codes().clone());
+    let es = get_compressed_bytes_func(bytes, tree.byte_codes().clone());
     let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
 
 
