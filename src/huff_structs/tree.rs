@@ -33,14 +33,34 @@ pub struct HuffTree{
 impl HuffTree{
     /// Initialize the tree from given bytes
     /// 
+    /// Threaded version is faster for bigger files (huff_encoding::HuffTree::threaded_from_bytes).
+    /// 
     /// # Examples
     /// ---
     /// ```
     /// use huff_encoding::HuffTree;
     /// 
-    /// let foo = HuffTree::from("bar".as_bytes());
+    /// let foo = HuffTree::from_bytes("bar".as_bytes());
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> HuffTree{
+        let mut tree = HuffTree::new();
+        tree.grow(&ByteFreqs::from_bytes(&bytes));
+        tree
+    }
+
+    /// Initialize the tree from given bytes, but using
+    /// multiple threads (It's faster for bigger files.).
+    /// 
+    /// Non-threaded version is faster for smaller files (huff_encoding::HuffTree::from_bytes).
+    /// 
+    /// # Examples
+    /// ---
+    /// ```
+    /// use huff_encoding::HuffTree;
+    /// 
+    /// let foo = HuffTree::threaded_from_bytes("bar".as_bytes());
+    /// ```
+    pub fn threaded_from_bytes(bytes: &[u8]) -> HuffTree{
         let mut tree = HuffTree::new();
         tree.grow(&ByteFreqs::threaded_from_bytes(&bytes));
         tree
@@ -88,7 +108,7 @@ impl HuffTree{
     /// //      11: 98,
     /// // }
     /// ```
-    pub fn coded_chars_from_bin(bin: &BitVec<LocalBits, u8>) -> HashMap<BitVec, u8>{
+    pub fn coded_bytes_from_bin(bin: &BitVec<LocalBits, u8>) -> HashMap<BitVec, u8>{
         fn revert_branch_code(branch_code: &mut BitVec, prev_branch: bool){
             match prev_branch{
                 // prev branch was joint -> you're its first child

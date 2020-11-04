@@ -11,27 +11,27 @@ use crate::{HuffTree, HuffCode};
 use crate::utils::{ration_vec, calc_padding_bits};
 
 
-const EXTENSION: &str = "hfe";
 
-
-
-/// Encode the string slice as Huffman code and write it to
-/// a .hfe file with the given name in the given dir_path
+/// Compress the string slice as Huffman code and write it to
+/// a file with the given name (extension is arbitrary, but .hfe is recommended) 
+/// in the given dir_path
 /// 
-/// ## .hfe file structure
+/// Threaded version is faster for bigger files (huff_encoding::threaded_write_hfe).
+/// 
+/// ## hfe file structure
 /// ---
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
-///   * next 4 digits -> encoded contents padding bits
+///   * next 4 digits -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree encoded in binary
-/// * Encoded bytes
+///   * HuffTree compressed in binary
+/// * compressed bytes
 /// 
 /// # Examples
 /// ---
 /// ```
-/// use huff_encoding::file::write_as_hfe; 
+/// use huff_encoding::file::write_hfe; 
 /// 
 /// fn main() -> std::io::Result<()> {
 ///     write_hfe("C:\\", "foo", "Lorem ipsum")?;
@@ -39,43 +39,79 @@ const EXTENSION: &str = "hfe";
 ///     Ok(())
 /// }
 /// ```
-pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> io::Result<()>{
+pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -> io::Result<()>{
     fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
-        // construct huffman tree
-        let tree = HuffTree::from_bytes(bytes);
-        
-        // encode string, get file header and calc their padding bits
-        let h = get_header(&mut tree.to_bin());
-        let es = get_encoded_bytes(bytes, tree.byte_codes().clone());
-        let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
-
+        let compressed_bytes = compress(bytes);
 
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
-        buf_writer.write_all(&[padding_bits])?;
-        buf_writer.write_all(&h.into_boxed_slice())?;
-        buf_writer.write_all(&es.into_boxed_slice())?;
+        buf_writer.write(&compressed_bytes)?;
 
         Ok(())
     }
     
     // add name and extension to dir path
-    let path = dir_path.as_ref().join(format!("{}.{}", file_name, EXTENSION));
+    let path = dir_path.as_ref().join(file_name);
 
     inner(&path, bytes.as_ref())
 }
 
-/// Read bytes encoded in a .hfe file
+/// Compress the string slice as Huffman code and write it to
+/// a file with the given name (extension is arbitrary, but .hfe is recommended) 
+/// in the given dir_path, but using multiple threads (it's faster for bigger files).
 /// 
-/// ## .hfe file structure
+/// Non-threaded version is faster for smaller files (huff_encoding::write_hfe).
+/// 
+/// ## hfe file structure
 /// ---
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
-///   * next 4 digits -> encoded contents padding bits
+///   * next 4 digits -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree encoded in binary
-/// * Encoded bytes
+///   * HuffTree compressed in binary
+/// * compressed bytes
+/// 
+/// # Examples
+/// ---
+/// ```
+/// use huff_encoding::file::threaded_write_as_hfe; 
+/// 
+/// fn main() -> std::io::Result<()> {
+///     threaded_write_hfe("C:\\", "foo", "Lorem ipsum")?;
+///     threaded_write_hfe("/home/user/", "bar", "dolor sit")?;
+///     Ok(())
+/// }
+/// ```
+pub fn threaded_write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -> io::Result<()>{
+    fn inner(path: &Path, bytes: &[u8]) -> io::Result<()>{
+        let compressed_bytes = threaded_compress(bytes);
+
+        let file = fs::File::create(path)?;
+        let mut buf_writer = BufWriter::new(file);
+        buf_writer.write(&compressed_bytes)?;
+
+        Ok(())
+    }
+    
+    // add name and extension to dir path
+    let path = dir_path.as_ref().join(file_name);
+
+    inner(&path, bytes.as_ref())
+}
+
+
+/// Read bytes compressed in a huff compressed file
+/// 
+/// ## hfe file structure
+/// ---
+/// * Byte containing the number of padding bits
+///   * first 4 digits -> header padding bits
+///   * next 4 digits -> compressed contents padding bits
+/// * Header comprised of:
+///   * 4 byte header length (in bytes)
+///   * HuffTree compressed in binary
+/// * compressed bytes
 /// 
 /// # Examples
 /// ---
@@ -92,51 +128,119 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8]) -> 
 /// ```
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
     fn inner(path: &Path) -> io::Result<Vec<u8>>{
-        let raw_bytes = fs::read(path)?;
-
-        let padding_bits = raw_bytes[0];
-        let header_padding_bits =  padding_bits >> 4;
-        let file_padding_bits = padding_bits & 0b0000_1111;
-
-        let header_len = u32::from_be_bytes(raw_bytes[1..5].try_into().unwrap());
-        let header = {
-            let mut header_bits = BitVec::from_vec(raw_bytes[5..5 + header_len as usize].to_vec());
-            header_bits.drain(header_bits.len() - (header_padding_bits as usize)..);
-            header_bits
-        };
-        let coded_bytes = HuffTree::coded_chars_from_bin(&header);
-
-        let encoded_file = {
-            let file_bytes = &raw_bytes[5 + header_len as usize..];
-            let mut file_bits: BitVec<bitvec::order::LocalBits, u8> = BitVec::from_vec(file_bytes.to_vec());
-            file_bits.drain(file_bits.len() - (file_padding_bits as usize)..);
-            file_bits
-        };
-        
-        // TODO: Replace the hashmap here somehow
-        let mut decoded_file: Vec<u8> = Vec::new();
-        let mut current_code = BitVec::new();
-        for bit in encoded_file{
-            current_code.push(bit);
-            let coded_byte = coded_bytes.get(&current_code);
-            match coded_byte{
-                Some(_) =>{
-                    decoded_file.push(*coded_byte.unwrap());
-                    current_code.clear();
-                }
-                None => (),
-            }
-        }
-
-        Ok(decoded_file)
+        let bytes = fs::read(path)?;
+        Ok(decompress(&bytes))
     }
 
     return inner(&path.as_ref())
 }
 
+/// Returns given bytes compresses using 
+/// huffman encoding.
+/// 
+/// Threaded version is faster for bigger files (huff_encoding::threaded_compress).
+/// 
+/// ## hfe file structure
+/// ---
+/// * Byte containing the number of padding bits
+///   * first 4 digits -> header padding bits
+///   * next 4 digits -> compressed contents padding bits
+/// * Header comprised of:
+///   * 4 byte header length (in bytes)
+///   * HuffTree compressed in binary
+/// * compressed bytes
+/// 
+/// # Examples
+/// ---
+/// ```
+/// use huff_encoding::file::compress_hfe; 
+/// 
+/// let foo = compress_hfe(&[255, 255, 255, 255, 255, 255]);
+pub fn compress(bytes: &[u8]) -> Vec<u8>{
+    // construct huffman tree
+    let tree = HuffTree::from_bytes(bytes);
+        
+    // compress bytes, get file header and calc their padding bits
+    let h = get_header(&mut tree.to_bin());
+    let es = get_compressed_bytes(bytes, tree.byte_codes().clone());
+    let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
+
+
+    let mut compressed_bytes: Vec<u8> = Vec::new();
+    compressed_bytes.extend(&[padding_bits]);
+    compressed_bytes.extend(h.into_boxed_slice().to_vec());
+    compressed_bytes.extend(es.into_boxed_slice().to_vec());
+
+    return compressed_bytes;
+}
+
+/// Returns given bytes compresses using 
+/// huffman encoding, but using multiple threads (it's faster for bigger files).
+/// 
+/// Non-threaded version is faster for smaller files (huff_encoding::compress).
+/// 
+/// ## hfe file structure
+/// ---
+/// * Byte containing the number of padding bits
+///   * first 4 digits -> header padding bits
+///   * next 4 digits -> compressed contents padding bits
+/// * Header comprised of:
+///   * 4 byte header length (in bytes)
+///   * HuffTree compressed in binary
+/// * compressed bytes
+/// 
+/// # Examples
+/// ---
+/// ```
+/// use huff_encoding::file::threaded_compress_hfe; 
+/// 
+/// let foo = threaded_compress_hfe(&[255, 255, 255, 255, 255, 255]);
+/// ```
+pub fn threaded_compress(bytes: &[u8]) -> Vec<u8>{
+    // construct huffman tree
+    let tree = HuffTree::threaded_from_bytes(bytes);
+        
+    // compress bytes, get file header and calc their padding bits
+    let h = get_header(&mut tree.to_bin());
+    let es = threaded_get_compressed_bytes(bytes, tree.byte_codes().clone());
+    let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
+
+
+    let mut compressed_bytes: Vec<u8> = Vec::new();
+    compressed_bytes.extend(&[padding_bits]);
+    compressed_bytes.extend(h.into_boxed_slice().to_vec());
+    compressed_bytes.extend(es.into_boxed_slice().to_vec());
+
+    return compressed_bytes;
+}
+
+/// Return bytes decompressed from the given bytes
+/// 
+/// ## hfe file structure
+/// ---
+/// * Byte containing the number of padding bits
+///   * first 4 digits -> header padding bits
+///   * next 4 digits -> compressed contents padding bits
+/// * Header comprised of:
+///   * 4 byte header length (in bytes)
+///   * HuffTree compressed in binary
+/// * compressed bytes
+/// 
+/// # Examples
+/// ---
+/// ```
+/// use huff_encoding::file::{compress_hfe, decompress_hfe}; 
+/// 
+/// let foo = compress_hfe(&[255, 255, 255, 255, 255, 255]);
+/// let bar = decompress_hfe(&foo);
+/// ```
+pub fn decompress(bytes: &[u8]) -> Vec<u8>{
+    return get_decoded_bytes(bytes);
+}
+
 
 /// Return a tree_bin preceded by its length
-/// to be used as a .hfe file header.
+/// to be used as a hfe file header.
 fn get_header(tree_bin: &mut BitVec<LocalBits, u8>) -> BitVec<LocalBits, u8>{
     // get tree_bin.len() and add at the front of tree_bin
     let tree_len: u32 = ((tree_bin.len() + calc_padding_bits(tree_bin.len()) as usize) / 8) as u32;
@@ -146,8 +250,26 @@ fn get_header(tree_bin: &mut BitVec<LocalBits, u8>) -> BitVec<LocalBits, u8>{
     return bin_len;
 }
 
-/// Return given bytes encoded with the given byte_codes HashMap
-fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
+/// Return given bytes compressed with the given byte_codes HashMap.
+/// 
+/// Threaded version is faster for bigger files.
+fn get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
+    let mut compressed_bytes = BitVec::new();
+    for byte in bytes{
+        let b_code = byte_codes.get(&byte).unwrap();
+        for bit in b_code{
+            compressed_bytes.push(bit);
+        }
+    }
+
+    return compressed_bytes;
+}
+
+/// Return given bytes compressed with the given byte_codes HashMap, but using
+/// multiple threads (it's faster for bigger files).
+/// 
+/// Non-threaded version is faster for smaller files.
+fn threaded_get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
     // allocate byte_codes onto the heap
     let byte_codes = Box::new(byte_codes);
 
@@ -159,25 +281,67 @@ fn get_encoded_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<
     for ration in byte_rations{
         let codes = byte_codes.clone();
         let handle = thread::spawn(move || {
-            let mut encoded_chunk = BitVec::new();
+            let mut compressed_chunk = BitVec::new();
             for byte in ration{
                 let b_code = codes.get(&byte).unwrap();
                 for bit in b_code{
-                    encoded_chunk.push(bit);
+                    compressed_chunk.push(bit);
                 }
             }
-            encoded_chunk
+            compressed_chunk
         });
         handles.push(handle);
     }
 
-    // concatenate every encoded chunk into encoded_bytes
+    // concatenate every compressed chunk into compressed_bytes
     // doing this is slow, but i've got no better idea
     // still faster than linear
-    let mut encoded_bytes: BitVec<LocalBits, u8> = BitVec::with_capacity(3 * bytes.len() / 4);
+    let mut compressed_bytes: BitVec<LocalBits, u8> = BitVec::with_capacity(3 * bytes.len() / 4);
     for handle in handles{	   
-        encoded_bytes.extend_from_bitslice(&handle.join().unwrap()[..]);
+        compressed_bytes.extend_from_bitslice(&handle.join().unwrap()[..]);
     }
 
-    return encoded_bytes;
+    return compressed_bytes;
+}
+
+// Return bytes decoded from given bytes.
+fn get_decoded_bytes(bytes: &[u8]) -> Vec<u8>{
+    // read how many bits were used for padding
+    let padding_bits = bytes[0];
+    let header_padding_bits =  padding_bits >> 4;
+    let file_padding_bits = padding_bits & 0b0000_1111;
+
+    // read coded bytes from header
+    let header_len = u32::from_be_bytes(bytes[1..5].try_into().unwrap());
+    let header = {
+        let mut header_bits = BitVec::from_vec(bytes[5..5 + header_len as usize].to_vec());
+        header_bits.drain(header_bits.len() - (header_padding_bits as usize)..);
+        header_bits
+    };
+    let coded_bytes = HuffTree::coded_bytes_from_bin(&header);
+
+    let compressed_file = {
+        let file_bytes = &bytes[5 + header_len as usize..];
+        let mut file_bits: BitVec<bitvec::order::LocalBits, u8> = BitVec::from_vec(file_bytes.to_vec());
+        file_bits.drain(file_bits.len() - (file_padding_bits as usize)..);
+        file_bits
+    };
+    
+    // decode every byte
+    // TODO: Replace the hashmap here somehow
+    let mut decoded_bytes: Vec<u8> = Vec::new();
+    let mut current_code = BitVec::new();
+    for bit in compressed_file{
+        current_code.push(bit);
+        let coded_byte = coded_bytes.get(&current_code);
+        match coded_byte{
+            Some(_) =>{
+                decoded_bytes.push(*coded_byte.unwrap());
+                current_code.clear();
+            }
+            None => (),
+        }
+    }
+
+    return decoded_bytes;
 }

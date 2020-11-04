@@ -60,6 +60,8 @@ impl ByteFreqs{
     /// Count all bytes in given slice and organize them
     /// into ByteFreqs (internally a lookup table)
     /// 
+    /// Threaded version is faster for bigger files (huff_encoding::ByteFreqs::threaded_from_bytes).
+    /// 
     /// # Examples
     /// ---
     /// ```
@@ -82,9 +84,10 @@ impl ByteFreqs{
 
     /// Count all bytes in given slice and organize them
     /// into ByteFreqs (internally a lookup table)
+    /// Uses multiple threads (it's faster for bigger files).
     ///   
-    /// ### Uses multiple threads to count bytes faster 
-    /// ---
+    /// Non-threaded version is faster for smaller files (huff_encoding::ByteFreqs::from_bytes).
+    /// 
     /// # Examples
     /// ---
     /// ```

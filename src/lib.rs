@@ -11,3 +11,12 @@ pub use crate::huff_structs::{
     HuffCode,
     ByteFreqs,
 };
+
+pub use crate::file::{
+    write_hfe,
+    threaded_write_hfe,
+    read_hfe,
+    compress,
+    threaded_compress,
+    decompress,
+};
