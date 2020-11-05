@@ -8,9 +8,9 @@ use crate::{HuffLeaf, HuffCode};
 /// Struct representing a node in the Huffman Tree.
 /// 
 /// Stores its children as:
-/// ```
+/// 
 /// [Option<Box<RefCell<HuffBranch>>>; 2]
-/// ```
+/// 
 /// Also stores its position in the parent's children Array, and 
 /// data represented as a HuffLeaf.
 #[derive(Debug, Clone, Eq)]
@@ -47,7 +47,7 @@ impl HuffBranch{
     /// ```
     /// use huff_encoding::{HuffBranch, HuffLeaf};
     /// 
-    /// let foo = HuffBranch::new(HuffLeaf::new(0xc4, 3), [None, None]);
+    /// let foo = HuffBranch::new(HuffLeaf::new(Some(0xc4), 3), None);
     /// ```
     pub fn new(leaf: HuffLeaf, children: Option<[Box<RefCell<HuffBranch>>; 2]>) -> HuffBranch{
         let huff_branch = HuffBranch{

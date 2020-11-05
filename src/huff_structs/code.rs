@@ -4,9 +4,8 @@
 /// accessed bitwise.
 /// ---
 /// Internal storage:
-/// ```
+/// 
 /// [u64; 4]
-/// ```
 /// ---
 /// Max length of a HuffCode in my
 /// implementation is 255, as I'm using
@@ -14,7 +13,7 @@
 ///  
 /// *alphabet_size - 1*
 /// 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct HuffCode{
     storage: [u64; 4],
 
@@ -25,7 +24,7 @@ pub struct HuffCode{
 
 impl PartialEq for HuffCode{
     fn eq(&self, other: &Self) -> bool {
-        return self.storage() == other.storage();
+        return self.storage == other.storage;
     }
 }
 
@@ -84,7 +83,7 @@ impl HuffCode{
     /// ```
     /// use huff_encoding::HuffCode;
     /// 
-    /// let code = HuffCode::new();
+    /// let mut code = HuffCode::new();
     /// code.push(true);
     /// 
     /// // does not panic.
@@ -110,7 +109,7 @@ impl HuffCode{
     /// ```
     /// use huff_encoding::HuffCode;
     /// 
-    /// let code = HuffCode::new();
+    /// let mut code = HuffCode::new();
     /// code.push(true);
     /// 
     /// // does not panic.
@@ -134,17 +133,11 @@ impl HuffCode{
         }
     }
 
+
     /// Returns the length of the code (in bits of course).
     pub fn len(&self) -> usize{
         return self.len;
     }
-    
-    /// Returns a reference to the internal storage
-    /// of the code.
-    pub fn storage(&self) -> &[u64; 4]{
-        return &self.storage;
-    }
-
 
     /// Returns the index of the block that the given bit's in
     fn get_block_index(index: usize) -> usize{

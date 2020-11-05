@@ -15,13 +15,13 @@ use crate::huff_structs::branch_heap::HuffBranchHeap;
 /// every bottom one containing a byte.
 /// 
 /// Can be grown from: 
-/// ```
-/// HashMap<u8, usize>
-/// ```
+/// 
+/// * HashMap<u8, usize>
+///
 /// or 
-/// ```
-/// &str
-/// ```
+/// 
+/// * &str
+/// 
 /// or even initialized empty and grown afterwards.
 /// 
 #[derive(Debug)]
@@ -73,10 +73,10 @@ impl HuffTree{
     /// # Examples
     /// ---
     /// ```
-    /// use huff_encoding::HuffTree;
+    /// use huff_encoding::{HuffTree, ByteFreqs};
     /// 
-    /// let foo = HuffTree::new();
-    /// foo.grow("Hello, World/");
+    /// let mut foo = HuffTree::new();
+    /// foo.grow(&ByteFreqs::from_bytes(&"Hello, World!".as_bytes()));
     /// ```
     pub fn new() -> HuffTree{
         let huff_tree = HuffTree{
@@ -95,10 +95,10 @@ impl HuffTree{
     /// # Examples
     /// ---
     /// ```
-    /// use huff_encoding::huff_structs::HuffTree;
+    /// use huff_encoding::HuffTree;
     /// 
-    /// let foo = HuffTree::from("abbccc".as_bytes());
-    /// let bar = HuffTree::char_codes_from_bin(&foo.as_bin());
+    /// let foo = HuffTree::from_bytes("abbccc".as_bytes());
+    /// let bar = HuffTree::coded_bytes_from_bin(&foo.to_bin());
     /// 
     /// print!("{:?}", bar)
     /// // Prints something like:
@@ -108,8 +108,8 @@ impl HuffTree{
     /// //      11: 98,
     /// // }
     /// ```
-    pub fn coded_bytes_from_bin(bin: &BitVec<LocalBits, u8>) -> HashMap<BitVec, u8>{
-        fn revert_branch_code(branch_code: &mut BitVec, prev_branch: bool){
+    pub fn coded_bytes_from_bin(bin: &BitVec<LocalBits, u8>) -> HashMap<BitVec<LocalBits, u8>, u8>{
+        fn revert_branch_code(branch_code: &mut BitVec<LocalBits, u8>, prev_branch: bool){
             match prev_branch{
                 // prev branch was joint -> you're its first child
                 true =>{
@@ -127,10 +127,10 @@ impl HuffTree{
         // this whole thing is probably atrocious, but it works?
 
         
-        let mut coded_bytes: HashMap<BitVec, u8> = HashMap::default();
+        let mut coded_bytes: HashMap<BitVec<LocalBits, u8>, u8> = HashMap::default();
 
         // current branch code and previous branch bit
-        let mut branch_code = BitVec::<LocalBits, usize>::new();
+        let mut branch_code = BitVec::<LocalBits, u8>::new();
         let mut prev_branch = true;
     
         let mut read_byte = false;
@@ -213,9 +213,8 @@ impl HuffTree{
     /// * 1 being a joint branch.
     /// 
     /// To decode use:
-    /// ```
-    /// HuffTree::char_codes_from_bin(bin);
-    /// ```
+    /// 
+    /// * HuffTree::char_codes_from_bin(bin);
     /// 
     /// ---
     /// ## DOES NOT STORE FREQUENCIES.
@@ -227,11 +226,11 @@ impl HuffTree{
     /// # Examples
     /// ---
     /// ```
-    /// use huff_encoding::huff_structs::HuffTree;
+    /// use huff_encoding::HuffTree;
     /// 
-    /// let foo = HuffTree::from("abbccc".as_bytes());
+    /// let foo = HuffTree::from_bytes("abbccc".as_bytes());
     /// 
-    /// print!("{:?}", &foo.as_bit_vec()[..])
+    /// print!("{:?}", &foo.to_bin())
     /// // outputs:
     /// // 10011000111001100001001100010
     /// ```
@@ -278,9 +277,7 @@ impl HuffTree{
 
 
     /// Grows the tree from the given
-    /// ```
-    /// &ByteFreqs
-    /// ```
+    /// * &ByteFreqs
     pub fn grow(&mut self, byte_freqs: &ByteFreqs){
         assert!(byte_freqs.len() > 0, "byte_freqs is empty");
 

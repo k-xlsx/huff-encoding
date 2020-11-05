@@ -8,9 +8,8 @@ use crate::{HuffBranch, HuffLeaf, ByteFreqs};
 /// used to grow the HuffTree.
 /// 
 /// Can be either initialized empty, or made from:
-/// ```
+/// 
 /// HashMap<u8, usize>
-/// ```
 #[derive(Debug)]
 pub struct HuffBranchHeap{
     heap: BinaryHeap<HuffBranch>,
@@ -19,14 +18,6 @@ pub struct HuffBranchHeap{
 impl HuffBranchHeap{
     /// Creates a HuffBranchHeap from a HashMap of u8 as
     /// keys and their frequencies (usize) as values.
-    /// 
-    /// # Example
-    /// ---
-    /// ```
-    /// use huff_encoding::{HuffBranchHeap, get_byte_freqs}
-    /// 
-    /// let foo = HuffBranchHeap::from(get_byte_freqs("Hello, World/".as_bytes()));
-    /// ```
     pub fn from_byte_freqs(byte_freqs: &ByteFreqs) -> HuffBranchHeap{
         let mut leaf_vec = HuffBranchHeap::new();
 
@@ -36,14 +27,6 @@ impl HuffBranchHeap{
     }
 
     /// Initializes an empty HuffBranchHeap.
-    /// 
-    /// # Example
-    /// ---
-    /// ```
-    /// use huff_encoding::HuffBranchHeap
-    /// 
-    /// let foo = HuffBranchHeap::new();
-    /// ```
     pub fn new() -> HuffBranchHeap{
         let leaf_vec = HuffBranchHeap{
             heap: BinaryHeap::new(),

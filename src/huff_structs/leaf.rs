@@ -3,11 +3,12 @@ use crate::HuffCode;
 
 
 /// Struct used to store HuffBranch data:
-/// ```
-/// byte: Option<u8>;                // get
-/// frequency: usize                 // get
-/// code: Option<bit_vec::BitVec>;   // get&set
-/// ```
+///
+/// * byte: Option<u8>
+/// 
+/// * frequency: usize
+/// 
+/// * code: Option<bit_vec::BitVec>
 #[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
     byte: Option<u8>,
@@ -29,7 +30,7 @@ impl HuffLeaf{
     /// ```
     /// use huff_encoding::HuffLeaf;
     /// 
-    /// let foo = HuffLeaf::new(0xc4, 3);
+    /// let foo = HuffLeaf::new(Some(0xc4), 3);
     /// ```
     pub fn new(byte: Option<u8>, frequency: usize) -> HuffLeaf{
         let huff_leaf = HuffLeaf{

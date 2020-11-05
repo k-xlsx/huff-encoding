@@ -34,8 +34,8 @@ use crate::utils::{ration_vec, calc_padding_bits};
 /// use huff_encoding::file::write_hfe; 
 /// 
 /// fn main() -> std::io::Result<()> {
-///     write_hfe("C:\\", "foo", "Lorem ipsum")?;
-///     write_hfe("/home/user/", "bar", "dolor sit")?;
+///     write_hfe("C:\\", "foo", &"Lorem ipsum".as_bytes());
+///     write_hfe("/home/user/", "bar", &"dolor sit".as_bytes());
 ///     Ok(())
 /// }
 /// ```
@@ -62,11 +62,11 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -
 /// # Examples
 /// ---
 /// ```
-/// use huff_encoding::file::threaded_write_as_hfe; 
+/// use huff_encoding::file::threaded_write_hfe; 
 /// 
 /// fn main() -> std::io::Result<()> {
-///     threaded_write_hfe("C:\\", "foo", "Lorem ipsum")?;
-///     threaded_write_hfe("/home/user/", "bar", "dolor sit")?;
+///     threaded_write_hfe("C:\\", "foo", &"Lorem ipsum".as_bytes());
+///     threaded_write_hfe("/home/user/", "bar", &"dolor sit".as_bytes());
 ///     Ok(())
 /// }
 /// ```
@@ -104,20 +104,6 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>(dir_path: P, f
 ///   * 4 byte header length (in bytes)
 ///   * HuffTree compressed in binary
 /// * compressed bytes
-/// 
-/// # Examples
-/// ---
-/// ```
-/// use huff_encoding::file::{write_hfe, read_hfe}; 
-/// 
-/// fn main() -> std::io::Result<()> {
-///     write_hfe("/home/user/", "bar", &"abbccc".as_bytes())?;
-///     let foo = read_hfe("/home/user/bar.hfe")?;
-///     assert_eq!(&foo[..], vec![97, 98, 98, 99, 99, 99]);
-///
-///     Ok(())
-/// }
-/// ```
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
     fn inner(path: &Path) -> io::Result<Vec<u8>>{
         let bytes = fs::read(path)?;
@@ -145,9 +131,9 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
 /// # Examples
 /// ---
 /// ```
-/// use huff_encoding::file::compress_hfe; 
+/// use huff_encoding::compress; 
 /// 
-/// let foo = compress_hfe(&[255, 255, 255, 255, 255, 255]);
+/// let foo = compress(&[97, 98, 98, 99, 99, 99]);
 pub fn compress(bytes: &[u8]) -> Vec<u8>{
     return generic_compress(bytes, HuffTree::from_bytes(bytes), get_compressed_bytes);
 }
@@ -170,9 +156,9 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// # Examples
 /// ---
 /// ```
-/// use huff_encoding::file::threaded_compress_hfe; 
+/// use huff_encoding::threaded_compress; 
 /// 
-/// let foo = threaded_compress_hfe(&[255, 255, 255, 255, 255, 255]);
+/// let foo = threaded_compress(&[97, 98, 98, 99, 99, 99]);
 /// ```
 pub fn threaded_compress(bytes: &[u8]) -> Vec<u8>{
     return generic_compress(bytes, HuffTree::threaded_from_bytes(bytes), threaded_get_compressed_bytes);
@@ -209,10 +195,10 @@ fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits,
 /// # Examples
 /// ---
 /// ```
-/// use huff_encoding::file::{compress_hfe, decompress_hfe}; 
+/// use huff_encoding::{compress, decompress}; 
 /// 
-/// let foo = compress_hfe(&[255, 255, 255, 255, 255, 255]);
-/// let bar = decompress_hfe(&foo);
+/// let foo = compress(&[97, 98, 98, 99, 99, 99]);
+/// let bar = decompress(&foo);
 /// ```
 pub fn decompress(bytes: &[u8]) -> Vec<u8>{
     return get_decoded_bytes(bytes);
@@ -310,7 +296,7 @@ fn get_decoded_bytes(bytes: &[u8]) -> Vec<u8>{
     // decode every byte
     // TODO: Replace the hashmap here somehow
     let mut decoded_bytes: Vec<u8> = Vec::new();
-    let mut current_code = BitVec::new();
+    let mut current_code = BitVec::<LocalBits, u8>::new();
     for bit in compressed_file{
         current_code.push(bit);
         let coded_byte = coded_bytes.get(&current_code);

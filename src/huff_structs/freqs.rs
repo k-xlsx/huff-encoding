@@ -12,16 +12,17 @@ use crate::utils::ration_vec;
 /// 
 /// ```
 /// use huff_encoding::ByteFreqs;
-/// let foo = ByteFreqs::from("bar".as_bytes());
+/// let foo = ByteFreqs::from_bytes(&"bar".as_bytes());
 /// ```
 /// or threaded (faster for larger byte collections):
 /// 
 /// ```
 /// use huff_encoding::ByteFreqs;
-/// let foo = ByteFreqs::from("bar".as_bytes());
+/// let foo = ByteFreqs::from_bytes(&"bar".as_bytes());
 /// ```
 pub struct ByteFreqs{
     freqs: [usize; 256],
+    len: usize,
 }
 
 /// Iterator over the contents of ByteFreqs (byte, freq)2
@@ -35,6 +36,10 @@ impl Iterator for ByteFreqsIter<'_>{
     type Item = (u8, usize);
 
     fn next(&mut self) -> Option<Self::Item>{
+        if self.current_index == 255{
+            return None
+        }
+
         while let None = self.freqs.get(self.current_index as usize){
             if self.current_index == 255{
                 return None
@@ -42,7 +47,7 @@ impl Iterator for ByteFreqsIter<'_>{
             self.current_index += 1
         }
         let entry = Some((self.current_index , *self.freqs.get(self.current_index as usize).unwrap()));
-        self.current_index += 1;
+        if self.current_index != 255{self.current_index += 1;}
         return entry;
     }
 }
@@ -67,18 +72,24 @@ impl ByteFreqs{
     /// ```
     /// use huff_encoding::ByteFreqs;
     /// 
-    /// let foo = ByteFreqs::from("bar".as_bytes());
+    /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
     /// ```
     pub fn from_bytes(bytes: &[u8]) -> ByteFreqs{
         // count bytes into an array
         let mut byte_freqs: [usize; 256] = [0;256];
+        let mut len = 0;
+
+        let mut previous_byte: Option<u8> = None;
         for b in bytes{
+            if previous_byte != Some(*b){len += 1;}
             byte_freqs[*b as usize] += 1;
+            previous_byte = Some(*b)
         }
 
         // convert the array into a hashmap
         return ByteFreqs{
-            freqs: byte_freqs
+            freqs: byte_freqs,
+            len: len,
         };
     }
 
@@ -93,7 +104,7 @@ impl ByteFreqs{
     /// ```
     /// use huff_encoding::ByteFreqs;
     /// 
-    /// let foo = ByteFreqs::from("bar".as_bytes());
+    /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
     /// ```
     pub fn threaded_from_bytes(bytes: &[u8]) -> ByteFreqs{
         // divide the bytes into rations per thread
@@ -122,6 +133,7 @@ impl ByteFreqs{
 
         return ByteFreqs{
             freqs: byte_freqs.freqs,
+            len: byte_freqs.len
         };
     }
 
@@ -159,7 +171,7 @@ impl ByteFreqs{
 
     /// Return the length of the wrapped Hashmap<u8; usize>.
     pub fn len(&self) -> usize{
-        return self.freqs.len();
+        return self.len;
     }
 
     /// Add another ByteFreqs to self
@@ -172,6 +184,7 @@ impl ByteFreqs{
                 }
                 None =>{
                     self.freqs[b as usize] = f;
+                    self.len += 1;
                 }
             }
         }
