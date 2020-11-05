@@ -28,15 +28,15 @@ fn write_read_hfe() {
     Baron von Tarkin...
     Master of Death waging war against the forces of Life.");
 
-    write_hfe("", "temp.hfe", &s.as_bytes()).expect("file write error");
-    let decoded_bytes = read_hfe("temp.hfe").expect("file read error");
-    assert_eq!(s, std::str::from_utf8(&decoded_bytes).unwrap());
-    assert_eq!(s.as_bytes(), decoded_bytes);
+    write_hfe(&"", &"temp.hfe", None, &s.as_bytes()).expect("file write error");
+    let decompress_result = read_hfe("temp.hfe").expect("file read error");
+    assert_eq!(s, std::str::from_utf8(&decompress_result.bytes()).unwrap());
+    assert_eq!(s.as_bytes(), decompress_result.bytes());
 
-    threaded_write_hfe("", "temp.hfe", &s.as_bytes()).expect("file threaded write error");
-    let decoded_bytes = read_hfe("temp.hfe").expect("file read error");
-    assert_eq!(s, std::str::from_utf8(&decoded_bytes).unwrap());
-    assert_eq!(s.as_bytes(), decoded_bytes);
+    threaded_write_hfe(&"", &"temp.hfe", None, &s.as_bytes()).expect("file threaded write error");
+    let decompress_result = read_hfe("temp.hfe").expect("file read error");
+    assert_eq!(s, std::str::from_utf8(&decompress_result.bytes()).unwrap());
+    assert_eq!(s.as_bytes(), decompress_result.bytes());
 
     std::fs::remove_file("temp.hfe").unwrap();
 }

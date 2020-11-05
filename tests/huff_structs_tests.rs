@@ -94,3 +94,5 @@ fn tree_bin_codes(){
         assert_eq!(tree.byte_codes().get(&byte).unwrap(), &{let mut hc = HuffCode::new(); for b in code{hc.push(b)}; hc}); 
     }
 }
+
+// TODO: test if empty stuff panics

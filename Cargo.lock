@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "huff_encoding"
-version = "0.0.9"
+version = "0.1.0"
 dependencies = [
  "bitvec",
  "num_cpus",

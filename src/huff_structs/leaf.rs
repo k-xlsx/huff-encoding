@@ -8,7 +8,7 @@ use crate::HuffCode;
 /// 
 /// * frequency: usize
 /// 
-/// * code: Option<bit_vec::BitVec>
+/// * code: Option<HuffCode>
 #[derive(Debug, Clone, Eq)]
 pub struct HuffLeaf{
     byte: Option<u8>,
@@ -59,7 +59,7 @@ impl HuffLeaf{
     }
 
 
-    /// Sets the given BitVec as code.
+    /// Sets the given HuffCode as code.
     pub fn set_code(&mut self, code: HuffCode){    
         self.code = Some(code);
     }

@@ -108,6 +108,7 @@ impl HuffTree{
     /// //      11: 98,
     /// // }
     /// ```
+    // TODO: make this return HashMap<HuffCode, u8> (need to implement pop and clear on HuffCode)
     pub fn coded_bytes_from_bin(bin: &BitVec<LocalBits, u8>) -> HashMap<BitVec<LocalBits, u8>, u8>{
         fn revert_branch_code(branch_code: &mut BitVec<LocalBits, u8>, prev_branch: bool){
             match prev_branch{
@@ -127,10 +128,10 @@ impl HuffTree{
         // this whole thing is probably atrocious, but it works?
 
         
-        let mut coded_bytes: HashMap<BitVec<LocalBits, u8>, u8> = HashMap::default();
+        let mut coded_bytes: HashMap<BitVec<LocalBits, u8>, u8> = HashMap::with_capacity(256);
 
         // current branch code and previous branch bit
-        let mut branch_code = BitVec::<LocalBits, u8>::new();
+        let mut branch_code = BitVec::<LocalBits, u8>::with_capacity(255);
         let mut prev_branch = true;
     
         let mut read_byte = false;

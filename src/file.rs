@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::thread;
 use std::convert::TryInto;
+use std::ffi::OsStr;
 use std::path::Path;
 use std::{fs, io};
 use io::{BufWriter, Write};
@@ -11,6 +12,32 @@ use crate::{HuffTree, HuffCode};
 use crate::utils::{ration_vec, calc_padding_bits};
 
 
+/// The result of decompressing a hfe file.
+/// 
+/// Contains:
+/// * extension -> the original file's extension.
+/// * bytes -> decompressed bytes.
+pub struct FileDecompressResult{
+    extension: String,
+    bytes: Vec<u8>,
+}
+
+impl FileDecompressResult{
+    pub fn new(bytes: Vec<u8>, extension: String) -> FileDecompressResult{
+        return FileDecompressResult{extension: extension, bytes: bytes};
+    }
+
+    /// Returns a reference to the original file's extension.
+    pub fn extension(&self) -> &String{
+        return &self.extension;
+    }
+
+    /// Returns a reference to the decompressed bytes.
+    pub fn bytes(&self) -> &Vec<u8>{
+        return &self.bytes;
+    } 
+}
+
 
 /// Compress the string slice as Huffman code and write it to
 /// a file with the given name (extension is arbitrary, but .hfe is recommended) 
@@ -20,6 +47,7 @@ use crate::utils::{ration_vec, calc_padding_bits};
 /// 
 /// ## hfe file structure
 /// ---
+/// * 255 bytes representing the original file's extension
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
 ///   * next 4 digits -> compressed contents padding bits
@@ -34,13 +62,13 @@ use crate::utils::{ration_vec, calc_padding_bits};
 /// use huff_encoding::file::write_hfe; 
 /// 
 /// fn main() -> std::io::Result<()> {
-///     write_hfe("C:\\", "foo", &"Lorem ipsum".as_bytes());
-///     write_hfe("/home/user/", "bar", &"dolor sit".as_bytes());
+///     write_hfe(&"C:\\", &"foo", Some(std::ffi::OsStr::new("exe")), &"Lorem ipsum".as_bytes());
+///     write_hfe(&"/home/user/", &"bar", None, &"dolor sit".as_bytes());
 ///     Ok(())
 /// }
 /// ```
-pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -> io::Result<()>{
-    return generic_write_hfe(dir_path, file_name, bytes, compress);
+pub fn write_hfe<P: AsRef<Path>>(dir_path: &P, file_name: &P, org_extension: Option<&OsStr>,  bytes: &[u8]) -> io::Result<()>{
+    return generic_write_hfe(dir_path, file_name, org_extension, bytes, compress);
 }
 
 /// Compress the string slice as Huffman code and write it to
@@ -51,6 +79,7 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -
 /// 
 /// ## hfe file structure
 /// ---
+/// * 255 bytes representing the original file's extension
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
 ///   * next 4 digits -> compressed contents padding bits
@@ -65,22 +94,30 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -
 /// use huff_encoding::file::threaded_write_hfe; 
 /// 
 /// fn main() -> std::io::Result<()> {
-///     threaded_write_hfe("C:\\", "foo", &"Lorem ipsum".as_bytes());
-///     threaded_write_hfe("/home/user/", "bar", &"dolor sit".as_bytes());
+///     threaded_write_hfe(&"C:\\", &"foo", Some(std::ffi::OsStr::new("exe")), &"Lorem ipsum".as_bytes());
+///     threaded_write_hfe(&"/home/user/", &"bar", None, &"dolor sit".as_bytes());
 ///     Ok(())
 /// }
 /// ```
-pub fn threaded_write_hfe<P: AsRef<Path>>(dir_path: P, file_name: &str, bytes: &[u8], ) -> io::Result<()>{
-    return generic_write_hfe(dir_path, file_name, bytes, threaded_compress);
+pub fn threaded_write_hfe<P: AsRef<Path>>(dir_path: &P, file_name: &P, org_extension: Option<&OsStr>, bytes: &[u8],) -> io::Result<()>{
+    return generic_write_hfe(dir_path, file_name, org_extension, bytes, threaded_compress);
 }
 
 /// A generic version of write_hfe functions that accepts the used compress function as arg
-fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>(dir_path: P, file_name: &str, bytes: &[u8], compress_func: F) -> io::Result<()>{
-    fn inner<F: FnOnce(&[u8]) -> Vec<u8>>(path: &Path, bytes: &[u8], compress_func: F) -> io::Result<()>{
+fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>
+(dir_path: &P, file_name: &P, org_extension: Option<&OsStr>, bytes: &[u8], compress_func: F) -> io::Result<()>{
+    fn inner<F: FnOnce(&[u8]) -> Vec<u8>>(path: &Path, bytes: &[u8], org_extension: Option<&OsStr>, compress_func: F) -> io::Result<()>{
         let compressed_bytes = compress_func(bytes);
+
+        let mut extension_bytes: [u8; 255] = [0; 255];
+        for (i, byte) in match org_extension{Some(_) => org_extension.unwrap(), None => OsStr::new("")}
+        .to_str().unwrap().as_bytes().iter().enumerate(){
+            extension_bytes[i] = *byte;
+        }
 
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
+        buf_writer.write(&extension_bytes)?;
         buf_writer.write(&compressed_bytes)?;
 
         Ok(())
@@ -89,7 +126,7 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>(dir_path: P, f
     // add name and extension to dir path
     let path = dir_path.as_ref().join(file_name);
 
-    inner(&path, bytes.as_ref(), compress_func)
+    inner(&path, bytes.as_ref(), org_extension, compress_func)
 }
 
 
@@ -97,6 +134,7 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>(dir_path: P, f
 /// 
 /// ## hfe file structure
 /// ---
+/// * 255 bytes representing the original file's extension
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
 ///   * next 4 digits -> compressed contents padding bits
@@ -104,10 +142,14 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>(dir_path: P, f
 ///   * 4 byte header length (in bytes)
 ///   * HuffTree compressed in binary
 /// * compressed bytes
-pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
-    fn inner(path: &Path) -> io::Result<Vec<u8>>{
+pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<FileDecompressResult>{
+    fn inner(path: &Path) -> io::Result<FileDecompressResult>{
         let bytes = fs::read(path)?;
-        Ok(decompress(&bytes))
+        let org_extension = std::str::from_utf8(&bytes[..255]).unwrap().trim_matches(char::from(0));
+        Ok(FileDecompressResult::new(
+            decompress(&bytes[255..]),
+            String::from(org_extension),
+        ))
     }
 
     return inner(&path.as_ref())
@@ -118,7 +160,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>>{
 /// 
 /// Threaded version is faster for bigger files (huff_encoding::threaded_compress).
 /// 
-/// ## hfe file structure
+/// ## hfe data structure
 /// ---
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
@@ -143,7 +185,7 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// 
 /// Non-threaded version is faster for smaller files (huff_encoding::compress).
 /// 
-/// ## hfe file structure
+/// ## hfe data structure
 /// ---
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
@@ -182,7 +224,7 @@ fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits,
 
 /// Return bytes decompressed from the given bytes
 /// 
-/// ## hfe file structure
+/// ## hfe data structure
 /// ---
 /// * Byte containing the number of padding bits
 ///   * first 4 digits -> header padding bits
