@@ -24,7 +24,7 @@ fn compress_decompress() {
 #[test]
 fn write_read_hfe() {
     let s = String::from("Erutan Revol...
-    Elven Warden sworn to protect Nature, with his own life if need should arise
+    Elven Warden sworn to protect Nature, with his own life if need should arise.
     Baron von Tarkin...
     Master of Death waging war against the forces of Life.");
 
