@@ -282,7 +282,7 @@ impl HuffTree{
     pub fn grow(&mut self, byte_freqs: &ByteFreqs){
         assert!(byte_freqs.len() > 0, "byte_freqs is empty");
 
-        
+
         let mut branch_heap = HuffBranchHeap::from_byte_freqs(&byte_freqs);
 
         while branch_heap.len() > 1{

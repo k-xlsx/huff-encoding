@@ -29,25 +29,25 @@ pub struct ByteFreqs{
 pub struct ByteFreqsIter<'a>{
     freqs: &'a ByteFreqs,
 
-    current_index: u8,
+    current_index: usize,
 }
 
 impl Iterator for ByteFreqsIter<'_>{
     type Item = (u8, usize);
 
     fn next(&mut self) -> Option<Self::Item>{
-        if self.current_index == 255{
+        if self.current_index == 256{
             return None
         }
 
         while let None = self.freqs.get(self.current_index as usize){
-            if self.current_index == 255{
+            if self.current_index == 256{
                 return None
             }
             self.current_index += 1
         }
-        let entry = Some((self.current_index , *self.freqs.get(self.current_index as usize).unwrap()));
-        if self.current_index != 255{self.current_index += 1;}
+        let entry = Some((self.current_index as u8, *self.freqs.get(self.current_index as usize).unwrap()));
+        if self.current_index != 256{self.current_index += 1;}
         return entry;
     }
 }
