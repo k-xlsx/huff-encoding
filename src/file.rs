@@ -49,11 +49,11 @@ impl FileDecompressResult{
 /// ---
 /// * 255 bytes representing the original file's extension
 /// * Byte containing the number of padding bits
-///   * first 4 digits -> header padding bits
-///   * next 4 digits -> compressed contents padding bits
+///   * first nibble -> header padding bits
+///   * second nibble -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree compressed in binary
+///   * HuffTree encoded in binary
 /// * compressed bytes
 /// 
 /// # Examples
@@ -81,11 +81,11 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: &P, file_name: &P, org_extension: Opt
 /// ---
 /// * 255 bytes representing the original file's extension
 /// * Byte containing the number of padding bits
-///   * first 4 digits -> header padding bits
-///   * next 4 digits -> compressed contents padding bits
+///   * first nibble-> header padding bits
+///   * second nibble -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree compressed in binary
+///   * HuffTree encoded in binary
 /// * compressed bytes
 /// 
 /// # Examples
@@ -136,11 +136,11 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>
 /// ---
 /// * 255 bytes representing the original file's extension
 /// * Byte containing the number of padding bits
-///   * first 4 digits -> header padding bits
-///   * next 4 digits -> compressed contents padding bits
+///   * first nibble -> header padding bits
+///   * second nibble -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree compressed in binary
+///   * HuffTree encoded in binary
 /// * compressed bytes
 pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<FileDecompressResult>{
     fn inner(path: &Path) -> io::Result<FileDecompressResult>{
@@ -163,11 +163,11 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<FileDecompressResult>{
 /// ## hfe data structure
 /// ---
 /// * Byte containing the number of padding bits
-///   * first 4 digits -> header padding bits
-///   * next 4 digits -> compressed contents padding bits
+///   * first nibble -> header padding bits
+///   * second nibble -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree compressed in binary
+///   * HuffTree encoded in binary
 /// * compressed bytes
 /// 
 /// # Examples
@@ -188,11 +188,11 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// ## hfe data structure
 /// ---
 /// * Byte containing the number of padding bits
-///   * first 4 digits -> header padding bits
-///   * next 4 digits -> compressed contents padding bits
+///   * first nibble -> header padding bits
+///   * second nibble -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree compressed in binary
+///   * HuffTree encoded in binary
 /// * compressed bytes
 /// 
 /// # Examples
@@ -227,11 +227,11 @@ fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits,
 /// ## hfe data structure
 /// ---
 /// * Byte containing the number of padding bits
-///   * first 4 digits -> header padding bits
-///   * next 4 digits -> compressed contents padding bits
+///   * first nibble -> header padding bits
+///   * second nibble -> compressed contents padding bits
 /// * Header comprised of:
 ///   * 4 byte header length (in bytes)
-///   * HuffTree compressed in binary
+///   * HuffTree encoded in binary
 /// * compressed bytes
 /// 
 /// # Examples
