@@ -4,7 +4,7 @@ An implementation of the *[Huffman Coding](https://en.wikipedia.org/wiki/Huffman
 
 Contains:
 
-- An [executable](https://github.com/k-xlsx/huff-encoding/tree/dev/bin) with a basic CLI compression program,  
+- An [executable](https://github.com/k-xlsx/huff-encoding/releases) with a basic CLI compression program,  
 - A [library](https://github.com/k-xlsx/huff-encoding/tree/dev/src) containing methods to compress/decompress byte data, write/read compressed files, as well as structs representing a *Huffman Tree*
 
 ## bin
