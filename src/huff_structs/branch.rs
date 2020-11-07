@@ -1,5 +1,7 @@
-use std::cell::RefCell;
-use std::cmp::Ordering;
+use std::{
+    cell::RefCell, 
+    cmp::Ordering,
+};
 
 use crate::{HuffLeaf, HuffCode};
 
@@ -50,33 +52,31 @@ impl HuffBranch{
     /// let foo = HuffBranch::new(HuffLeaf::new(Some(0xc4), 3), None);
     /// ```
     pub fn new(leaf: HuffLeaf, children: Option<[Box<RefCell<HuffBranch>>; 2]>) -> HuffBranch{
-        let huff_branch = HuffBranch{
-            leaf: leaf,
+        HuffBranch{
+            leaf,
 
             pos_in_parent: None,
-            children: children
-        };
-
-        return huff_branch;
+            children
+        }
     }
 
     /// Returns a reference to the stored HuffLeaf.
     pub fn leaf(&self) -> &HuffLeaf{
-        return &self.leaf;
+        &self.leaf
     }
 
     /// Returns its position in the parent's children Array
     pub fn pos_in_parent(&self) -> Option<u8>{
-        return self.pos_in_parent
+        self.pos_in_parent
     }
 
     /// Returns the stored Array of the branch's children
     pub fn children(&self) -> Option<&[Box<RefCell<HuffBranch>>; 2]>{
         match self.children{
             None => 
-                return None,
+                None,
             Some(_) => {
-                return self.children.as_ref();
+                self.children.as_ref()
             }
         }
     }
@@ -97,24 +97,16 @@ impl HuffBranch{
     pub fn set_code(&mut self, parent_code: Option<&HuffCode>){
         let mut code = HuffCode::new();
 
-        match self.pos_in_parent(){
-            Some(_) =>{
-                match parent_code{
-                    Some(_) =>{
-                        for bit in parent_code.unwrap(){
-                            code.push(bit);
-                        }
-                    }
-                    None =>
-                        (),
+        if self.pos_in_parent().is_some(){
+            if parent_code.is_some(){
+                for bit in parent_code.unwrap(){
+                    code.push(bit);
                 }
-                
-                code.push(self.pos_in_parent().unwrap() >= 1);
-
-                self.leaf.set_code(code);
             }
-            None =>
-                (),
+            
+            code.push(self.pos_in_parent().unwrap() >= 1);
+
+            self.leaf.set_code(code);
         }
     }
 }

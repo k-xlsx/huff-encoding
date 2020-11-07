@@ -23,22 +23,20 @@ impl HuffBranchHeap{
 
         leaf_vec.build(byte_freqs);
 
-        return leaf_vec;
+        leaf_vec
     }
 
     /// Initializes an empty HuffBranchHeap.
     pub fn new() -> HuffBranchHeap{
-        let leaf_vec = HuffBranchHeap{
+        HuffBranchHeap{
             heap: BinaryHeap::new(),
-        };
-
-        return leaf_vec;
+        }
     }
 
 
     /// Returns the length of the heap.
     pub fn len(&self) -> usize{
-        return self.heap.len();
+        self.heap.len()
     }
 
     /// Pushes the branch onto the heap.
@@ -48,7 +46,7 @@ impl HuffBranchHeap{
 
     /// Pops a branch (which is always the lowest frequency one) of the heap.
     pub fn pop_min(&mut self) -> HuffBranch{
-        return self.heap.pop().unwrap();
+        self.heap.pop().unwrap()
     }
 
 

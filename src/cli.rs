@@ -1,13 +1,17 @@
-use std::fs;
-use std::io::{self, Write};
-use std::thread;
-use std::time::Duration;
-use std::sync::mpsc::{self, TryRecvError};
-use std::path::{Path, PathBuf};
 
 use structopt::StructOpt;
 
+use std::{
+    thread,
+    fs,
+    io::{self, Write},
+    path::{Path, PathBuf},
+    time::Duration,
+    sync::mpsc::{self, TryRecvError},
+};
+
 use huff_encoding::file::{write_hfe, threaded_write_hfe, read_hfe};
+
 
 
 #[derive(StructOpt)]
@@ -166,7 +170,7 @@ pub fn process_args() -> Result<(), &'static str>{
         },
     }
 
-    return Ok(());
+    Ok(())
 }
 
 fn spawn_wait_indicator(msg: &'static str, delay: Duration) -> mpsc::Sender<()> {
@@ -190,5 +194,5 @@ fn spawn_wait_indicator(msg: &'static str, delay: Duration) -> mpsc::Sender<()> 
         }
     });
 
-    return tx;
+    tx
 }

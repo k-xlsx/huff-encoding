@@ -33,29 +33,27 @@ impl HuffLeaf{
     /// let foo = HuffLeaf::new(Some(0xc4), 3);
     /// ```
     pub fn new(byte: Option<u8>, frequency: usize) -> HuffLeaf{
-        let huff_leaf = HuffLeaf{
-            byte: byte,
-            frequency: frequency,
+        HuffLeaf{
+            byte,
+            frequency,
             code: None,
-        };
-
-        return huff_leaf;
+        }
     }
 
 
     /// Returns the stored byte.
     pub fn byte(&self) -> Option<u8>{
-        return self.byte;
+        self.byte
     }
     
     /// Returns the stored frequency.
     pub fn frequency(&self) -> usize{
-        return self.frequency
+        self.frequency
     }
     
     /// Returns a reference to the stored code.
     pub fn code(&self) -> Option<&HuffCode>{
-        return self.code.as_ref();
+        self.code.as_ref()
     }
 
 

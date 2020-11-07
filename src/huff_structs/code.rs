@@ -13,7 +13,7 @@
 ///  
 /// *alphabet_size - 1*
 /// 
-#[derive(Debug, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Eq)]
 pub struct HuffCode{
     storage: [u64; 4],
 
@@ -22,9 +22,15 @@ pub struct HuffCode{
     len: usize,
 }
 
+impl Default for HuffCode{
+    fn default() -> Self{
+        Self::new()
+    }
+}
+
 impl PartialEq for HuffCode{
     fn eq(&self, other: &Self) -> bool {
-        return self.storage == other.storage;
+        self.storage == other.storage
     }
 }
 
@@ -41,7 +47,7 @@ impl Iterator for HuffCodeIter<'_>{
     fn next(&mut self) -> Option<Self::Item>{
         let value = self.code.get(self.current_index as usize);
         self.current_index += 1;
-        return value;
+        value
     }
 }
 
@@ -50,7 +56,7 @@ impl<'a> IntoIterator for &'a HuffCode{
     type IntoIter = HuffCodeIter<'a>;
 
     fn into_iter(self) -> HuffCodeIter<'a>{
-        return HuffCodeIter{code: &self, current_index: 0}
+        HuffCodeIter{code: &self, current_index: 0}
     }
 }
 
@@ -65,7 +71,7 @@ impl HuffCode{
     /// let foo = HuffCode::new();
     /// ```
     pub fn new() -> HuffCode{
-        return HuffCode{
+        HuffCode{
             storage: [0; 4],
 
             next_bit: 0,
@@ -99,7 +105,7 @@ impl HuffCode{
         let index_in_block = HuffCode::get_rel_index(index, block_index);
 
         let block = self.storage[block_index];
-        return Some((block >> (63 - index_in_block)) % 2 != 0);
+        Some((block >> (63 - index_in_block)) % 2 != 0)
     }
 
     /// Pushes a bit at the end of the code.
@@ -125,28 +131,30 @@ impl HuffCode{
         }
         self.len += 1;
         self.next_bit += 1;
-        if self.next_bit == 64{
-            if self.current_block != 3{
-                self.next_bit = 0;
-                self.current_block += 1;
-            }
+        if self.next_bit == 64 && self.current_block != 3{
+            self.next_bit = 0;
+            self.current_block += 1;
         }
     }
 
 
     /// Returns the length of the code (in bits of course).
     pub fn len(&self) -> usize{
-        return self.len;
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool{
+        self.len == 0 
     }
 
     /// Returns the index of the block that the given bit's in
     fn get_block_index(index: usize) -> usize{
         let i = index + 1; 
-        return (i / 64 + (i % 64 != 0) as usize) - 1;
+        (i / 64 + (i % 64 != 0) as usize) - 1
     }
 
     /// Returns the index relative to the given block.
     fn get_rel_index(abs_index: usize, block_index: usize) -> usize{
-        return abs_index - block_index * 64;
+        abs_index - block_index * 64
     }
 }

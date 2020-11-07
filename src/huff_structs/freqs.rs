@@ -40,7 +40,7 @@ impl Iterator for ByteFreqsIter<'_>{
             return None
         }
 
-        while let None = self.freqs.get(self.current_index as usize){
+        while self.freqs.get(self.current_index as usize).is_none(){
             if self.current_index == 256{
                 return None
             }
@@ -48,7 +48,8 @@ impl Iterator for ByteFreqsIter<'_>{
         }
         let entry = Some((self.current_index as u8, *self.freqs.get(self.current_index as usize).unwrap()));
         if self.current_index != 256{self.current_index += 1;}
-        return entry;
+
+        entry
     }
 }
 
@@ -57,7 +58,7 @@ impl <'a> IntoIterator for &'a ByteFreqs{
     type IntoIter = ByteFreqsIter<'a>;
 
     fn into_iter(self) -> ByteFreqsIter<'a>{
-        return ByteFreqsIter{freqs: &self, current_index: 0}
+        ByteFreqsIter{freqs: &self, current_index: 0}
     }   
 }
 
@@ -87,10 +88,10 @@ impl ByteFreqs{
         }
 
         // convert the array into a hashmap
-        return ByteFreqs{
+        ByteFreqs{
             freqs: byte_freqs,
-            len: len,
-        };
+            len,
+        }
     }
 
     /// Count all bytes in given slice and organize them
@@ -131,10 +132,10 @@ impl ByteFreqs{
             byte_freqs.add_bfreq(&bfreq);
         }
 
-        return ByteFreqs{
+        ByteFreqs{
             freqs: byte_freqs.freqs,
             len: byte_freqs.len
-        };
+        }
     }
 
 
@@ -147,9 +148,9 @@ impl ByteFreqs{
                 if *entry.unwrap() == 0{
                     return None
                 }
-                return entry
+                entry
             }
-            None => return None
+            None => None,
         }
     }
 
@@ -163,15 +164,19 @@ impl ByteFreqs{
                 if *freq == 0{
                     return None
                 }
-                return Some(freq)
+                Some(freq)
             }
-            None => return None
+            None => None
         }
     }
 
     /// Return the length of the wrapped Hashmap<u8; usize>.
     pub fn len(&self) -> usize{
-        return self.len;
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool{
+        self.len == 0
     }
 
     /// Add another ByteFreqs to self

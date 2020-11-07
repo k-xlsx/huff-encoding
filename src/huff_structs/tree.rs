@@ -1,10 +1,14 @@
-use std::cell::{RefCell, Ref, RefMut};
-use std::collections::HashMap;
-
 use bitvec::prelude::{BitVec, LocalBits};
 
-use crate::{HuffBranch, HuffLeaf, HuffCode, ByteFreqs};
-use crate::huff_structs::branch_heap::HuffBranchHeap;
+use std::{
+    collections::HashMap,
+    cell::{RefCell, Ref, RefMut}, 
+};
+
+use crate::{
+    huff_structs::branch_heap::HuffBranchHeap,
+    {HuffBranch, HuffLeaf, HuffCode, ByteFreqs},
+};
 
 
 
@@ -28,6 +32,12 @@ use crate::huff_structs::branch_heap::HuffBranchHeap;
 pub struct HuffTree{
     root: Option<Box<RefCell<HuffBranch>>>,
     byte_codes: HashMap<u8, HuffCode>,
+}
+
+impl Default for HuffTree{
+    fn default() -> Self{
+        Self::new()
+    }
 }
 
 impl HuffTree{
@@ -79,12 +89,10 @@ impl HuffTree{
     /// foo.grow(&ByteFreqs::from_bytes(&"Hello, World!".as_bytes()));
     /// ```
     pub fn new() -> HuffTree{
-        let huff_tree = HuffTree{
+        HuffTree{
             root: None,
             byte_codes: HashMap::default(),
-        };
-
-        return huff_tree;
+        }
     }
 
     /// Returns coded_chars read from a tree represented in binary
@@ -185,7 +193,7 @@ impl HuffTree{
             }
         }
 
-        return coded_bytes;
+        coded_bytes
     }
 
 
@@ -193,16 +201,16 @@ impl HuffTree{
     pub fn root(&self) -> Option<&Box<RefCell<HuffBranch>>>{
         match self.root{
             Some(_) =>
-                return self.root.as_ref(),
+                self.root.as_ref(),
             None =>
-                return None,
+                None,
         }
     }
 
     /// Returns reference to a HashMap of bytes with their
     /// corresponding Huffman codes.
     pub fn byte_codes(&self) -> &HashMap<u8, HuffCode>{
-        return &self.byte_codes;
+        &self.byte_codes
     }
 
 
@@ -273,14 +281,14 @@ impl HuffTree{
         let mut bit_vec: BitVec<LocalBits, u8> = BitVec::new();
         set_tree_as_bin(&mut bit_vec, self.root().unwrap().borrow());
         
-        return bit_vec;
+        bit_vec
     }
 
 
     /// Grows the tree from the given
     /// * &ByteFreqs
     pub fn grow(&mut self, byte_freqs: &ByteFreqs){
-        assert!(byte_freqs.len() > 0, "byte_freqs is empty");
+        assert!(!byte_freqs.is_empty(), "byte_freqs is empty");
 
 
         let mut branch_heap = HuffBranchHeap::from_byte_freqs(&byte_freqs);
@@ -349,20 +357,15 @@ impl HuffTree{
     /// Recursively set codes on every branch
     fn set_codes_in_branches(root: RefMut<HuffBranch>){
         let root = root;
-        let children = root.children();
 
-        match children{
-            Some(_) =>{
-                let root_code = root.leaf().code();
+        if let Some(children) = root.children(){
+            let root_code = root.leaf().code();
 
-                // set codes on children and call set_branch_codes on them
-                for child in children.unwrap().iter(){
-                    child.borrow_mut().set_code(root_code);
-                    HuffTree::set_codes_in_branches(child.borrow_mut());
-                }
+            // set codes on children and call set_branch_codes on them
+            for child in children.iter(){
+                child.borrow_mut().set_code(root_code);
+                HuffTree::set_codes_in_branches(child.borrow_mut());
             }
-            None =>
-                (),
         }
     }
 }

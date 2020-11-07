@@ -1,21 +1,26 @@
-use std::collections::HashMap;
-use std::thread;
-use std::convert::TryInto;
-use std::ffi::OsStr;
-use std::path::Path;
-use std::{fs, io};
-use io::{BufWriter, Write};
-
 use bitvec::prelude::{BitVec, LocalBits};
 
-use crate::{HuffTree, HuffCode};
-use crate::utils::{ration_vec, calc_padding_bits};
+use std::{
+    thread,
+    fs, 
+    io::{self, BufWriter, Write},
+    ffi::OsStr,
+    path::Path,
+    collections::HashMap,
+    convert::TryInto,
+};
+
+use crate::{
+    utils::{ration_vec, calc_padding_bits},
+    HuffTree, HuffCode,
+};
+
 
 
 /// The result of decompressing a hfe file.
 /// 
 /// Contains:
-/// * extension -> the original file's extension.
+/// * extension -> the original file's extension.A
 /// * bytes -> decompressed bytes.
 pub struct FileDecompressResult{
     extension: String,
@@ -24,17 +29,17 @@ pub struct FileDecompressResult{
 
 impl FileDecompressResult{
     pub fn new(bytes: Vec<u8>, extension: String) -> FileDecompressResult{
-        return FileDecompressResult{extension: extension, bytes: bytes};
+        FileDecompressResult{extension, bytes}
     }
 
     /// Returns a reference to the original file's extension.
     pub fn extension(&self) -> &String{
-        return &self.extension;
+        &self.extension
     }
 
     /// Returns a reference to the decompressed bytes.
     pub fn bytes(&self) -> &Vec<u8>{
-        return &self.bytes;
+        &self.bytes
     } 
 }
 
@@ -68,7 +73,7 @@ impl FileDecompressResult{
 /// }
 /// ```
 pub fn write_hfe<P: AsRef<Path>>(dir_path: &P, file_name: &P, org_extension: Option<&OsStr>,  bytes: &[u8]) -> io::Result<()>{
-    return generic_write_hfe(dir_path, file_name, org_extension, bytes, compress);
+    generic_write_hfe(dir_path, file_name, org_extension, bytes, compress)
 }
 
 /// Compress the string slice as Huffman code and write it to
@@ -100,7 +105,7 @@ pub fn write_hfe<P: AsRef<Path>>(dir_path: &P, file_name: &P, org_extension: Opt
 /// }
 /// ```
 pub fn threaded_write_hfe<P: AsRef<Path>>(dir_path: &P, file_name: &P, org_extension: Option<&OsStr>, bytes: &[u8],) -> io::Result<()>{
-    return generic_write_hfe(dir_path, file_name, org_extension, bytes, threaded_compress);
+    generic_write_hfe(dir_path, file_name, org_extension, bytes, threaded_compress)
 }
 
 /// A generic version of write_hfe functions that accepts the used compress function as arg
@@ -117,8 +122,8 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>
 
         let file = fs::File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
-        buf_writer.write(&extension_bytes)?;
-        buf_writer.write(&compressed_bytes)?;
+        buf_writer.write_all(&extension_bytes)?;
+        buf_writer.write_all(&compressed_bytes)?;
 
         Ok(())
     }
@@ -126,7 +131,7 @@ fn generic_write_hfe<P: AsRef<Path>, F: FnOnce(&[u8]) -> Vec<u8>>
     // add name and extension to dir path
     let path = dir_path.as_ref().join(file_name);
 
-    inner(&path, bytes.as_ref(), org_extension, compress_func)
+    inner(&path, bytes, org_extension, compress_func)
 }
 
 
@@ -177,7 +182,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<FileDecompressResult>{
 /// 
 /// let foo = compress(&[97, 98, 98, 99, 99, 99]);
 pub fn compress(bytes: &[u8]) -> Vec<u8>{
-    return generic_compress(bytes, HuffTree::from_bytes(bytes), get_compressed_bytes);
+    generic_compress(bytes, HuffTree::from_bytes(bytes), get_compressed_bytes)
 }
 
 /// Returns given bytes compresses using 
@@ -203,7 +208,7 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// let foo = threaded_compress(&[97, 98, 98, 99, 99, 99]);
 /// ```
 pub fn threaded_compress(bytes: &[u8]) -> Vec<u8>{
-    return generic_compress(bytes, HuffTree::threaded_from_bytes(bytes), threaded_get_compressed_bytes);
+    generic_compress(bytes, HuffTree::threaded_from_bytes(bytes), threaded_get_compressed_bytes)
 }
 
 // A generic version of the compress functions that accepts the tree and get_compressed_bytes func as arguments
@@ -219,7 +224,7 @@ fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits,
     compressed_bytes.extend(h.into_boxed_slice().to_vec());
     compressed_bytes.extend(es.into_boxed_slice().to_vec());
 
-    return compressed_bytes;
+    compressed_bytes
 }
 
 /// Return bytes decompressed from the given bytes
@@ -243,7 +248,7 @@ fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits,
 /// let bar = decompress(&foo);
 /// ```
 pub fn decompress(bytes: &[u8]) -> Vec<u8>{
-    return get_decoded_bytes(bytes);
+    get_decoded_bytes(bytes)
 }
 
 
@@ -255,7 +260,7 @@ fn get_header(tree_bin: &mut BitVec<LocalBits, u8>) -> BitVec<LocalBits, u8>{
     let mut bin_len = BitVec::from_vec(tree_len.to_be_bytes().to_vec());
     
     bin_len.extend_from_bitslice(&tree_bin[..]);
-    return bin_len;
+    bin_len
 }
 
 /// Return given bytes compressed with the given byte_codes HashMap.
@@ -270,7 +275,7 @@ fn get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitV
         }
     }
 
-    return compressed_bytes;
+    compressed_bytes
 }
 
 /// Return given bytes compressed with the given byte_codes HashMap, but using
@@ -309,7 +314,7 @@ fn threaded_get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>
         compressed_bytes.extend_from_bitslice(&handle.join().unwrap()[..]);
     }
 
-    return compressed_bytes;
+    compressed_bytes
 }
 
 // Return bytes decoded from given bytes.
@@ -341,15 +346,11 @@ fn get_decoded_bytes(bytes: &[u8]) -> Vec<u8>{
     let mut current_code = BitVec::<LocalBits, u8>::new();
     for bit in compressed_file{
         current_code.push(bit);
-        let coded_byte = coded_bytes.get(&current_code);
-        match coded_byte{
-            Some(_) =>{
-                decoded_bytes.push(*coded_byte.unwrap());
-                current_code.clear();
-            }
-            None => (),
+        if let Some(coded_byte) = coded_bytes.get(&current_code){
+            decoded_bytes.push(*coded_byte);
+            current_code.clear();
         }
     }
 
-    return decoded_bytes;
+    decoded_bytes
 }

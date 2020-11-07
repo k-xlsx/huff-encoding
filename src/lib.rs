@@ -1,19 +1,20 @@
 pub mod file;
+pub mod huff_structs;
 
 mod utils;
-mod huff_structs;
 
 
-pub use crate::huff_structs::{
-    HuffLeaf, 
-    HuffBranch, 
-    HuffTree, 
-    HuffCode,
-    ByteFreqs,
-};
-
-pub use crate::file::{
-    compress,
-    threaded_compress,
-    decompress,
+pub use crate::{
+    huff_structs::{
+        HuffLeaf, 
+        HuffBranch, 
+        HuffTree, 
+        HuffCode,
+        ByteFreqs,
+    },
+    file::{
+        compress,
+        threaded_compress,
+        decompress,
+    },
 };
