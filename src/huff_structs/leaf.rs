@@ -9,16 +9,22 @@ use crate::HuffCode;
 /// * frequency: usize
 /// 
 /// * code: Option<HuffCode>
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Copy, Eq)]
 pub struct HuffLeaf{
     byte: Option<u8>,
     frequency: usize,
     code: Option<HuffCode>,
 }
 
+impl Clone for HuffLeaf {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
 impl PartialEq for HuffLeaf {
     fn eq(&self, other: &Self) -> bool {
-        self.frequency() == other.frequency()
+        self.frequency == other.frequency
     }
 }
 
@@ -32,7 +38,7 @@ impl HuffLeaf{
     /// 
     /// let foo = HuffLeaf::new(Some(0xc4), 3);
     /// ```
-    pub fn new(byte: Option<u8>, frequency: usize) -> HuffLeaf{
+    pub fn new(byte: Option<u8>, frequency: usize) -> Self{
         HuffLeaf{
             byte,
             frequency,

@@ -52,9 +52,9 @@ impl HuffTree{
     /// 
     /// let foo = HuffTree::from_bytes("bar".as_bytes());
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> HuffTree{
+    pub fn from_bytes<T: Into<Vec<u8>>>(bytes: T) -> Self{
         let mut tree = HuffTree::new();
-        tree.grow(&ByteFreqs::from_bytes(&bytes));
+        tree.grow(&ByteFreqs::from_bytes(bytes));
         tree
     }
 
@@ -70,9 +70,9 @@ impl HuffTree{
     /// 
     /// let foo = HuffTree::threaded_from_bytes("bar".as_bytes());
     /// ```
-    pub fn threaded_from_bytes(bytes: &[u8]) -> HuffTree{
+    pub fn threaded_from_bytes<T: Into<Vec<u8>>>(bytes: T) -> Self{
         let mut tree = HuffTree::new();
-        tree.grow(&ByteFreqs::threaded_from_bytes(&bytes));
+        tree.grow(&ByteFreqs::threaded_from_bytes(bytes));
         tree
     }
 
@@ -86,9 +86,9 @@ impl HuffTree{
     /// use huff_encoding::{HuffTree, ByteFreqs};
     /// 
     /// let mut foo = HuffTree::new();
-    /// foo.grow(&ByteFreqs::from_bytes(&"Hello, World!".as_bytes()));
+    /// foo.grow(&ByteFreqs::from_bytes("Hello, World!".as_bytes()));
     /// ```
-    pub fn new() -> HuffTree{
+    pub fn new() -> Self{
         HuffTree{
             root: None,
             byte_codes: HashMap::default(),

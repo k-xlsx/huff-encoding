@@ -1,4 +1,6 @@
+/// Module containing methods to compress/decompress bytes
 pub mod file;
+/// Module containing structs used to build a *Huffman Tree*
 pub mod huff_structs;
 
 mod utils;

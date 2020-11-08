@@ -5,20 +5,20 @@ use crate::utils::ration_vec;
 
 
 /// Struct used to count and store the 
-/// frequencies of bytes in a given &[u8]
+/// frequencies of bytes in a given &\[u8\]
 /// ---
 /// 
 /// Can be initialized either linearly:
 /// 
 /// ```
 /// use huff_encoding::ByteFreqs;
-/// let foo = ByteFreqs::from_bytes(&"bar".as_bytes());
+/// let foo = ByteFreqs::from_bytes("bar".as_bytes());
 /// ```
 /// or threaded (faster for larger byte collections):
 /// 
 /// ```
 /// use huff_encoding::ByteFreqs;
-/// let foo = ByteFreqs::from_bytes(&"bar".as_bytes());
+/// let foo = ByteFreqs::from_bytes("bar".as_bytes());
 /// ```
 pub struct ByteFreqs{
     freqs: [usize; 256],
@@ -77,16 +77,16 @@ impl ByteFreqs{
     /// 
     /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
     /// ```
-    pub fn from_bytes(bytes: &[u8]) -> ByteFreqs{
+    pub fn from_bytes<T: Into<Vec<u8>>>(bytes: T) -> Self{
         // count bytes into an array
         let mut byte_freqs: [usize; 256] = [0;256];
         let mut len = 0;
 
         let mut previous_byte: Option<u8> = None;
-        for b in bytes{
-            if previous_byte != Some(*b){len += 1;}
-            byte_freqs[*b as usize] += 1;
-            previous_byte = Some(*b)
+        for b in bytes.into(){
+            if previous_byte != Some(b){len += 1;}
+            byte_freqs[b as usize] += 1;
+            previous_byte = Some(b)
         }
 
         // convert the array into a hashmap
@@ -109,15 +109,15 @@ impl ByteFreqs{
     /// 
     /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
     /// ```
-    pub fn threaded_from_bytes(bytes: &[u8]) -> ByteFreqs{
+    pub fn threaded_from_bytes<T: Into<Vec<u8>>>(bytes: T) -> Self{
         // divide the bytes into rations per thread
-        let byte_rations = ration_vec(&bytes.to_vec(), num_cpus::get());
+        let byte_rations = ration_vec(&bytes.into(), num_cpus::get());
 
         // create ByteFreqs from every ration
         let mut handles = Vec::with_capacity(num_cpus::get());
         for ration in byte_rations{
             let handle = thread::spawn(move || {
-                ByteFreqs::from_bytes(&ration)
+                ByteFreqs::from_bytes(ration)
             });
             handles.push(handle);
         }

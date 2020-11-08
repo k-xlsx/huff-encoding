@@ -85,7 +85,7 @@ fn code_iter(){
 
 #[test]
 fn freqs_iter(){
-    let byte_freqs = ByteFreqs::from_bytes(&[255, 255, 255, 255, 255]);
+    let byte_freqs = ByteFreqs::from_bytes([255, 255, 255, 255, 255]);
 
     let mut len = 0;
     for (b, f) in byte_freqs.iter(){

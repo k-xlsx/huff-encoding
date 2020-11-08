@@ -93,7 +93,7 @@ impl HuffCode{
     /// 
     /// let foo = HuffCode::new();
     /// ```
-    pub fn new() -> HuffCode{
+    pub fn new() -> Self{
         HuffCode{
             storage: [0; 4],
 

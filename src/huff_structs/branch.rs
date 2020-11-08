@@ -51,7 +51,7 @@ impl HuffBranch{
     /// 
     /// let foo = HuffBranch::new(HuffLeaf::new(Some(0xc4), 3), None);
     /// ```
-    pub fn new(leaf: HuffLeaf, children: Option<[Box<RefCell<HuffBranch>>; 2]>) -> HuffBranch{
+    pub fn new(leaf: HuffLeaf, children: Option<[Box<RefCell<HuffBranch>>; 2]>) -> Self{
         HuffBranch{
             leaf,
 

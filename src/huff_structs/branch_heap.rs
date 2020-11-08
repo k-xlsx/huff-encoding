@@ -18,7 +18,7 @@ pub struct HuffBranchHeap{
 impl HuffBranchHeap{
     /// Creates a HuffBranchHeap from a HashMap of u8 as
     /// keys and their frequencies (usize) as values.
-    pub fn from_byte_freqs(byte_freqs: &ByteFreqs) -> HuffBranchHeap{
+    pub fn from_byte_freqs(byte_freqs: &ByteFreqs) -> Self{
         let mut leaf_vec = HuffBranchHeap::new();
 
         leaf_vec.build(byte_freqs);
@@ -27,7 +27,7 @@ impl HuffBranchHeap{
     }
 
     /// Initializes an empty HuffBranchHeap.
-    pub fn new() -> HuffBranchHeap{
+    pub fn new() -> Self{
         HuffBranchHeap{
             heap: BinaryHeap::new(),
         }

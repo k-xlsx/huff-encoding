@@ -70,8 +70,10 @@ pub fn process_args() -> Result<(), &'static str>{
         Commands::Compress{src_path, dst_path, single_thread_flag} =>{
             let start = std::time::Instant::now();
 
+            // make dst_path mutable
             let mut dst_path = dst_path;
             
+            //--------------Path Tests--------------
             // check if src exists and is a file
             if !src_path.exists() || !src_path.is_file(){
                 return Err("src path not found")
@@ -91,7 +93,7 @@ pub fn process_args() -> Result<(), &'static str>{
             if dst_path.is_dir(){
                 return Err("dst is a directory")
             }
-    
+            //--------------Path Tests--------------
 
             // read src
             let tx = spawn_wait_indicator("reading src file", Duration::from_millis(800));
@@ -126,8 +128,10 @@ pub fn process_args() -> Result<(), &'static str>{
         Commands::Decompress{src_path, dst_path} =>{
             let start = std::time::Instant::now();
 
+            // make dst_path mutable
             let mut dst_path = dst_path;
 
+            //--------------Path Tests--------------
             // check if src exists and is a file
             if !src_path.exists() || !src_path.is_file(){
                 return Err("src path not found")
@@ -147,7 +151,7 @@ pub fn process_args() -> Result<(), &'static str>{
             if dst_path.is_dir(){
                 return Err("dst is a directory")
             }
-    
+            //--------------Path Tests--------------
 
             // decompress src
             let tx = spawn_wait_indicator("decompressing", Duration::from_millis(1000));

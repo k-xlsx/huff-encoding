@@ -28,7 +28,7 @@ pub struct FileDecompressResult{
 }
 
 impl FileDecompressResult{
-    pub fn new(bytes: Vec<u8>, extension: String) -> FileDecompressResult{
+    pub fn new(bytes: Vec<u8>, extension: String) -> Self{
         FileDecompressResult{extension, bytes}
     }
 
