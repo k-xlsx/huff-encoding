@@ -25,7 +25,9 @@ pub struct ByteFreqs{
     len: usize,
 }
 
-/// Iterator over the contents of ByteFreqs (byte, freq)2
+/// Iterator over the contents of ByteFreqs 
+/// 
+/// *(u8, usize)*
 pub struct ByteFreqsIter<'a>{
     freqs: &'a ByteFreqs,
 
