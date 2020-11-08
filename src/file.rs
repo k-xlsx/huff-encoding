@@ -161,6 +161,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<FileDecompressResult>{
     return inner(&path.as_ref())
 }
 
+
 /// Returns given bytes compresses using 
 /// huffman encoding.
 /// 
@@ -183,7 +184,7 @@ pub fn read_hfe<P: AsRef<Path>>(path: P) -> io::Result<FileDecompressResult>{
 /// 
 /// let foo = compress(&[97, 98, 98, 99, 99, 99]);
 pub fn compress(bytes: &[u8]) -> Vec<u8>{
-    generic_compress(bytes, HuffTree::from_bytes(bytes), get_compressed_bytes)
+    generic_compress(bytes, HuffTree::from_bytes(bytes), get_compressed_bits)
 }
 
 /// Returns given bytes compresses using 
@@ -209,14 +210,15 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// let foo = threaded_compress(&[97, 98, 98, 99, 99, 99]);
 /// ```
 pub fn threaded_compress(bytes: &[u8]) -> Vec<u8>{
-    generic_compress(bytes, HuffTree::threaded_from_bytes(bytes), threaded_get_compressed_bytes)
+    generic_compress(bytes, HuffTree::threaded_from_bytes(bytes), threaded_get_compressed_bits)
 }
 
 // A generic version of the compress functions that accepts the tree and get_compressed_bytes func as arguments
-fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>>(bytes: &[u8], tree: HuffTree, get_compressed_bytes_func: F) -> Vec<u8>{
+fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>>
+(bytes: &[u8], tree: HuffTree, get_compressed_bits_func: F) -> Vec<u8>{
     // compress bytes, get file header and calc their padding bits
     let h = get_header(&mut tree.to_bin());
-    let es = get_compressed_bytes_func(bytes, tree.byte_codes().clone());
+    let es = get_compressed_bits_func(bytes, tree.byte_codes().clone());
     let padding_bits = calc_padding_bits(es.len()) + (calc_padding_bits(h.len()) << 4);
 
 
@@ -227,31 +229,6 @@ fn generic_compress<F: FnOnce(&[u8], HashMap<u8, HuffCode>) -> BitVec<LocalBits,
 
     compressed_bytes
 }
-
-/// Return bytes decompressed from the given bytes
-/// 
-/// ## hfe data structure
-/// ---
-/// * Byte containing the number of padding bits
-///   * first nibble -> header padding bits
-///   * second nibble -> compressed contents padding bits
-/// * Header comprised of:
-///   * 4 byte header length (in bytes)
-///   * HuffTree encoded in binary
-/// * compressed bytes
-/// 
-/// # Examples
-/// ---
-/// ```
-/// use huff_encoding::{compress, decompress}; 
-/// 
-/// let foo = compress(&[97, 98, 98, 99, 99, 99]);
-/// let bar = decompress(&foo);
-/// ```
-pub fn decompress(bytes: &[u8]) -> Vec<u8>{
-    get_decoded_bytes(bytes)
-}
-
 
 /// Return a tree_bin preceded by its length
 /// to be used as a hfe file header.
@@ -267,23 +244,23 @@ fn get_header(tree_bin: &mut BitVec<LocalBits, u8>) -> BitVec<LocalBits, u8>{
 /// Return given bytes compressed with the given byte_codes HashMap.
 /// 
 /// Threaded version is faster for bigger files.
-fn get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
-    let mut compressed_bytes = BitVec::new();
+fn get_compressed_bits(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
+    let mut compressed_bits = BitVec::new();
     for byte in bytes{
         let b_code = byte_codes.get(&byte).unwrap();
         for bit in b_code{
-            compressed_bytes.push(bit);
+            compressed_bits.push(bit);
         }
     }
 
-    compressed_bytes
+    compressed_bits
 }
 
 /// Return given bytes compressed with the given byte_codes HashMap, but using
 /// multiple threads (it's faster for bigger files).
 /// 
 /// Non-threaded version is faster for smaller files.
-fn threaded_get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
+fn threaded_get_compressed_bits(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>) -> BitVec<LocalBits, u8>{
     // allocate byte_codes onto the heap
     let byte_codes = Box::new(byte_codes);
 
@@ -310,12 +287,37 @@ fn threaded_get_compressed_bytes(bytes: &[u8], byte_codes: HashMap<u8, HuffCode>
     // concatenate every compressed chunk into compressed_bytes
     // doing this is slow, but i've got no better idea
     // still faster than linear
-    let mut compressed_bytes: BitVec<LocalBits, u8> = BitVec::with_capacity(3 * bytes.len() / 4);
+    let mut compressed_bits: BitVec<LocalBits, u8> = BitVec::with_capacity(3 * bytes.len() / 4);
     for handle in handles{	   
-        compressed_bytes.extend_from_bitslice(&handle.join().unwrap()[..]);
+        compressed_bits.extend_from_bitslice(&handle.join().unwrap()[..]);
     }
 
-    compressed_bytes
+    compressed_bits
+}
+
+
+/// Return bytes decompressed from the given bytes
+/// 
+/// ## hfe data structure
+/// ---
+/// * Byte containing the number of padding bits
+///   * first nibble -> header padding bits
+///   * second nibble -> compressed contents padding bits
+/// * Header comprised of:
+///   * 4 byte header length (in bytes)
+///   * HuffTree encoded in binary
+/// * compressed bytes
+/// 
+/// # Examples
+/// ---
+/// ```
+/// use huff_encoding::{compress, decompress}; 
+/// 
+/// let foo = compress(&[97, 98, 98, 99, 99, 99]);
+/// let bar = decompress(&foo);
+/// ```
+pub fn decompress(bytes: &[u8]) -> Vec<u8>{
+    get_decoded_bytes(bytes)
 }
 
 // Return bytes decoded from given bytes.

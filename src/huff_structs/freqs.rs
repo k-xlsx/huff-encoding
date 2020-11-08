@@ -180,6 +180,13 @@ impl ByteFreqs{
         self.len == 0
     }
 
+    /// Returns an iterator over the bytes to their frequencies
+    /// 
+    /// *(u8, usize)*
+    pub fn iter(&self) -> ByteFreqsIter{
+        self.into_iter()
+    }
+
     /// Add another ByteFreqs to self
     pub fn add_bfreq(&mut self, other: &ByteFreqs){
         for (b, f) in other{

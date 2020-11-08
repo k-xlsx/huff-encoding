@@ -30,7 +30,7 @@ use crate::{
 /// 
 #[derive(Debug)]
 pub struct HuffTree{
-    root: Option<Box<RefCell<HuffBranch>>>,
+    root: Option<RefCell<HuffBranch>>,
     byte_codes: HashMap<u8, HuffCode>,
 }
 
@@ -165,7 +165,7 @@ impl HuffTree{
             
                         coded_bytes.insert({
                             revert_branch_code(&mut branch_code, prev_branch);
-                            branch_code.clone()
+                            branch_code
                         }, *byte);
             
                         // set yourself as prev_child
@@ -197,7 +197,7 @@ impl HuffTree{
 
 
     /// Returns the root of the tree.
-    pub fn root(&self) -> Option<&Box<RefCell<HuffBranch>>>{
+    pub fn root(&self) -> Option<&RefCell<HuffBranch>>{
         match self.root{
             Some(_) =>
                 self.root.as_ref(),
@@ -312,7 +312,7 @@ impl HuffTree{
 
 
         // last branch in branch_heap is root
-        let root = Some(Box::new(RefCell::new(branch_heap.pop_min())));
+        let root = Some(RefCell::new(branch_heap.pop_min()));
         self.root = root;
 
         // set codes for all branches recursively
@@ -338,7 +338,7 @@ impl HuffTree{
                     let byte = leaf.byte();
                     match byte{
                         Some(_) =>{
-                            byte_codes.insert(byte.unwrap(), leaf.code().unwrap().clone());
+                            byte_codes.insert(byte.unwrap(), *leaf.code().unwrap());
                         }
                         None =>{
                             self.set_byte_codes(byte_codes, child.borrow());

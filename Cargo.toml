@@ -1,6 +1,6 @@
 [package]
 name = "huff_encoding"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 

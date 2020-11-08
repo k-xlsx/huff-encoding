@@ -73,7 +73,7 @@ fn code_iter(){
         }
     }
 
-    for (i, b) in codes.into_iter().enumerate(){
+    for (i, b) in codes.iter().enumerate(){
         if (i % 2) == 0{
             assert_eq!(b, true);
         }
@@ -88,7 +88,7 @@ fn freqs_iter(){
     let byte_freqs = ByteFreqs::from_bytes(&[255, 255, 255, 255, 255]);
 
     let mut len = 0;
-    for (b, f) in byte_freqs.into_iter(){
+    for (b, f) in byte_freqs.iter(){
         len += 1;
         println!("{:?}", (b, f))
     }
@@ -103,6 +103,6 @@ fn tree_bin_codes(){
 
     let bin_byte_codes = HuffTree::coded_bytes_from_bin(&tree_bin);
     for (code, byte) in bin_byte_codes{
-        assert_eq!(tree.byte_codes().get(&byte).unwrap(), &{let mut hc = HuffCode::new(); for b in code.into_iter(){hc.push(b)}; hc}); 
+        assert_eq!(tree.byte_codes().get(&byte).unwrap(), &{let mut hc = HuffCode::new(); for b in code.iter(){hc.push(b)}; hc}); 
     }
 }
