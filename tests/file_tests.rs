@@ -31,12 +31,12 @@ fn write_read_hfe() {
     write_hfe(&"", &"temp.hfe", None, &s.as_bytes()).expect("file write error");
     let decompress_result = read_hfe("temp.hfe").expect("file read error");
     assert_eq!(s, std::str::from_utf8(&decompress_result.bytes()).unwrap());
-    assert_eq!(s.as_bytes(), decompress_result.bytes());
+    assert_eq!(s.as_bytes(), &decompress_result.bytes()[..]);
 
     threaded_write_hfe(&"", &"temp.hfe", None, &s.as_bytes()).expect("file threaded write error");
     let decompress_result = read_hfe("temp.hfe").expect("file read error");
     assert_eq!(s, std::str::from_utf8(&decompress_result.bytes()).unwrap());
-    assert_eq!(s.as_bytes(), decompress_result.bytes());
+    assert_eq!(s.as_bytes(), &decompress_result.bytes()[..]);
 
     std::fs::remove_file("temp.hfe").unwrap();
 }

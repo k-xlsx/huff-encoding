@@ -1,5 +1,7 @@
 # huff-encoding
 
+[![Build Status](https://travis-ci.com/k-xlsx/huff-encoding.svg?branch=dev)](https://travis-ci.com/k-xlsx/huff-encoding)
+
 An implementation of the *[Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding)* algorithm in Rust.
 
 Contains:
