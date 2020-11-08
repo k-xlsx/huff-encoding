@@ -3,6 +3,7 @@ pub mod huff_structs;
 
 mod utils;
 
+// TODO: make more extensive docs
 
 pub use crate::{
     huff_structs::{

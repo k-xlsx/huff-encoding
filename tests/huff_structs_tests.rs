@@ -32,8 +32,8 @@ fn struct_equality(){
 
 #[test]
 fn code_interfacing(){
+    // getting
     let mut codes = HuffCode::new();
-
     for i in 0..8{
         if (i % 2) == 0{
             codes.push(true);
@@ -42,10 +42,22 @@ fn code_interfacing(){
             codes.push(false);
         }
     }
-
     assert_eq!(codes.get(7), Some(false));
     assert_eq!(codes.get(2), Some(true));
     assert_eq!(codes.get(31), None);
+
+    // pushing and popping
+    let mut codea = huff_encoding::HuffCode::new();
+    for _ in 0..65{
+        codea.push(true);
+    }
+    codea.pop();
+    let mut codeb = huff_encoding::HuffCode::new();
+    for _ in 0..64{
+        codeb.push(true);
+    }
+
+    assert_eq!(codea, codeb);
 }
 
 #[test]
@@ -91,6 +103,6 @@ fn tree_bin_codes(){
 
     let bin_byte_codes = HuffTree::coded_bytes_from_bin(&tree_bin);
     for (code, byte) in bin_byte_codes{
-        assert_eq!(tree.byte_codes().get(&byte).unwrap(), &{let mut hc = HuffCode::new(); for b in code{hc.push(b)}; hc}); 
+        assert_eq!(tree.byte_codes().get(&byte).unwrap(), &{let mut hc = HuffCode::new(); for b in code.into_iter(){hc.push(b)}; hc}); 
     }
 }

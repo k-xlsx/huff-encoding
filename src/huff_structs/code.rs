@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 
 /// Struct used to store the code of
 /// a given HuffBranch. HuffCode is 
@@ -12,14 +13,21 @@
 /// bytes as my alphabet and max length equals:
 ///  
 /// *alphabet_size - 1*
-/// 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Copy, Eq)]
 pub struct HuffCode{
     storage: [u64; 4],
 
     next_bit: u8,
     current_block: u8,
     len: usize,
+}
+
+impl Hash for HuffCode {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        for i in 0..=self.current_block as usize{
+            self.storage[i].hash(state);
+        }
+    }
 }
 
 impl Default for HuffCode{
@@ -30,7 +38,7 @@ impl Default for HuffCode{
 
 impl PartialEq for HuffCode{
     fn eq(&self, other: &Self) -> bool {
-        self.storage == other.storage
+        self.storage == other.storage && self.len == other.len
     }
 }
 
@@ -109,26 +117,12 @@ impl HuffCode{
     }
 
     /// Pushes a bit at the end of the code.
-    /// 
-    /// # Example
-    /// ---
-    /// ```
-    /// use huff_encoding::HuffCode;
-    /// 
-    /// let mut code = HuffCode::new();
-    /// code.push(true);
-    /// 
-    /// // does not panic.
-    /// assert_eq!(code.get(0).unwrap(), true);
-    /// ```
     pub fn push(&mut self, bit: bool){
         assert!(!(self.current_block == 3 && self.next_bit == 64), "tried to push over max capacity");
+        
+        self.set_next_bit(bit);
 
-        if bit{
-            let mut block = self.storage[self.current_block as usize];
-            block |= 1 << (63 - self.next_bit);
-            self.storage[self.current_block as usize] = block;
-        }
+        // increment length and all pointers
         self.len += 1;
         self.next_bit += 1;
         if self.next_bit == 64 && self.current_block != 3{
@@ -137,14 +131,62 @@ impl HuffCode{
         }
     }
 
+    /// Removes the last bit and returns it, or None if it is empty.
+    pub fn pop(&mut self) -> Option<bool>{
+        match !self.is_empty(){
+            true =>{
+                // decrement the lenght and all pointers
+                self.len -= 1;
+                if self.next_bit == 0{
+                    self.current_block -= 1;
+                    self.next_bit = 63;
+                }
+                else{
+                    self.next_bit -= 1;
+                }
+
+                // read the value of the bit to be popped
+                let popped_bit = Some((self.storage[self.current_block as usize] >> (63 - self.next_bit)) % 2 != 0);
+
+                // set the bit to 0
+                self.set_next_bit(false);
+
+                popped_bit
+            }
+            false => None,
+        }
+
+    }
+
+    /// Clears the code of all bits
+    pub fn clear(&mut self){
+        for i in 0..=self.current_block as usize{
+            self.storage[i] = 0;
+        }
+
+        self.len = 0;
+        self.next_bit = 0;
+        self.current_block = 0;
+    }
 
     /// Returns the length of the code (in bits of course).
     pub fn len(&self) -> usize{
         self.len
     }
 
+    /// Return true if len == 0
     pub fn is_empty(&self) -> bool{
         self.len == 0 
+    }
+
+    /// Sets self.storage[self.current_block] at bit self.next_bit to bit 
+    fn set_next_bit(&mut self, bit: bool){
+        if bit{
+            self.storage[self.current_block as usize] |= 1 << (63 - self.next_bit);
+        }
+        else{
+            self.storage[self.current_block as usize] &= !(1 << (63 - self.next_bit));
+        }
     }
 
     /// Returns the index of the block that the given bit's in

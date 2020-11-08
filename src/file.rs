@@ -43,6 +43,7 @@ impl FileDecompressResult{
     } 
 }
 
+// TODO: make it not load the whole file into ram
 
 /// Compress the string slice as Huffman code and write it to
 /// a file with the given name (extension is arbitrary, but .hfe is recommended) 
@@ -343,7 +344,7 @@ fn get_decoded_bytes(bytes: &[u8]) -> Vec<u8>{
     // decode every byte
     // TODO: Replace the hashmap here somehow
     let mut decoded_bytes: Vec<u8> = Vec::new();
-    let mut current_code = BitVec::<LocalBits, u8>::new();
+    let mut current_code = HuffCode::new();
     for bit in compressed_file{
         current_code.push(bit);
         if let Some(coded_byte) = coded_bytes.get(&current_code){
