@@ -98,7 +98,7 @@ fn freqs_iter(){
 #[test]
 fn tree_bin_codes(){
     let tree = HuffTree::from_bytes("Spazz Maticus...
-    a young King on a mad quest to rule the world.".as_bytes());
+    a young King on a mad quest to rule the world.");
     let tree_bin = tree.to_bin();
 
     let bin_byte_codes = HuffTree::coded_bytes_from_bin(&tree_bin);

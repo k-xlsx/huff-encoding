@@ -17,6 +17,9 @@ use crate::{
 
 
 
+// TODO: redo this whole file
+
+
 /// The result of decompressing a hfe file.
 /// 
 /// Contains:

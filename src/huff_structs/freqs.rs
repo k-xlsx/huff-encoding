@@ -5,7 +5,8 @@ use crate::utils::ration_vec;
 
 
 /// Struct used to count and store the 
-/// frequencies of bytes in a given &\[u8\]
+/// frequencies of bytes in a given byte slice
+/// (or something that implements Into<Vec&lt;u8&gt;>)
 /// ---
 /// 
 /// Can be initialized either linearly:
@@ -131,7 +132,7 @@ impl ByteFreqs{
         // add all ByteFreqs into one
         let mut byte_freqs = bfreq_mult.pop().unwrap();
         for bfreq in bfreq_mult{
-            byte_freqs.add_bfreq(&bfreq);
+            byte_freqs.add_byte_freqs(&bfreq);
         }
 
         ByteFreqs{
@@ -190,7 +191,7 @@ impl ByteFreqs{
     }
 
     /// Add another ByteFreqs to self
-    pub fn add_bfreq(&mut self, other: &ByteFreqs){
+    pub fn add_byte_freqs(&mut self, other: &ByteFreqs){
         for (b, f) in other{
             let self_entry = self.get_mut(b as usize);
             match self_entry{
