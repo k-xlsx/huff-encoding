@@ -1,19 +1,12 @@
 [package]
-name = "huff_encoding"
-version = "0.1.1"
+# TODO: change the name on github
+name = "huff"
+version = "0.1.2"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 
-[lib]
-name = "huff_encoding"
-path = "src/lib.rs"
-
-[[bin]]
-name = "huff"
-path = "src/main.rs"
-
+[workspace]
 
 [dependencies]
-bitvec = "0.19.4"   # TODO: make it myself?
-num_cpus = "1.13"
-structopt = "0.3.20"
+huff_coding = { path = "huff_coding" }
+structopt = "0.3.21"

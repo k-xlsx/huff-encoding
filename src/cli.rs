@@ -66,113 +66,14 @@ pub enum Commands {
 pub fn process_args() -> Result<(), &'static str>{
     let cli = Cli::from_args();
 
+    // TODO: cli for binary
     match cli.cmd{
         Commands::Compress{src_path, dst_path, single_thread_flag} =>{
-            let start = std::time::Instant::now();
-
-            // make dst_path mutable
-            let mut dst_path = dst_path;
-            
-            //--------------Path Tests--------------
-            // check if src exists and is a file
-            if !src_path.exists() || !src_path.is_file(){
-                return Err("src path not found")
-            }
-
-            // copy file name from src if none is provided
-            if dst_path == Path::new("./"){
-                dst_path.push(Path::new(src_path.file_name().unwrap()).with_extension("hfe"));
-            }
-
-            // check if path to dst exists
-            if !dst_path.parent().unwrap().exists() && 
-                dst_path.parent().unwrap() != Path::new(""){
-                return Err("dst path not found")
-            }
-            // check if dst is a file 
-            if dst_path.is_dir(){
-                return Err("dst is a directory")
-            }
-            //--------------Path Tests--------------
-
-            // read src
-            let tx = spawn_wait_indicator("reading src file", Duration::from_millis(800));
-            let src_bytes = fs::read(&src_path).unwrap();
-            let _ = tx.send(());
-            println!();
-                
-            // extract dst_name & dst_path
-            let dst_name = dst_path.file_name().unwrap();
-            let dst_path = match dst_path.parent(){Some(_) => dst_path.parent().unwrap(), None => Path::new("")};
-    
-            // compress
-            let tx = spawn_wait_indicator("compressing", Duration::from_millis(800));
-            // single-threaded
-            if single_thread_flag{
-                write_hfe(&dst_path, &Path::new(dst_name), src_path.extension(), &src_bytes).unwrap();
-            }
-            // multi-threaded
-            else{
-                threaded_write_hfe(&dst_path, &Path::new(dst_name), src_path.extension(), &src_bytes).unwrap();
-            }
-            let _ = tx.send(());
-            
-            // print time if t flag
-            print!("\ndone.");
-            if cli.time{
-                let elapsed = start.elapsed();
-                print!(" {:?}", elapsed);
-            }
-            println!();
+            todo!();
         },
         Commands::Decompress{src_path, dst_path} =>{
-            let start = std::time::Instant::now();
-
-            // make dst_path mutable
-            let mut dst_path = dst_path;
-
-            //--------------Path Tests--------------
-            // check if src exists and is a file
-            if !src_path.exists() || !src_path.is_file(){
-                return Err("src path not found")
-            }
-
-            // copy file name from src if none is provided
-            if dst_path == Path::new("./"){
-                dst_path.push(Path::new(src_path.file_name().unwrap()));
-            }
-
-            // check if path to dst exists
-            if !dst_path.parent().unwrap().exists() && 
-                dst_path.parent().unwrap() != Path::new(""){
-                return Err("dst path not found")
-            }
-            // check if dst is a file 
-            if dst_path.is_dir(){
-                return Err("dst is a directory")
-            }
-            //--------------Path Tests--------------
-
-            // decompress src
-            let tx = spawn_wait_indicator("decompressing", Duration::from_millis(1000));
-            let decompress_result = read_hfe(src_path).unwrap();
-            let _ = tx.send(());
-            println!(".");
-    
-            // write decompressed to dst with the read extension
-            let tx = spawn_wait_indicator("writing to destination", Duration::from_millis(1000));
-            fs::write(dst_path.with_extension(decompress_result.extension()), decompress_result.bytes()).unwrap();
-            let _ = tx.send(());
-            
-            // print time if t flag
-            print!("\ndone");
-            if cli.time{
-                let elapsed = start.elapsed();
-                print!(" {:?}", elapsed);
-            }
-            println!(".");
-        },
-    }
+            todo!();
+        }
 
     Ok(())
 }

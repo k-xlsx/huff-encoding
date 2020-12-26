@@ -1,5 +1,5 @@
 
-/// Ration a Vec<T> into ration_count sized rations.
+/// Ration a ```Vec<T>``` into ration_count sized rations.
 /// 
 /// Edge cases:
 /// * If cannot ration equally -> dumps the remainder into the last ration.
@@ -29,8 +29,13 @@ pub fn ration_vec<T: Clone>(vec: &[T], ration_count: usize) -> Vec<Vec<T>>{
     rations
 }
 
+/// Returns the size of the type in bits
+pub fn size_of_bits<T>() -> usize{
+    std::mem::size_of::<T>() * 8
+}
+
 /// Return how many bits will be used as padding
-/// with given the bit_count.
+/// when converting to bytes with given the bit_count.
 pub fn calc_padding_bits(bit_count: usize) -> u8{
     let n = (8 - bit_count % 8) as u8; 
     match n{8 => 0, _ => n}
