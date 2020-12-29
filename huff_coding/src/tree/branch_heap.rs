@@ -1,10 +1,11 @@
+
+use super::{HuffBranch, HuffLeaf, HuffLetter};
+use crate::freqs::Freq;
+
 use std::{
     collections::BinaryHeap,
     cmp::Ordering,
 };
-
-use super::{HuffBranch, HuffLeaf, HuffLetter};
-use crate::freqs::Freq;
 
 
 

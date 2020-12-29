@@ -8,5 +8,5 @@ edition = "2018"
 [workspace]
 
 [dependencies]
-huff_coding = { path = "huff_coding" }
+huff_coding = {path = "huff_coding"}
 structopt = "0.3.21"

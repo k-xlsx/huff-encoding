@@ -1,23 +1,23 @@
-mod leaf;
-mod branch;
+pub mod leaf;
+pub mod branch;
 mod branch_heap;
 mod tree;
-mod bits;
-
 
 pub use self::{
     leaf::HuffLeaf, 
-    branch::HuffBranch, 
+    branch::HuffBranch,
     tree::HuffTree,
-    bits::{HuffCode, HuffTreeBin},
+    tree::FromBinError,
 };
 
 
 use std::{
+    fmt::Debug,
     hash::Hash,
     mem::size_of,
     convert::TryInto,
 };
+
 
 
 
@@ -28,7 +28,7 @@ use std::{
 /// 
 /// Implemented by default for every primitive type, as well as String.
 /// 
-pub trait HuffLetter: Clone + Eq + Hash{}
+pub trait HuffLetter: Clone + Eq + Hash + Debug{}
 /// Trait specifying that the given HuffLetter can be converted
 /// into bytes *(returns ```Vec<u8>``` 'cause i have no idea right now)* and
 /// can be created from bytes (```&[u8]```)

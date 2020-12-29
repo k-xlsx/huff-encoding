@@ -1,7 +1,7 @@
+use super::HuffLetter;
+use crate::bitvec::prelude::*;
 
 use std::cmp::Ordering;
-
-use super::{HuffCode, HuffLetter};
 
 
 
@@ -19,7 +19,7 @@ use super::{HuffCode, HuffLetter};
 pub struct HuffLeaf<L: HuffLetter>{
     letter: Option<L>,
     frequency: usize,
-    code: Option<HuffCode>,
+    code: Option<BitVec<Msb0, u8>>,
 }
 
 impl<L: HuffLetter> Ord for HuffLeaf<L> {
@@ -62,12 +62,12 @@ impl<L: HuffLetter> HuffLeaf<L>{
     }
 
     /// Returns the stored code
-    pub fn code(&self) -> Option<&HuffCode>{
+    pub fn code(&self) -> Option<&BitVec<Msb0, u8>>{
         self.code.as_ref()
     }
     
     /// Set the given code, consuming the original
-    pub fn set_code(&mut self, code: HuffCode){    
+    pub fn set_code(&mut self, code: BitVec<Msb0, u8>){    
         self.code = Some(code);
     }
 }

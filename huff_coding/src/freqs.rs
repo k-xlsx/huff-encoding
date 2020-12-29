@@ -1,3 +1,6 @@
+pub use self::byte_freqs::ByteFreqs;
+
+
 use std::{
     hash::Hash,
     collections::HashMap,

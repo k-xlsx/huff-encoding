@@ -1,12 +1,12 @@
+use super::{HuffLeaf, HuffLetter};
+use crate::bitvec::prelude::*;
+
 use std::{
     cell::RefCell, 
     cmp::Ordering,
 };
 
-use super::{HuffLeaf, HuffCode, HuffLetter};
 
-
-// TODO: maybe a macro to quickly create huffbranches?
 
 /// Struct representing a branch in a ```HuffTree```
 /// 
@@ -176,7 +176,32 @@ impl<L: HuffLetter> HuffBranch<L>{
     }
 
     /// Setter for the leaf's code 
-    pub fn set_code(&mut self, code: HuffCode){
+    pub fn set_code(&mut self, code: BitVec<Msb0, u8>){
         self.leaf.set_code(code);
     }
+}
+
+
+// TODO: figure out how to export this from huff_coding::tree::branch
+#[macro_export]
+macro_rules! huff_branch {
+    ($freq:expr, [$child1:expr, $child2:expr]) => {
+        HuffBranch::new(
+            HuffLeaf::new(None, $freq),
+            Some([
+                Box::new(std::cell::RefCell::new(
+                    $child1
+                )), 
+                Box::new(std::cell::RefCell::new(
+                    $child2
+                ))
+            ])
+        );
+    };
+    ($lett:expr, $freq: expr) => {
+        HuffBranch::new(
+            HuffLeaf::new(Some($lett), $freq),
+            None
+        );
+    };
 }
