@@ -1,17 +1,21 @@
 /// Module containing structs used to build a *Huffman Tree*
 pub mod tree;
+/// Module containing the ```Freq``` trait and the ```byte_freqs``` module
 pub mod freqs;
 
 mod utils;
 
-// TODO: make extensive docs
 // TODO: compression/decompression
 // TODO: tests
+// TODO: rename the 'tree' folder
 
+/// ```huff_coding``` symbol export
 pub mod prelude{
     pub use super::tree::{
         HuffLetter,
-        HuffLetterBitStore,
+        HuffLetterAsBytes,
+        HuffCode,
+        HuffTreeBin,
         HuffBranch,
         HuffLeaf, 
         HuffTree,

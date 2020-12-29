@@ -1,20 +1,120 @@
-use bitvec::prelude::*;
-
 use std::{
     cell::RefCell, 
     cmp::Ordering,
 };
 
-
-use super::{HuffLeaf, HuffLetter};
-
+use super::{HuffLeaf, HuffCode, HuffLetter};
 
 
+// TODO: maybe a macro to quickly create huffbranches?
+
+/// Struct representing a branch in a ```HuffTree```
+/// 
+/// Stores:
+/// * ```leaf: HuffLeaf<L>```
+///  * a struct containing the branch's letter(of type ```L```), 
+/// frequency & code
+/// * ```children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>```
+///  * references to its child ```HuffBranch```es
+///  * ```None``` if has no children
+/// 
+/// # Examples
+/// ---
+/// Initializing a branch "by hand":
+/// ```
+/// use huff_coding::prelude::{HuffBranch, HuffLeaf};
+/// use std::cell::RefCell;
+/// 
+/// let foo = HuffBranch::new(
+///     HuffLeaf::new(
+///         Some(0xaa),
+///         0
+///     ),
+///     Some([
+///         Box::new(RefCell::new(HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some(0xbb),
+///                 0
+///             ),
+///             None
+///         ))),
+///         Box::new(RefCell::new(HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some(0xcc),
+///                 0
+///             ),
+///             None
+///         ))),
+///     ])
+/// );
+/// ```
+/// Setting the children after initialization:
+/// ```
+/// use huff_coding::prelude::{HuffBranch, HuffLeaf};
+/// use std::cell::RefCell;
+/// 
+/// let mut foo = HuffBranch::new(
+///     HuffLeaf::new(
+///         Some("yś"),
+///         12
+///     ),
+///     None
+/// );
+/// 
+/// foo.set_children(
+///     Some([
+///         Box::new(RefCell::new(HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some("yś"),
+///                 2
+///             ),
+///             None
+///         ))),
+///         Box::new(RefCell::new(HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some("omamale"),
+///                 10
+///             ),
+///             None
+///         )))
+///     ])
+/// );
+/// ```
+/// Comparing different branches:
+/// ```
+/// use huff_coding::prelude::{HuffBranch, HuffLeaf};
+/// 
+/// let foo = HuffBranch::new(
+///     HuffLeaf::new(
+///         Some('t'),
+///         2137
+///     ),
+///     None
+/// );
+/// 
+///  let bar = HuffBranch::new(
+///     HuffLeaf::new(
+///         Some('x'),
+///         144
+///     ),
+///     None
+/// );
+/// 
+/// let foobar = HuffBranch::new(
+///     HuffLeaf::new(
+///         Some('t'),
+///         144
+///     ),
+///     None
+/// );
+/// 
+/// assert!(foo > bar);
+/// assert!(bar == foobar);
+/// assert!(foobar != foo);
+/// ```
 #[derive(Debug, Clone, Eq)]
 pub struct HuffBranch<L: HuffLetter>{
     leaf: HuffLeaf<L>,
-
-    pos_in_parent: Option<u8>,
     children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>
 }
 
@@ -37,23 +137,24 @@ impl<L: HuffLetter> PartialEq for HuffBranch<L>{
 }
 
 impl<L: HuffLetter> HuffBranch<L>{
+    /// Initialize a new ```HuffBranch<L>``` with the given leaf and children
     pub fn new(leaf: HuffLeaf<L>, children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>) -> Self{
         HuffBranch{
             leaf,
-
-            pos_in_parent: None,
-            children
+            children,
         }
     }
 
+    /// Returns a reference to the ```HuffLeaf``` containing the branch's
+    /// letter, frequency and code.
     pub fn leaf(&self) -> &HuffLeaf<L>{
         &self.leaf
     }
 
-    pub fn pos_in_parent(&self) -> Option<u8>{
-        self.pos_in_parent
-    }
-
+    /// Returns a reference to the children of the ```HuffBranch```:
+    /// 
+    /// ```&[Box<RefCell<HuffBranch<L>>>; 2]``` or 
+    /// ```None``` if has no children
     pub fn children(&self) -> Option<&[Box<RefCell<HuffBranch<L>>>; 2]>{
         match self.children{
             None => 
@@ -64,28 +165,18 @@ impl<L: HuffLetter> HuffBranch<L>{
         }
     }
 
+    /// Returns true if the branch has children
+    pub fn has_children(&self) -> bool{
+        self.children.is_some()
+    }
 
+    /// Setter for ```children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>```
     pub fn set_children(&mut self, children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>){
         self.children = children;
     }
 
-    pub fn set_pos_in_parent(&mut self, pos_in_parent: u8){
-        self.pos_in_parent = Some(pos_in_parent);
-    } 
-
-    pub fn set_code(&mut self, parent_code: Option<&BitVec<Msb0, u8>>){
-        let mut code = BitVec::new();
-
-        if let Some(pos_in_parent) = self.pos_in_parent(){
-            if let Some(parent_code) = parent_code{
-                for bit in parent_code{
-                    code.push(*bit);
-                }
-            }
-            
-            code.push(pos_in_parent >= 1);
-
-            self.leaf.set_code(code);
-        }
+    /// Setter for the leaf's code 
+    pub fn set_code(&mut self, code: HuffCode){
+        self.leaf.set_code(code);
     }
 }

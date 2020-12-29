@@ -7,36 +7,45 @@ use super::{HuffBranch, HuffLeaf, HuffLetter};
 use crate::freqs::Freq;
 
 
+
+/// A struct used to build a ```HuffTree```
+/// 
+/// Stores ```HuffBranch```es inside a ```std::collections::BinaryHeap```, but reversed
+/// (branches with the smallest frequencies are at the end, so they can be easily popped)
 #[derive(Debug, Clone)]
 pub struct HuffBranchHeap<L: HuffLetter>{
     heap: BinaryHeap<HuffBranchHeapItem<L>>,
 }
 
 impl<L: HuffLetter> HuffBranchHeap<L>{
-    pub fn from_byte_freqs<F: Freq<L>>(byte_freqs: F) -> Self{
+    /// Initialize a new ```HuffBranchHeap``` from the given freqs struct
+    pub fn from_freq<F: Freq<L>>(freqs: F) -> Self{
         let mut heap = HuffBranchHeap::new();
-        heap.build(byte_freqs);
+        heap.build(freqs);
         heap
     }
 
+    /// Initialize an empty ```HuffBranchHeap```
     pub fn new() -> Self{
         HuffBranchHeap::<L>{
             heap: BinaryHeap::new(),
         }
     }
 
+    /// Return the lenght of the heap
     pub fn len(&self) -> usize{
         self.heap.len()
     }
 
+    /// Push a branch onto the heap
     pub fn push(&mut self, branch: HuffBranch<L>){
         self.heap.push(HuffBranchHeapItem(branch));
     }
 
+    /// Pop the ```HuffBranch``` with the smallest frequency
     pub fn pop_min(&mut self) -> HuffBranch<L>{
         self.heap.pop().unwrap().unwrap()
     }
-
 
     fn build<F: Freq<L>>(&mut self, freqs: F){
         for (l, f) in freqs.into_iter(){

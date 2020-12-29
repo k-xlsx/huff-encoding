@@ -1,17 +1,25 @@
 
-use bitvec::prelude::*;
-
 use std::cmp::Ordering;
 
-use super::HuffLetter;
+use super::{HuffCode, HuffLetter};
 
 
 
+/// Struct representing a HuffBranch's data.
+/// 
+/// Stores:
+/// * ```letter: Option<L>```
+///  * type implementing ```HuffLetter```
+///  * if is a joint branch then ```letter == None```
+/// * ```frequency: usize```
+/// * ```code: Option<BitVec<Msb0, u8>>``` (big endian)
+/// 
+/// *Can be compared with an another ```HuffLeaf``` by their frequencies*
 #[derive(Debug, Eq, Clone)]
 pub struct HuffLeaf<L: HuffLetter>{
     letter: Option<L>,
     frequency: usize,
-    code: Option<BitVec<Msb0, u8>>,
+    code: Option<HuffCode>,
 }
 
 impl<L: HuffLetter> Ord for HuffLeaf<L> {
@@ -33,6 +41,8 @@ impl<L: HuffLetter> PartialEq for HuffLeaf<L>{
 }
 
 impl<L: HuffLetter> HuffLeaf<L>{
+    /// Initialize a HuffLeaf with the given letter and frequency 
+    /// (code is at first set to None and can be changed with the ```set_code``` method)
     pub fn new(letter: Option<L>, frequency: usize) -> Self{
         HuffLeaf{
             letter,
@@ -41,19 +51,23 @@ impl<L: HuffLetter> HuffLeaf<L>{
         }
     }
 
+    /// Returns a reference to the stored letter 
     pub fn letter(&self) -> Option<&L>{
         self.letter.as_ref()
     }
 
+    /// Returns the stored frequency
     pub fn frequency(&self) -> usize{
         self.frequency
     }
 
-    pub fn code(&self) -> Option<&BitVec<Msb0, u8>>{
+    /// Returns the stored code
+    pub fn code(&self) -> Option<&HuffCode>{
         self.code.as_ref()
     }
     
-    pub fn set_code(&mut self, code: BitVec<Msb0, u8>){    
+    /// Set the given code, consuming the original
+    pub fn set_code(&mut self, code: HuffCode){    
         self.code = Some(code);
     }
 }

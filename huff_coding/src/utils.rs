@@ -1,4 +1,3 @@
-
 /// Ration a ```Vec<T>``` into ration_count sized rations.
 /// 
 /// Edge cases:
@@ -25,7 +24,6 @@ pub fn ration_vec<T: Clone>(vec: &[T], ration_count: usize) -> Vec<Vec<T>>{
             elements_left -= elements_per_ration;
         }
     }
-
     rations
 }
 

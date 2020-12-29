@@ -1,15 +1,36 @@
-use super::tree::HuffLetter;
+use std::{
+    hash::Hash,
+    collections::HashMap,
+};
 
 
 
-pub trait Freq<L: HuffLetter>: PartialEq + Eq + Clone + IntoIterator<Item = (L, usize)>{
+/// Trait signifying that the struct stores the frequencies of a type ```L```, so that
+/// for any stored ```L``` there is a corresponding ```usize```(frequency).
+/// 
+/// Implemented by default for ```std::collections::HashMap<L, usize>``` and
+/// for ```huff_coding::freqs::byte_freqs::ByteFreqs```
+/// 
+/// Needed implementations:
+/// * Traits:
+///  * ```Eq```
+///  * ```Clone```
+///  * ```IntoIterator<Item = (L, usize)>```
+/// * Methods:
+///  * ```fn get(&self, letter: &L) -> Option<&usize>```
+///  * ```fn get_mut(&mut self, letter: &L) -> Option<&mut usize>```
+///  * ```fn len(&self) -> usize```
+///  * ```fn is_empty(&self) -> bool```
+/// 
+/// *In order to build with a ```huff_coding::tree::HuffTree``` ```L``` must implement ```huff_coding::tree::HuffLetter```*
+pub trait Freq<L>: Eq + Clone + IntoIterator<Item = (L, usize)>{
     fn get(&self, letter: &L) -> Option<&usize>;
     fn get_mut(&mut self, letter: &L) -> Option<&mut usize>;
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool;
 }
 
-impl<L: HuffLetter> Freq<L> for std::collections::HashMap<L, usize>{
+impl<L: Eq + Clone + Hash> Freq<L> for HashMap<L, usize>{
     fn get(&self, letter: &L) -> Option<&usize>{
         self.get(letter)
     }
@@ -24,6 +45,7 @@ impl<L: HuffLetter> Freq<L> for std::collections::HashMap<L, usize>{
     }
 }
 
+/// Module containing the ```ByteFreqs``` struct and stuff related to it
 pub mod byte_freqs{
     use std::{
         ops::{Add, AddAssign},
@@ -37,18 +59,19 @@ pub mod byte_freqs{
 
     /// Struct used to count and store the 
     /// frequencies of bytes in a given byte slice.
+    /// (implementing ```Freq<u8>```)
     /// ---
     /// 
     /// Can be initialized either linearly:
     /// 
     /// ```
-    /// use huff_encoding::prelude::ByteFreqs;
+    /// use huff_coding::prelude::ByteFreqs;
     /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
     /// ```
     /// or threaded (faster for larger byte collections):
     /// 
     /// ```
-    /// use huff_encoding::prelude::ByteFreqs;
+    /// use huff_coding::prelude::ByteFreqs;
     /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
     /// ```
     #[derive(Clone, Copy, Eq)]
@@ -114,13 +137,13 @@ pub mod byte_freqs{
     /// Consuming iterator over the contents of ByteFreqs 
     /// 
     /// *(u8, usize)*
-    pub struct Iter{
+    pub struct IntoIter{
         freqs: ByteFreqs,
 
         current_index: usize,
     }
 
-    impl Iterator for Iter{
+    impl Iterator for IntoIter{
         type Item = (u8, usize);
 
         fn next(&mut self) -> Option<Self::Item>{
@@ -143,23 +166,23 @@ pub mod byte_freqs{
 
     impl IntoIterator for ByteFreqs{
         type Item = (u8, usize);
-        type IntoIter = Iter;
+        type IntoIter = IntoIter;
 
-        fn into_iter(self) -> Iter{
-            Iter{freqs: self, current_index: 0}
+        fn into_iter(self) -> IntoIter{
+            IntoIter{freqs: self, current_index: 0}
         }   
     }
 
     /// Non consuming iterator over the contents of ByteFreqs 
     /// 
     /// *(u8, usize)*
-    pub struct IterRef<'a>{
+    pub struct Iter<'a>{
         freqs: &'a ByteFreqs,
 
         current_index: usize,
     }
 
-    impl Iterator for IterRef<'_>{
+    impl Iterator for Iter<'_>{
         type Item = (u8, usize);
 
         fn next(&mut self) -> Option<Self::Item>{
@@ -182,10 +205,10 @@ pub mod byte_freqs{
 
     impl <'a> IntoIterator for &'a ByteFreqs{
         type Item = (u8, usize);
-        type IntoIter = IterRef<'a>;
+        type IntoIter = Iter<'a>;
 
-        fn into_iter(self) -> IterRef<'a>{
-            IterRef{freqs: &self, current_index: 0}
+        fn into_iter(self) -> Iter<'a>{
+            Iter{freqs: &self, current_index: 0}
         }   
     }
 
@@ -199,7 +222,7 @@ pub mod byte_freqs{
         /// # Examples
         /// ---
         /// ```
-        /// use huff_encoding::prelude::ByteFreqs;
+        /// use huff_coding::prelude::ByteFreqs;
         /// 
         /// let foo = ByteFreqs::from_bytes("bar".as_bytes());
         /// ```
@@ -229,7 +252,7 @@ pub mod byte_freqs{
         /// # Examples
         /// ---
         /// ```
-        /// use huff_encoding::prelude::ByteFreqs;
+        /// use huff_coding::prelude::ByteFreqs;
         /// 
         /// let foo = ByteFreqs::threaded_from_bytes("bar".as_bytes(), 12 /* number of threads */);
         /// ```
@@ -264,7 +287,7 @@ pub mod byte_freqs{
         /// Returns an iterator over the bytes to their frequencies
         /// 
         /// *(u8, usize)*
-        pub fn iter(&self) -> IterRef{
+        pub fn iter(&self) -> Iter{
             self.into_iter()
         }
 
