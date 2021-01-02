@@ -8,17 +8,11 @@ use std::{
 
 
 
-/// Struct representing a branch in a ```HuffTree```
-/// 
-/// Stores:
-/// * ```leaf: HuffLeaf<L>```
-///  * a struct containing the branch's letter(of type ```L```), 
-/// frequency & code
-/// * ```children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>```
-///  * references to its child ```HuffBranch```es
-///  * ```None``` if has no children
-/// 
-/// # Examples
+/// Struct representing a branch in the `HuffTree` struct. 
+/// It contains data stored in a `HuffLeaf` (letter, frequency and code) and 
+/// optionally two child `HuffBranch`es (left and right)
+///
+/// Examples 
 /// ---
 /// Initializing a branch "by hand":
 /// ```
@@ -27,58 +21,72 @@ use std::{
 /// 
 /// let foo = HuffBranch::new(
 ///     HuffLeaf::new(
-///         Some(0xaa),
-///         0
+///         None,
+///         5
 ///     ),
-///     Some([
-///         Box::new(RefCell::new(HuffBranch::new(
+///     Some((
+///         HuffBranch::new(
 ///             HuffLeaf::new(
 ///                 Some(0xbb),
-///                 0
+///                 2
 ///             ),
 ///             None
-///         ))),
-///         Box::new(RefCell::new(HuffBranch::new(
+///         ),
+///         HuffBranch::new(
 ///             HuffLeaf::new(
 ///                 Some(0xcc),
-///                 0
+///                 3
 ///             ),
 ///             None
-///         ))),
-///     ])
+///         ),
+///     ))
 /// );
 /// ```
-/// Setting the children after initialization:
+/// Iterating over the children of a `HuffBranch`:
 /// ```
 /// use huff_coding::prelude::{HuffBranch, HuffLeaf};
 /// use std::cell::RefCell;
 /// 
-/// let mut foo = HuffBranch::new(
+/// let foo = HuffBranch::new(
 ///     HuffLeaf::new(
-///         Some("yś"),
-///         12
+///         None,
+///         9
 ///     ),
-///     None
-/// );
-/// 
-/// foo.set_children(
-///     Some([
-///         Box::new(RefCell::new(HuffBranch::new(
+///     Some((
+///         HuffBranch::new(
 ///             HuffLeaf::new(
-///                 Some("yś"),
+///                 Some(-423),
+///                 7
+///             ),
+///             None
+///         ),
+///         HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some(8),
 ///                 2
 ///             ),
 ///             None
-///         ))),
-///         Box::new(RefCell::new(HuffBranch::new(
-///             HuffLeaf::new(
-///                 Some("omamale"),
-///                 10
-///             ),
-///             None
-///         )))
-///     ])
+///         ),
+///     ))
 /// );
+/// 
+/// let mut children_iter = foo.children_iter().unwrap();
+/// 
+/// assert_eq!(
+///     children_iter.next().unwrap().borrow().leaf().letter(),
+///     Some(&-423)
+/// );
+/// 
+/// assert_eq!(
+///     children_iter.next().unwrap().borrow().leaf().letter(),
+///     Some(&8)
+/// );
+/// 
+/// assert_eq!(
+///     children_iter.next(),
+///     None
+/// );
+/// 
 /// ```
 /// Comparing different branches:
 /// ```
@@ -112,10 +120,43 @@ use std::{
 /// assert!(bar == foobar);
 /// assert!(foobar != foo);
 /// ```
+/// Setting the children after initialization:
+/// ```
+/// use huff_coding::prelude::{HuffBranch, HuffLeaf};
+/// use std::cell::RefCell;
+/// 
+/// let mut foo = HuffBranch::new(
+///     HuffLeaf::new(
+///         Some("yś"),
+///         12
+///     ),
+///     None
+/// );
+/// 
+/// foo.set_children(
+///     Some((
+///         HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some("yś"),
+///                 2
+///             ),
+///             None
+///         ),
+///         HuffBranch::new(
+///             HuffLeaf::new(
+///                 Some("omamale"),
+///                 10
+///             ),
+///             None
+///         )
+///     ))
+/// );
+/// ```
 #[derive(Debug, Clone, Eq)]
 pub struct HuffBranch<L: HuffLetter>{
     leaf: HuffLeaf<L>,
-    children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>
+    left_child: Option<Box<RefCell<HuffBranch<L>>>>,
+    right_child: Option<Box<RefCell<HuffBranch<L>>>>,
 }
 
 impl<L: HuffLetter> Ord for HuffBranch<L>{
@@ -137,42 +178,108 @@ impl<L: HuffLetter> PartialEq for HuffBranch<L>{
 }
 
 impl<L: HuffLetter> HuffBranch<L>{
-    /// Initialize a new ```HuffBranch<L>``` with the given leaf and children
-    pub fn new(leaf: HuffLeaf<L>, children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>) -> Self{
-        HuffBranch{
-            leaf,
-            children,
+    /// Initialize a new `HuffBranch<L>` with the given leaf and children
+    /// 
+    /// In the provided tuple:
+    /// * 0 means left_child
+    /// * 1 means right_child
+    pub fn new(leaf: HuffLeaf<L>, children: Option<(HuffBranch<L>, HuffBranch<L>)>) -> Self{
+        if let Some(children) = children{
+            HuffBranch{
+                leaf,
+                left_child: Some(Box::new(RefCell::new(children.0))),
+                right_child: Some(Box::new(RefCell::new(children.1))),
+            }
+        }
+        else{
+            HuffBranch{
+                leaf,
+                left_child: None,
+                right_child: None,
+            }
         }
     }
 
-    /// Returns a reference to the ```HuffLeaf``` containing the branch's
+    /// Return a reference to the `HuffLeaf` containing the branch's
     /// letter, frequency and code.
     pub fn leaf(&self) -> &HuffLeaf<L>{
         &self.leaf
     }
 
-    /// Returns a reference to the children of the ```HuffBranch```:
+    /// Return an iterator over the branch's children (`Box<RefCell<HuffBranch<L>>>`)
+    /// or `None` if it has no children
     /// 
-    /// ```&[Box<RefCell<HuffBranch<L>>>; 2]``` or 
-    /// ```None``` if has no children
-    pub fn children(&self) -> Option<&[Box<RefCell<HuffBranch<L>>>; 2]>{
-        match self.children{
-            None => 
-                None,
-            Some(_) => {
-                self.children.as_ref()
-            }
-        }
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_coding::prelude::{HuffBranch, HuffLeaf};
+    /// 
+    /// let branch = HuffBranch::new(
+    ///     HuffLeaf::new(None, 7),
+    ///     Some((
+    ///         HuffBranch::new(
+    ///             HuffLeaf::new(Some(5), 3), 
+    ///             None,
+    ///         ),
+    ///         HuffBranch::new(
+    ///             HuffLeaf::new(Some(42), 4), 
+    ///             None,
+    ///         )
+    ///     ))
+    /// );
+    /// 
+    /// let mut children_iter = branch.children_iter().unwrap();
+    /// assert_eq!(
+    ///     children_iter.next().unwrap()
+    ///         .borrow()
+    ///         .leaf()
+    ///         .letter(),
+    ///     Some(&5)
+    /// );
+    /// assert_eq!(
+    ///     children_iter.next().unwrap()
+    ///         .borrow()
+    ///         .leaf()
+    ///         .letter(),
+    ///     Some(&42)
+    /// );
+    /// ```
+    pub fn children_iter(&self) -> Option<ChildrenIter<L>>{
+        if self.has_children(){Some(ChildrenIter::new(self))}
+        else{None}
     }
 
-    /// Returns true if the branch has children
+    /// Return a reference to the left child of the branch (`Box<RefCell<HuffBranch<L>>>`), or 
+    /// `None` if it has no children
+    pub fn left_child(&self) -> Option<&Box<RefCell<HuffBranch<L>>>>{
+        self.left_child.as_ref()
+    }
+
+    /// Return a reference to the right child of the branch (`Box<RefCell<HuffBranch<L>>>`), or 
+    /// `None` if it has no children
+    pub fn right_child(&self) -> Option<&Box<RefCell<HuffBranch<L>>>>{
+        self.right_child.as_ref()
+    }
+
+    /// Return true if the branch has children
     pub fn has_children(&self) -> bool{
-        self.children.is_some()
+        self.left_child.is_some()
     }
 
-    /// Setter for ```children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>```
-    pub fn set_children(&mut self, children: Option<[Box<RefCell<HuffBranch<L>>>; 2]>){
-        self.children = children;
+    /// Setter for the branch's children
+    /// 
+    /// In the provided tuple:
+    /// * 0 means left_child
+    /// * 1 means right_child
+    pub fn set_children(&mut self, children: Option<(HuffBranch<L>, HuffBranch<L>)>){
+        if let Some(children) = children{
+            self.left_child = Some(Box::new(RefCell::new(children.0)));
+            self.right_child = Some(Box::new(RefCell::new(children.1)));  
+        }
+        else{
+            self.left_child = None;
+            self.right_child = None;
+        }
     }
 
     /// Setter for the leaf's code 
@@ -181,27 +288,38 @@ impl<L: HuffLetter> HuffBranch<L>{
     }
 }
 
+/// An iterator ovet a `HuffBranch`'s children
+pub struct ChildrenIter<'a, L: HuffLetter>{
+    parent: &'a HuffBranch<L>,
+    child_pos: u8,
+}
 
-// TODO: figure out how to export this from huff_coding::tree::branch
-#[macro_export]
-macro_rules! huff_branch {
-    ($freq:expr, [$child1:expr, $child2:expr]) => {
-        HuffBranch::new(
-            HuffLeaf::new(None, $freq),
-            Some([
-                Box::new(std::cell::RefCell::new(
-                    $child1
-                )), 
-                Box::new(std::cell::RefCell::new(
-                    $child2
-                ))
-            ])
-        );
-    };
-    ($lett:expr, $freq: expr) => {
-        HuffBranch::new(
-            HuffLeaf::new(Some($lett), $freq),
-            None
-        );
-    };
+impl<'a, L: HuffLetter> Iterator for ChildrenIter<'a, L>{
+    type Item = &'a Box<RefCell<HuffBranch<L>>>;
+
+    fn next(&mut self) -> Option<Self::Item>{
+        match self.child_pos{
+            0 =>{
+                self.child_pos += 1;
+                self.parent.left_child()
+            }
+            1 =>{
+                self.child_pos += 1;
+                self.parent.right_child()
+            }
+            _ => 
+                None,
+        }
+    }
+}
+
+impl<'a, L: HuffLetter> ChildrenIter<'a, L>{
+    /// Initialize a new ```ChildrenIter``` over 
+    /// the children of the provided ```HuffBranch```
+    pub fn new(parent: &'a HuffBranch<L>) -> Self{
+        ChildrenIter{
+            parent,
+            child_pos: 0,
+        }
+    }
 }

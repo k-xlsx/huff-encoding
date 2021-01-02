@@ -20,20 +20,18 @@ use std::{
 
 
 
-
-/// Trait specifying that the given type can be stored in a ```HuffTree```, which means
+/// Trait specifying that the given type can be stored in a `HuffTree`, which means
 /// it implements:
 /// 
-/// ```Clone``` + ```Eq``` + ```std::hash::Hash```
+/// `Clone` + `Eq` + `std::hash::Hash`
 /// 
-/// Implemented by default for every primitive type, as well as String.
-/// 
+/// Implemented by default for every primitive type, except floats and including String
 pub trait HuffLetter: Clone + Eq + Hash + Debug{}
 /// Trait specifying that the given HuffLetter can be converted
-/// into bytes *(returns ```Vec<u8>``` 'cause i have no idea right now)* and
-/// can be created from bytes (```&[u8]```)
+/// into bytes *(returns `Vec<u8>` 'cause i have no idea right now)* and
+/// can be created from bytes (`&[u8]`)
 /// 
-/// so the ```HuffTree``` can be represented in binary.
+/// so the `HuffTree` can be represented in binary.
 /// 
 /// Implemented by default for every integer
 pub trait HuffLetterAsBytes: HuffLetter{
@@ -42,7 +40,7 @@ pub trait HuffLetterAsBytes: HuffLetter{
 }
 
 
-/// Implements HuffLetter for every provided type (without generics) 
+/// Implements `HuffLetter` for every provided type (without generics) 
 macro_rules! primitive_letter_impl{
     {$($type:ty),+} => {
         $(
@@ -56,7 +54,7 @@ primitive_letter_impl!{
     String
 }
 
-/// Implements HuffLetter and HuffLetterAsBytes with a default implementation
+/// Implements `HuffLetter` and `HuffLetterAsBytes` with a default implementation
 /// for provided primitive integer types
 macro_rules! integer_letter_impl{
     {$($type:ty),+} => {

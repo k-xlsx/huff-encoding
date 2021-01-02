@@ -8,24 +8,24 @@ use std::{
 
 
 
-/// Trait signifying that the struct stores the frequencies of a type ```L```, so that
-/// for any stored ```L``` there is a corresponding ```usize```(frequency).
+/// Trait signifying that the struct stores the frequencies of a type `L`, so that
+/// for any stored `L` there is a corresponding `usize`(frequency).
 /// 
-/// Implemented by default for ```std::collections::HashMap<L, usize>``` and
-/// for ```huff_coding::freqs::byte_freqs::ByteFreqs```
+/// Implemented by default for `std::collections::HashMap<L, usize>` and
+/// for `huff_coding::freqs::byte_freqs::ByteFreqs`
 /// 
 /// Needed implementations:
 /// * Traits:
-///  * ```Eq```
-///  * ```Clone```
-///  * ```IntoIterator<Item = (L, usize)>```
+///  * `Eq`
+///  * `Clone`
+///  * `IntoIterator<Item = (L, usize)>`
 /// * Methods:
-///  * ```fn get(&self, letter: &L) -> Option<&usize>```
-///  * ```fn get_mut(&mut self, letter: &L) -> Option<&mut usize>```
-///  * ```fn len(&self) -> usize```
-///  * ```fn is_empty(&self) -> bool```
+///  * `fn get(&self, letter: &L) -> Option<&usize>`
+///  * `fn get_mut(&mut self, letter: &L) -> Option<&mut usize>`
+///  * `fn len(&self) -> usize`
+///  * `fn is_empty(&self) -> bool`
 /// 
-/// *In order to build with a ```huff_coding::tree::HuffTree``` ```L``` must implement ```huff_coding::tree::HuffLetter```*
+/// *In order to build with a `huff_coding::tree::HuffTree` `L` must implement `huff_coding::tree::HuffLetter`*
 pub trait Freq<L>: Eq + Clone + IntoIterator<Item = (L, usize)>{
     fn get(&self, letter: &L) -> Option<&usize>;
     fn get_mut(&mut self, letter: &L) -> Option<&mut usize>;
@@ -48,7 +48,7 @@ impl<L: Eq + Clone + Hash> Freq<L> for HashMap<L, usize>{
     }
 }
 
-/// Module containing the ```ByteFreqs``` struct and stuff related to it
+/// Module containing the `ByteFreqs` struct and stuff related to it
 pub mod byte_freqs{
     use std::{
         ops::{Add, AddAssign},
@@ -59,10 +59,10 @@ pub mod byte_freqs{
     use super::Freq;
 
 
-
+    // TODO: docs
     /// Struct used to count and store the 
     /// frequencies of bytes in a given byte slice.
-    /// (implementing ```Freq<u8>```)
+    /// (implementing `Freq<u8>`)
     /// ---
     /// 
     /// Can be initialized either linearly:
@@ -125,7 +125,7 @@ pub mod byte_freqs{
             Some(freq)
         }
 
-        /// Return the length of the wrapped Hashmap<u8; usize>.
+        /// Return the number of different counted bytes stored in the `ByteFreqs`
         fn len(&self) -> usize{
             self.len
         }
@@ -137,9 +137,7 @@ pub mod byte_freqs{
     }
 
 
-    /// Consuming iterator over the contents of ByteFreqs 
-    /// 
-    /// *(u8, usize)*
+    // Consuming iterator over the contents (`(u8, usize)`) of `ByteFreqs` 
     pub struct IntoIter{
         freqs: ByteFreqs,
 
@@ -176,9 +174,7 @@ pub mod byte_freqs{
         }   
     }
 
-    /// Non consuming iterator over the contents of ByteFreqs 
-    /// 
-    /// *(u8, usize)*
+    /// Non consuming iterator over the contents (`(u8, usize)`) of `ByteFreqs` 
     pub struct Iter<'a>{
         freqs: &'a ByteFreqs,
 
@@ -218,7 +214,7 @@ pub mod byte_freqs{
 
     impl ByteFreqs{
         /// Count all bytes in given slice and organize them
-        /// into ```ByteFreqs``` (internally a lookup table)
+        /// into `ByteFreqs` (internally a lookup table)
         /// 
         /// Threaded version is faster for bigger files (huff_encoding::ByteFreqs::threaded_from_bytes).
         /// 
@@ -238,8 +234,7 @@ pub mod byte_freqs{
                 if byte_freqs[*byte as usize] == 0{len += 1;}
                 byte_freqs[*byte as usize] += 1;
             }
-
-            // convert the array into a hashmap
+ 
             ByteFreqs{
                 freqs: byte_freqs,
                 len,
@@ -287,14 +282,12 @@ pub mod byte_freqs{
             byte_freqs
         }
 
-        /// Returns an iterator over the bytes to their frequencies
-        /// 
-        /// *(u8, usize)*
+        /// Returns an iterator over the bytes to their frequencies `(u8, usize)`
         pub fn iter(&self) -> Iter{
             self.into_iter()
         }
 
-        /// Add another ByteFreqs to self
+        /// Add another `ByteFreqs` to self
         pub fn add_byte_freqs(&mut self, other: &ByteFreqs){
             for (b, f) in other{
                 let self_entry = self.get_mut(&b);

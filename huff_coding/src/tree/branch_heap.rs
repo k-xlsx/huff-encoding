@@ -19,14 +19,14 @@ pub struct HuffBranchHeap<L: HuffLetter>{
 }
 
 impl<L: HuffLetter> HuffBranchHeap<L>{
-    /// Initialize a new ```HuffBranchHeap``` from the given freqs struct
+    /// Initialize a new `HuffBranchHeap` from the given freqs struct
     pub fn from_freq<F: Freq<L>>(freqs: F) -> Self{
         let mut heap = HuffBranchHeap::new();
         heap.build(freqs);
         heap
     }
 
-    /// Initialize an empty ```HuffBranchHeap```
+    /// Initialize an empty `HuffBranchHeap`
     pub fn new() -> Self{
         HuffBranchHeap::<L>{
             heap: BinaryHeap::new(),
@@ -43,7 +43,7 @@ impl<L: HuffLetter> HuffBranchHeap<L>{
         self.heap.push(HuffBranchHeapItem(branch));
     }
 
-    /// Pop the ```HuffBranch``` with the smallest frequency
+    /// Pop the `HuffBranch` with the smallest frequency
     pub fn pop_min(&mut self) -> HuffBranch<L>{
         self.heap.pop().unwrap().unwrap()
     }
@@ -57,9 +57,9 @@ impl<L: HuffLetter> HuffBranchHeap<L>{
     }
 }
 
-/// A wrapper for HuffBranch that reverses it's cmp
+/// A wrapper for `HuffBranch` that reverses it's cmp
 /// for the smallest HuffBranches to appear at the end of the 
-/// HuffBranchHeap
+/// `HuffBranchHeap`
 #[derive(Debug, Clone, Eq)]
 struct HuffBranchHeapItem<L: HuffLetter>(HuffBranch<L>);
 

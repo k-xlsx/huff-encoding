@@ -8,13 +8,13 @@ use std::cmp::Ordering;
 /// Struct representing a HuffBranch's data.
 /// 
 /// Stores:
-/// * ```letter: Option<L>```
-///  * type implementing ```HuffLetter```
-///  * if is a joint branch then ```letter == None```
-/// * ```frequency: usize```
-/// * ```code: Option<BitVec<Msb0, u8>>``` (big endian)
+/// * `letter: Option<L>`
+///  * type implementing `HuffLetter`
+///  * if is a joint branch then `letter == None`
+/// * `frequency: usize`
+/// * `code: Option<BitVec<Msb0, u8>>` (big endian)
 /// 
-/// *Can be compared with an another ```HuffLeaf``` by their frequencies*
+/// *Can be compared with an another `HuffLeaf` by their frequencies*
 #[derive(Debug, Eq, Clone)]
 pub struct HuffLeaf<L: HuffLetter>{
     letter: Option<L>,
@@ -42,7 +42,7 @@ impl<L: HuffLetter> PartialEq for HuffLeaf<L>{
 
 impl<L: HuffLetter> HuffLeaf<L>{
     /// Initialize a HuffLeaf with the given letter and frequency 
-    /// (code is at first set to None and can be changed with the ```set_code``` method)
+    /// (code is at first set to None and can be changed with the `set_code` method)
     pub fn new(letter: Option<L>, frequency: usize) -> Self{
         HuffLeaf{
             letter,

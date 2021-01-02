@@ -5,9 +5,9 @@
 
 /// Module containing structs used to build a *Huffman Tree*
 pub mod tree;
-/// Module containing the ```Freq``` trait and the ```byte_freqs``` module
+/// Module containing the `Freq` trait and the `byte_freqs` module
 pub mod freqs;
-/// ```huff_coding``` symbol export
+/// `huff_coding` symbol export
 pub mod prelude{
     pub use super::tree::{
         HuffLetter,
@@ -24,7 +24,7 @@ pub mod prelude{
 }
 mod utils;
 
-// bitvec re-export
+// `bitvec` re-export
 pub use bitvec;
 
 

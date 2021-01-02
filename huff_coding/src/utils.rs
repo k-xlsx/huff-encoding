@@ -1,8 +1,8 @@
-/// Ration a ```Vec<T>``` into ration_count sized rations.
+/// Ration a `Vec<T>` into ration_count sized rations.
 /// 
 /// Edge cases:
 /// * If cannot ration equally -> dumps the remainder into the last ration.
-/// * If Vec is to small -> returns just one ration with the whole Vec in it.
+/// * If `Vec<T>` is to small -> returns just one ration with the whole `Vec<T>` in it.
 pub fn ration_vec<T: Clone>(vec: &[T], ration_count: usize) -> Vec<Vec<T>>{
     let mut elements_left = vec.len();
     let elements_per_ration = elements_left / ration_count;
