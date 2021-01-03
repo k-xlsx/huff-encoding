@@ -1,12 +1,6 @@
-[package]
 # TODO: change the name on github
-name = "huff"
-version = "0.1.2"
-authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
-edition = "2018"
-
 [workspace]
-
-[dependencies]
-huff_coding = {path = "huff_coding"}
-structopt = "0.3.21"
+members = [
+    "huff",
+    "huff_coding",
+]

@@ -1,8 +1,9 @@
 [package]
-name = "huff_coding"
+name = "huff"
 version = "0.0.0"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-bitvec = "0.20.1"
+huff_coding = {path = "../huff_coding"}
+structopt = "0.3.21"

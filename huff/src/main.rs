@@ -1,5 +1,6 @@
 use huff_coding::prelude::*;
-use std::io::prelude::*;
+
+
 
 fn main() {
     let bf = ByteFreqs::threaded_from_bytes(b"abbccc", 12);
