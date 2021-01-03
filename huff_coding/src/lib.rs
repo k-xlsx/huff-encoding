@@ -26,5 +26,3 @@ mod utils;
 
 // `bitvec` re-export
 pub use bitvec;
-
-

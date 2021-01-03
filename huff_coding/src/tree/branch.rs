@@ -1,10 +1,8 @@
 use super::{HuffLeaf, HuffLetter};
 use crate::bitvec::prelude::*;
 
-use std::{
-    cell::RefCell, 
-    cmp::Ordering,
-};
+use std::cmp::Ordering;
+
 
 
 
@@ -73,12 +71,12 @@ use std::{
 /// let mut children_iter = foo.children_iter().unwrap();
 /// 
 /// assert_eq!(
-///     children_iter.next().unwrap().borrow().leaf().letter(),
+///     children_iter.next().unwrap().leaf().letter(),
 ///     Some(&-423)
 /// );
 /// 
 /// assert_eq!(
-///     children_iter.next().unwrap().borrow().leaf().letter(),
+///     children_iter.next().unwrap().leaf().letter(),
 ///     Some(&8)
 /// );
 /// 
@@ -155,8 +153,8 @@ use std::{
 #[derive(Debug, Clone, Eq)]
 pub struct HuffBranch<L: HuffLetter>{
     leaf: HuffLeaf<L>,
-    left_child: Option<Box<RefCell<HuffBranch<L>>>>,
-    right_child: Option<Box<RefCell<HuffBranch<L>>>>,
+    left_child: Option<Box<HuffBranch<L>>>,
+    right_child: Option<Box<HuffBranch<L>>>,
 }
 
 impl<L: HuffLetter> Ord for HuffBranch<L>{
@@ -187,8 +185,8 @@ impl<L: HuffLetter> HuffBranch<L>{
         if let Some(children) = children{
             HuffBranch{
                 leaf,
-                left_child: Some(Box::new(RefCell::new(children.0))),
-                right_child: Some(Box::new(RefCell::new(children.1))),
+                left_child: Some(Box::new(children.0)),
+                right_child: Some(Box::new(children.1)),
             }
         }
         else{
@@ -206,7 +204,7 @@ impl<L: HuffLetter> HuffBranch<L>{
         &self.leaf
     }
 
-    /// Return an iterator over the branch's children (`Box<RefCell<HuffBranch<L>>>`)
+    /// Return an iterator over the branch's children (`&HuffBranch<L>`)
     /// or `None` if it has no children
     /// 
     /// # Example
@@ -231,14 +229,12 @@ impl<L: HuffLetter> HuffBranch<L>{
     /// let mut children_iter = branch.children_iter().unwrap();
     /// assert_eq!(
     ///     children_iter.next().unwrap()
-    ///         .borrow()
     ///         .leaf()
     ///         .letter(),
     ///     Some(&5)
     /// );
     /// assert_eq!(
     ///     children_iter.next().unwrap()
-    ///         .borrow()
     ///         .leaf()
     ///         .letter(),
     ///     Some(&42)
@@ -249,16 +245,28 @@ impl<L: HuffLetter> HuffBranch<L>{
         else{None}
     }
 
-    /// Return a reference to the left child of the branch (`Box<RefCell<HuffBranch<L>>>`), or 
+    /// Return a reference to the left child of the branch `HuffBranch<L>`, or 
     /// `None` if it has no children
-    pub fn left_child(&self) -> Option<&Box<RefCell<HuffBranch<L>>>>{
-        self.left_child.as_ref()
+    pub fn left_child(&self) -> Option<&HuffBranch<L>>{
+        self.left_child.as_deref()
     }
 
-    /// Return a reference to the right child of the branch (`Box<RefCell<HuffBranch<L>>>`), or 
+    /// Return a mutable reference to the left child of the branch `HuffBranch<L>`, or 
     /// `None` if it has no children
-    pub fn right_child(&self) -> Option<&Box<RefCell<HuffBranch<L>>>>{
-        self.right_child.as_ref()
+    pub fn left_child_mut(&mut self) -> Option<&mut HuffBranch<L>>{
+        self.left_child.as_deref_mut()
+    }
+
+    /// Return a reference to the right child of the branch `HuffBranch<L>`, or 
+    /// `None` if it has no children
+    pub fn right_child(&self) -> Option<&HuffBranch<L>>{
+        self.right_child.as_deref()
+    }
+
+    /// Return a mutable reference to the right child of the branch `HuffBranch<L>`, or 
+    /// `None` if it has no children
+    pub fn right_child_mut(&mut self) -> Option<&mut HuffBranch<L>>{
+        self.right_child.as_deref_mut()
     }
 
     /// Return true if the branch has children
@@ -273,8 +281,8 @@ impl<L: HuffLetter> HuffBranch<L>{
     /// * 1 means right_child
     pub fn set_children(&mut self, children: Option<(HuffBranch<L>, HuffBranch<L>)>){
         if let Some(children) = children{
-            self.left_child = Some(Box::new(RefCell::new(children.0)));
-            self.right_child = Some(Box::new(RefCell::new(children.1)));  
+            self.left_child = Some(Box::new(children.0));
+            self.right_child = Some(Box::new(children.1));  
         }
         else{
             self.left_child = None;
@@ -295,7 +303,7 @@ pub struct ChildrenIter<'a, L: HuffLetter>{
 }
 
 impl<'a, L: HuffLetter> Iterator for ChildrenIter<'a, L>{
-    type Item = &'a Box<RefCell<HuffBranch<L>>>;
+    type Item = &'a HuffBranch<L>;
 
     fn next(&mut self) -> Option<Self::Item>{
         match self.child_pos{

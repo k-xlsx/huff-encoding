@@ -36,7 +36,7 @@ pub trait HuffLetter: Clone + Eq + Hash + Debug{}
 /// Implemented by default for every integer
 pub trait HuffLetterAsBytes: HuffLetter{
     fn try_from_be_bytes(bytes: &[u8]) ->  Result<Self, Box<dyn std::error::Error>>;
-    fn to_be_byte_vec(&self) -> Vec<u8>;
+    fn as_be_bytes(&self) -> Box<[u8]>;
 }
 
 
@@ -65,8 +65,8 @@ macro_rules! integer_letter_impl{
                 let bytes: [u8; size_of::<$type>()] = bytes.try_into()?;
                 Ok(Self::from_be_bytes(bytes))
             }
-            fn to_be_byte_vec(&self) -> Vec<u8>{
-                self.to_be_bytes().to_vec()
+            fn as_be_bytes(&self) -> Box<[u8]>{
+                Box::new(self.to_be_bytes())
             }
         }
         )+

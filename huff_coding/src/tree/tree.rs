@@ -11,43 +11,11 @@ use crate::{
 use std::{
     fmt,
     mem,
-    cell::{RefCell, Ref, RefMut},
     collections::{hash_map::RandomState, HashMap},
     hash::BuildHasher,
 };
 
 
-
-/// Error encountered while trying to construct a `HuffTree` from bin
-/// with the `HuffTree::try_from_bin` method
-#[derive(Debug)]
-pub struct FromBinError<L: HuffLetterAsBytes>{
-    message: &'static str,
-    _typebind: std::marker::PhantomData<L>,
-}
-
-impl<L: HuffLetterAsBytes> fmt::Display for FromBinError<L>{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}<{}>", self.message, std::any::type_name::<L>())
-    }
-}
-
-impl<L: HuffLetterAsBytes> std::error::Error for FromBinError<L>{}
-
-impl<L: HuffLetterAsBytes> FromBinError<L>{
-    /// Initialize a new `FromBinError` with the given message
-    pub fn new(message: &'static str) -> Self{
-        Self{
-            message,
-            _typebind: std::marker::PhantomData,
-        }
-    }
-
-    /// Return the message
-    pub fn message(&self) -> &str{
-        self.message
-    }
-}
 
 /// Struct representing a Huffman Tree with an alphabet of
 /// type `L: HuffLetter`
@@ -164,12 +132,10 @@ impl<L: HuffLetterAsBytes> FromBinError<L>{
 /// assert_ne!(
 ///     tree
 ///         .root()
-///         .borrow()
 ///         .leaf()
 ///         .frequency(), 
 ///     new_tree
 ///         .root()
-///         .borrow()
 ///         .leaf()
 ///         .frequency()
 /// );
@@ -177,7 +143,6 @@ impl<L: HuffLetterAsBytes> FromBinError<L>{
 /// assert_eq!(
 ///     new_tree
 ///         .root()
-///         .borrow()
 ///         .leaf()
 ///         .frequency(),
 ///      0
@@ -223,7 +188,7 @@ impl<L: HuffLetterAsBytes> FromBinError<L>{
 /// ```
 #[derive(Debug, Clone)]
 pub struct HuffTree<L: HuffLetter>{
-    root: Box<RefCell<HuffBranch<L>>>,
+    root: HuffBranch<L>,
 }
 
 impl<L: HuffLetter> HuffTree<L>{
@@ -328,15 +293,15 @@ impl<L: HuffLetter> HuffTree<L>{
         }
 
         // last branch in branch_heap is root
-        let root = Box::new(RefCell::new(branch_heap.pop_min()));
+        let mut root = branch_heap.pop_min();
 
         // set codes for all branches recursively if has children
-        if root.borrow().has_children(){
-            HuffTree::set_codes_in_child_branches(root.borrow_mut());
+        if root.has_children(){
+            HuffTree::set_codes_in_child_branches(&mut root, None);
         }
         // else just set the root's code to 0
         else{
-            root.borrow_mut().set_code({let mut c = BitVec::with_capacity(1); c.push(false); c});
+            root.set_code({let mut c = BitVec::with_capacity(1); c.push(false); c});
         }
 
         HuffTree{
@@ -345,18 +310,13 @@ impl<L: HuffLetter> HuffTree<L>{
     }
 
     /// Return a reference to the tree's root `Box<std::cell::RefCell<HuffBranch>>`
-    pub fn root(&self) -> &Box<RefCell<HuffBranch<L>>>{
+    pub fn root(&self) -> &HuffBranch<L>{
         &self.root
     }
 
-    /// Return a `std::cell::Ref` to the root branch
-    pub fn root_ref(&self) -> Ref<HuffBranch<L>>{
-        self.root.borrow()
-    }
-
-    /// Return a `std::cell::RefMut` to the root branch
-    pub fn root_ref_mut(&self) -> RefMut<HuffBranch<L>>{
-        self.root.borrow_mut()
+    /// Return a mutable reference to the tree's root `Box<std::cell::RefCell<HuffBranch>>`
+    pub fn root_mut(&mut self) -> &mut HuffBranch<L>{
+        &mut self.root
     }
 
     /// Go down the tree reading every letter's code and returning
@@ -417,16 +377,16 @@ impl<L: HuffLetter> HuffTree<L>{
     /// ```
     pub fn read_codes_with_hasher<S: BuildHasher>(&self, hash_builder: S) -> HashMap<L, BitVec<Msb0, u8>, S>{
         /// Recursively insert letters to codes into the given HashMap<L, BitVec<Msb0, u8>>
-        fn set_codes<L: HuffLetter, S: BuildHasher>(codes: &mut HashMap<L, BitVec<Msb0, u8>, S>, root: Ref<HuffBranch<L>>, pos_in_parent: bool){
+        fn set_codes<L: HuffLetter, S: BuildHasher>(codes: &mut HashMap<L, BitVec<Msb0, u8>, S>, root: &HuffBranch<L>, pos_in_parent: bool){
             if let Some(children_iter) = root.children_iter(){
                 for (pos, child) in children_iter.enumerate(){
-                    let branch = child.borrow();
+                    let branch = child;
                     let leaf = branch.leaf();
                     if let Some(letter) = leaf.letter(){
                         codes.insert(letter.clone(), leaf.code().unwrap().clone());
                     }
                     else{
-                        set_codes(codes, child.borrow(), pos != 0);
+                        set_codes(codes, child, pos != 0);
                     }
                 }
             }  
@@ -436,33 +396,36 @@ impl<L: HuffLetter> HuffTree<L>{
         }
         
         let mut codes = HashMap::with_hasher(hash_builder);
-        let root_ref = self.root_ref();
-        if root_ref.has_children(){
-            set_codes(&mut codes, root_ref.left_child().unwrap().borrow(), false);
-            set_codes(&mut codes, root_ref.right_child().unwrap().borrow(), true);
+        let root = self.root();
+        if root.has_children(){
+            set_codes(&mut codes, root.left_child().unwrap(), false);
+            set_codes(&mut codes, root.right_child().unwrap(), true);
             codes
         }
         else{
-            codes.insert(root_ref.leaf().letter().unwrap().clone(), bitvec![Msb0, u8; 0]);
+            codes.insert(root.leaf().letter().unwrap().clone(), bitvec![Msb0, u8; 0]);
             codes
         }
     }
 
     /// Recursively set the codes in every encountered branch
-    fn set_codes_in_child_branches(parent: RefMut<HuffBranch<L>>){
-        if let Some(children_iter) = parent.children_iter(){
-            for (pos, child) in children_iter.enumerate(){
+    fn set_codes_in_child_branches(parent: &mut HuffBranch<L>, parent_code: Option<BitVec<Msb0, u8>>){
+        if parent.has_children(){
+            let set_code = |child: &mut HuffBranch<L>, pos|{
                 // append pos_in_parent to parent_code and set the newly created code on child
                 let mut child_code = BitVec::with_capacity(1);
-                if let Some(parent_code) = parent.leaf().code(){
-                    child_code = parent_code.clone();
+                if let Some(parent_code) = parent_code{
+                    child_code = parent_code;
                 }   
                 child_code.push(pos != 0);
-                child.borrow_mut().set_code(child_code);
-
+                child.set_code(child_code.clone());
+    
                 // recurse into the child's children
-                HuffTree::set_codes_in_child_branches(child.borrow_mut());
-            }
+                HuffTree::set_codes_in_child_branches(child, Some(child_code));
+            };
+            
+            set_code.clone()(parent.left_child_mut().unwrap(), 0);
+            set_code(parent.right_child_mut().unwrap(), 1);
         }
     }
 }
@@ -500,12 +463,10 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// assert_ne!(
     ///     tree
     ///         .root()
-    ///         .borrow()
     ///         .leaf()
     ///         .frequency(), 
     ///     new_tree
     ///         .root()
-    ///         .borrow()
     ///         .leaf()
     ///         .frequency()
     /// );
@@ -513,7 +474,6 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// assert_eq!(
     ///     new_tree
     ///         .root()
-    ///         .borrow()
     ///         .leaf()
     ///         .frequency(),
     ///      0
@@ -548,7 +508,8 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         /// Recursively reads branches and their children from the given bits
         /// When finding a 1 -> recurses to get children,
         /// and when a 0 -> ends recursion returning a letter branch
-        fn read_branches_from_bits<L: HuffLetterAsBytes>(bits: &mut bitvec::slice::IterMut<Msb0, u8>) -> Result<HuffBranch<L>, FromBinError<L>>{
+        fn read_branches_from_bits<L: HuffLetterAsBytes>(bits: &mut bitvec::slice::IterMut<Msb0, u8>) -> 
+        Result<HuffBranch<L>, FromBinError<L>>{
             // check whether the bit can be popped at all, if not return Err
             // remove first bit, if its 1 -> joint branch
             if {if let Some(bit) = bits.next(){*bit}
@@ -605,7 +566,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         let mut bin = bin;
         // recurse to create root, and set codes for all branches
         let mut bin_iter_mut = bin.iter_mut();
-        let root = read_branches_from_bits(&mut bin_iter_mut)?;
+        let mut root = read_branches_from_bits(&mut bin_iter_mut)?;
 
         // return Err if not all bits used
         if bin_iter_mut.next().is_some(){
@@ -615,13 +576,12 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         }
 
         // set codes for all branches recursively if has children
-        let root = Box::new(RefCell::new(root)); 
-        if root.borrow().has_children(){
-            HuffTree::set_codes_in_child_branches(root.borrow_mut());
+        if root.has_children(){
+            HuffTree::set_codes_in_child_branches(&mut root, None);
         }
         // else just set the root's code to 0
         else{
-            root.borrow_mut().set_code(bitvec![Msb0, u8; 0]);
+            root.set_code(bitvec![Msb0, u8; 0]);
         }
         
         Ok(HuffTree{
@@ -657,7 +617,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         /// depending on the branches you encounter:
         /// * 0 being a letter branch (followed by a letter encoded in binary)
         /// * 1 being a joint branch
-        fn set_tree_as_bin<L: HuffLetterAsBytes>(tree_bin: &mut BitVec<Msb0, u8>, root: Ref<HuffBranch<L>>){
+        fn set_tree_as_bin<L: HuffLetterAsBytes>(tree_bin: &mut BitVec<Msb0, u8>, root: &HuffBranch<L>){
             let root = root;
             let children_iter = root.children_iter();
 
@@ -668,7 +628,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
 
                 // call set_bin on children
                 for child in children_iter{
-                    set_tree_as_bin(tree_bin, child.borrow());
+                    set_tree_as_bin(tree_bin, child);
                 }
             }
             // no children -> letter branch
@@ -677,7 +637,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
                 tree_bin.push(false);
 
                 // convert the letter to bytes and push the bytes' bits into the tree_bin
-                for byte in root.leaf().letter().unwrap().to_be_byte_vec(){
+                for byte in root.leaf().letter().unwrap().as_be_bytes().iter(){
                     for i in 0..8{
                         tree_bin.push((byte >> (7 - i)) & 1 == 1)
                     }
@@ -686,7 +646,38 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         }
 
         let mut treebin = BitVec::new();
-        set_tree_as_bin(&mut treebin, self.root_ref());
+        set_tree_as_bin(&mut treebin, self.root());
         treebin
+    }
+}
+
+/// Error encountered while trying to construct a `HuffTree` from bin
+/// with the `HuffTree::try_from_bin` method
+#[derive(Debug)]
+pub struct FromBinError<L: HuffLetterAsBytes>{
+    message: &'static str,
+    _typebind: std::marker::PhantomData<L>,
+}
+
+impl<L: HuffLetterAsBytes> fmt::Display for FromBinError<L>{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}<{}>", self.message, std::any::type_name::<L>())
+    }
+}
+
+impl<L: HuffLetterAsBytes> std::error::Error for FromBinError<L>{}
+
+impl<L: HuffLetterAsBytes> FromBinError<L>{
+    /// Initialize a new `FromBinError` with the given message
+    pub fn new(message: &'static str) -> Self{
+        Self{
+            message,
+            _typebind: std::marker::PhantomData,
+        }
+    }
+
+    /// Return the message
+    pub fn message(&self) -> &str{
+        self.message
     }
 }
