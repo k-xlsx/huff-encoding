@@ -5,8 +5,8 @@
 
 /// Module containing structs used to build a *Huffman Tree*
 pub mod tree;
-/// Module containing the `Freq` trait and the `byte_freqs` module
-pub mod freqs;
+/// Module containing the `Weights` trait and the `byte_weights` module
+pub mod weights;
 /// `huff_coding` symbol export
 pub mod prelude{
     pub use super::tree::{
@@ -17,9 +17,9 @@ pub mod prelude{
         HuffTree,
         FromBinError,
     };
-    pub use super::freqs::{
-        Freq,
-        byte_freqs::ByteFreqs
+    pub use super::weights::{
+        Weights,
+        byte_weights::ByteWeights
     };
 }
 mod utils;

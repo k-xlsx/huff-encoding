@@ -5,7 +5,7 @@ use super::{
 use crate::{
     bitvec::prelude::*,
     utils::size_of_bits,
-    freqs::Freq,
+    weights::Weights,
 };
 
 use std::{
@@ -21,7 +21,7 @@ use std::{
 /// type `L: HuffLetter`
 /// 
 /// A `HuffTree` can be initialized in two ways:
-/// * from a struct implementing the `huff_coding::freqs::Freq<L>` trait, 
+/// * from a struct implementing the `huff_coding::weights::Weights<L>` trait, 
 /// where `L` must implement the `HuffLetter` trait  
 /// * from a binary representation: `BitVec<Msb0, u8>`
 /// where in order to even get it,
@@ -31,13 +31,13 @@ use std::{
 /// 
 /// # How it works
 /// ---
-/// When initialized with the `HuffTree::from_freqs` method it
+/// When initialized with the `HuffTree::from_weights` method it
 /// follows the steps of the Huffman Coding algorithm (duh):
-/// 1. Creates standalone branches for every letter found in the given freqs and
+/// 1. Creates standalone branches for every letter found in the given weights and
 /// pushes them into a `HuffBranchHeap`
-/// 2. Finds two branches with the lowest frequencies
+/// 2. Finds two branches with the lowest weights
 /// 3. Makes them children to a branch with a `None` letter and
-/// the children's summed up frequency
+/// the children's summed up weight
 /// 4. Removes the two found branches from the heap and adds the newly created
 /// branch into it
 /// 5. Repeats steps 2 to 4 until there's only one branch left
@@ -54,16 +54,16 @@ use std::{
 /// 
 /// # Examples
 /// ---
-/// Initialization from `huff_coding::freqs::ByteFreqs`
+/// Initialization from `huff_coding::weights::ByteWeights`
 /// ```
 /// use huff_coding::{
 ///     bitvec::prelude::*,
-///     prelude::{HuffTree, ByteFreqs},
+///     prelude::{HuffTree, ByteWeights},
 /// };
 /// use std::collections::HashMap;
 /// 
-/// let tree = HuffTree::from_freq(
-///     ByteFreqs::from_bytes(b"abbccc")
+/// let tree = HuffTree::from_weights(
+///     ByteWeights::from_bytes(b"abbccc")
 /// );
 /// let codes = tree.read_codes();
 /// 
@@ -84,18 +84,16 @@ use std::{
 /// ```
 /// use huff_coding::{
 ///     bitvec::prelude::*,
-///     prelude::{HuffTree, Freq},
+///     prelude::{HuffTree, Weights},
 /// };
 /// use std::collections::HashMap;
 /// 
-/// let mut freqs = HashMap::new();
-/// freqs.insert(String::from("pudzian"), 1);
-/// freqs.insert(String::from("krol"), 2);
-/// freqs.insert(String::from("szef"), 3);
+/// let mut weights = HashMap::new();
+/// weights.insert(String::from("pudzian"), 1);
+/// weights.insert(String::from("krol"), 2);
+/// weights.insert(String::from("szef"), 3);
 /// 
-/// let tree = HuffTree::from_freq(
-///     freqs
-/// );
+/// let tree = HuffTree::from_weights(weights);
 /// let codes = tree.read_codes();
 /// 
 /// assert_eq!(
@@ -113,10 +111,10 @@ use std::{
 /// ```
 /// Representing and reading the tree from bits:
 /// ```
-/// use huff_coding::prelude::{HuffTree, ByteFreqs};
+/// use huff_coding::prelude::{HuffTree, ByteWeights};
 /// 
-/// let tree = HuffTree::from_freq(
-///     ByteFreqs::from_bytes(b"abbccc")
+/// let tree = HuffTree::from_weights(
+///     ByteWeights::from_bytes(b"abbccc")
 /// );
 /// 
 /// let tree_bin = tree.as_bin();
@@ -124,7 +122,7 @@ use std::{
 /// assert_eq!(*tree_bin.get(1).unwrap(), false);
 /// 
 /// let new_tree = HuffTree::try_from_bin(tree_bin).unwrap();
-/// // the newly created tree is identical, except in frequencies
+/// // the newly created tree is identical, except in weights
 /// assert_eq!(
 ///     tree.read_codes(),
 ///     new_tree.read_codes()
@@ -133,33 +131,34 @@ use std::{
 ///     tree
 ///         .root()
 ///         .leaf()
-///         .frequency(), 
+///         .weight(), 
 ///     new_tree
 ///         .root()
 ///         .leaf()
-///         .frequency()
+///         .weight()
 /// );
-/// // every frequency in a HuffTree read from binary is set to 0 
+/// // every weight in a HuffTree read from binary is set to 0 
 /// assert_eq!(
 ///     new_tree
 ///         .root()
 ///         .leaf()
-///         .frequency(),
+///         .weight(),
 ///      0
 /// );
 /// ```
 /// 
 /// # Panics
 /// ---
-/// When trying to create a `HuffTree<L>` from a Freq with len == 0:
+/// When trying to create a `HuffTree<L>` from a type implementing 
+/// `huff_coding::weights::Weights<L>` with len == 0:
 /// ```should_panic
-/// use huff_coding::prelude::{HuffTree, Freq};
+/// use huff_coding::prelude::{HuffTree, Weights};
 /// use std::collections::HashMap;
 /// 
-/// let freqs = HashMap::<char, usize>::new();
+/// let weights = HashMap::<char, usize>::new();
 /// 
-/// // panics here at 'provided empty freqs'
-/// let tree = HuffTree::from_freq(freqs);
+/// // panics here at 'provided empty weights'
+/// let tree = HuffTree::from_weights(weights);
 /// ```
 /// 
 /// # Errors
@@ -167,10 +166,10 @@ use std::{
 /// When trying to create a `HuffTree<L>` from binary where the original's
 /// letter type is different than the one specified to be read:
 /// ```should_panic
-/// use huff_coding::prelude::{HuffTree, ByteFreqs};
+/// use huff_coding::prelude::{HuffTree, ByteWeights};
 /// 
-/// let tree = HuffTree::from_freq(
-///     ByteFreqs::from_bytes(b"abbccc")
+/// let tree = HuffTree::from_weights(
+///     ByteWeights::from_bytes(b"abbccc")
 /// );
 /// let tree_bin = tree.as_bin();
 /// let new_tree = HuffTree::<u128>::try_from_bin(tree_bin)
@@ -180,7 +179,7 @@ use std::{
 /// ```should_panic
 /// use huff_coding::{
 ///     bitvec::prelude::*,
-///     prelude::{HuffTree, ByteFreqs},
+///     prelude::{HuffTree, ByteWeights},
 /// };
 /// 
 /// let tree = HuffTree::<u128>::try_from_bin(bitvec![Msb0, u8; 0, 1])
@@ -192,7 +191,7 @@ pub struct HuffTree<L: HuffLetter>{
 }
 
 impl<L: HuffLetter> HuffTree<L>{
-    /// Initialize the `HuffTree` with a struct implementing the `huff_coding::freq::Freq<L>` trait,
+    /// Initialize the `HuffTree` with a struct implementing the `huff_coding::weights::Weights<L>` trait,
     /// where `L` implements `HuffLetter`
     /// 
     /// In order to get the tree represented in binary(`Bitvec<Msb0, u8>`) you must ensure 
@@ -200,16 +199,16 @@ impl<L: HuffLetter> HuffTree<L>{
     /// 
     /// # Examples
     /// ---
-    /// Initialization from `huff_coding::freqs::ByteFreqs`
+    /// Initialization from `huff_coding::weights::ByteWeights`
     /// ```
     /// use huff_coding::{
     ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree,  ByteFreqs},
+    ///     prelude::{HuffTree, ByteWeights},
     /// };
     /// use std::collections::HashMap;
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     ByteFreqs::from_bytes(b"deefff")
+    /// let tree = HuffTree::from_weights(
+    ///     ByteWeights::from_bytes(b"deefff")
     /// );
     /// let codes = tree.read_codes();
     /// 
@@ -230,18 +229,16 @@ impl<L: HuffLetter> HuffTree<L>{
     /// ```
     /// use huff_coding::{
     ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree, Freq},
+    ///     prelude::{HuffTree, Weights},
     /// };
     /// use std::collections::HashMap;
     /// 
-    /// let mut freqs = HashMap::new();
-    /// freqs.insert('ą', 1);
-    /// freqs.insert('þ', 2);
-    /// freqs.insert('😎', 3);
+    /// let mut weights = HashMap::new();
+    /// weights.insert('ą', 1);
+    /// weights.insert('þ', 2);
+    /// weights.insert('😎', 3);
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     freqs
-    /// );
+    /// let tree = HuffTree::from_weights(weights);
     /// let codes = tree.read_codes();
     /// 
     /// assert_eq!(
@@ -260,21 +257,22 @@ impl<L: HuffLetter> HuffTree<L>{
     /// 
     /// # Panics
     /// ---
-    /// When trying to create a `HuffTree` from a Freq with len == 0:
+    /// When trying to create a `HuffTree<L>` from a type implementing 
+    /// `huff_coding::weights::Weights<L>` with len == 0:
     /// ```should_panic
-    /// use huff_coding::prelude::{HuffTree, Freq};
+    /// use huff_coding::prelude::{HuffTree, Weights};
     /// use std::collections::HashMap;
     /// 
-    /// let freqs = HashMap::<char, usize>::new();
+    /// let weights = HashMap::<char, usize>::new();
     /// 
-    /// // panics here at 'provided empty freqs'
-    /// let tree = HuffTree::from_freq(freqs);
+    /// // panics here at 'provided empty weights'
+    /// let tree = HuffTree::from_weights(weights);
     /// ```
-    pub fn from_freq<F: Freq<L>>(freqs: F) -> Self{
-        // panic when provided with empty freqs
-        assert!(!freqs.is_empty(), "provided empty freqs");
+    pub fn from_weights<W: Weights<L>>(weights: W) -> Self{
+        // panic when provided with empty weights
+        assert!(!weights.is_empty(), "provided empty weights");
 
-        let mut branch_heap = HuffBranchHeap::from_freq(freqs);
+        let mut branch_heap = HuffBranchHeap::from_weights(weights);
 
         while branch_heap.len() > 1{
             // get the min pair, removing it from the heap
@@ -285,7 +283,7 @@ impl<L: HuffLetter> HuffTree<L>{
             let branch = HuffBranch::new(
                 HuffLeaf::new(
                     None,
-                    min.leaf().frequency() + next_min.leaf().frequency()
+                    min.leaf().weight() + next_min.leaf().weight()
                 ),
                 Some((min, next_min))
             );
@@ -327,12 +325,12 @@ impl<L: HuffLetter> HuffTree<L>{
     /// ```
     /// use huff_coding::{
     ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree, ByteFreqs},
+    ///     prelude::{HuffTree, ByteWeights},
     /// };
     /// use std::collections::HashMap;
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     ByteFreqs::from_bytes(b"ghhiii")
+    /// let tree = HuffTree::from_weights(
+    ///     ByteWeights::from_bytes(b"ghhiii")
     /// );
     /// let codes = tree.read_codes();
     /// 
@@ -356,15 +354,15 @@ impl<L: HuffLetter> HuffTree<L>{
     /// ```
     /// use huff_coding::{
     ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree, ByteFreqs},
+    ///     prelude::{HuffTree, ByteWeights},
     /// };
     /// use std::collections::{
     ///     HashMap,
     ///     hash_map::RandomState,
     /// };
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     ByteFreqs::from_bytes(b"ghhiii")
+    /// let tree = HuffTree::from_weights(
+    ///     ByteWeights::from_bytes(b"ghhiii")
     /// );
     /// let codes = tree.read_codes_with_hasher(RandomState::default());
     /// 
@@ -432,7 +430,7 @@ impl<L: HuffLetter> HuffTree<L>{
 
 impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// Try to read the provided `BitVec<Msb0, u8>` and construct a `HuffTree<L>` from it.
-    /// Every frequency in the newly created tree is set to 0 as they're not stored in the binary representation
+    /// Every weight in the newly created tree is set to 0 as they're not stored in the binary representation
     /// 
     /// In order to call this method, `L` must implement `HuffLetterAsBytes`
     /// 
@@ -446,16 +444,16 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// # Example
     /// ---
     /// ```
-    /// use huff_coding::prelude::{HuffTree, ByteFreqs};
+    /// use huff_coding::prelude::{HuffTree, ByteWeights};
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     ByteFreqs::from_bytes(b"mnnooo")
+    /// let tree = HuffTree::from_weights(
+    ///     ByteWeights::from_bytes(b"mnnooo")
     /// );
     /// 
     /// let tree_bin = tree.as_bin();
     /// 
     /// let new_tree = HuffTree::try_from_bin(tree_bin).unwrap();
-    /// // the newly created tree is identical, except in frequencies
+    /// // the newly created tree is identical, except in weights
     /// assert_eq!(
     ///     tree.read_codes(),
     ///     new_tree.read_codes()
@@ -464,18 +462,18 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     ///     tree
     ///         .root()
     ///         .leaf()
-    ///         .frequency(), 
+    ///         .weight(), 
     ///     new_tree
     ///         .root()
     ///         .leaf()
-    ///         .frequency()
+    ///         .weight()
     /// );
-    /// // every frequency in a HuffTree read from binary is set to 0 
+    /// // every weight in a HuffTree read from binary is set to 0 
     /// assert_eq!(
     ///     new_tree
     ///         .root()
     ///         .leaf()
-    ///         .frequency(),
+    ///         .weight(),
     ///      0
     /// );
     /// ```
@@ -485,10 +483,10 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// When trying to create a `HuffTree<L>` from binary where the original's
     /// letter type is different than the one specified to be read:
     /// ```should_panic
-    /// use huff_coding::prelude::{HuffTree, ByteFreqs};
+    /// use huff_coding::prelude::{HuffTree, ByteWeights};
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     ByteFreqs::from_bytes(b"abbccc")
+    /// let tree = HuffTree::from_weights(
+    ///     ByteWeights::from_bytes(b"abbccc")
     /// );
     /// let tree_bin = tree.as_bin();
     /// let new_tree = HuffTree::<u128>::try_from_bin(tree_bin)
@@ -498,7 +496,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// ```should_panic
     /// use huff_coding::{
     ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree, ByteFreqs},
+    ///     prelude::{HuffTree, ByteWeights},
     /// };
     /// 
     /// let tree = HuffTree::<u128>::try_from_bin(bitvec![Msb0, u8; 0, 1])
@@ -603,10 +601,10 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// # Example
     /// ---
     /// ```
-    /// use huff_coding::prelude::{HuffTree, ByteFreqs};
+    /// use huff_coding::prelude::{HuffTree, ByteWeights};
     /// 
-    /// let tree = HuffTree::from_freq(
-    ///     ByteFreqs::from_bytes(b"abbccc")
+    /// let tree = HuffTree::from_weights(
+    ///     ByteWeights::from_bytes(b"abbccc")
     /// );
     /// 
     /// let tree_bin = tree.as_bin();

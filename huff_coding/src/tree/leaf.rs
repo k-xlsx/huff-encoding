@@ -11,20 +11,20 @@ use std::cmp::Ordering;
 /// * `letter: Option<L>`
 ///  * type implementing `HuffLetter`
 ///  * if is a joint branch then `letter == None`
-/// * `frequency: usize`
+/// * `weight: usize`
 /// * `code: Option<BitVec<Msb0, u8>>` (big endian)
 /// 
-/// *Can be compared with an another `HuffLeaf` by their frequencies*
+/// *Can be compared with an another `HuffLeaf` by their weights*
 #[derive(Debug, Eq, Clone)]
 pub struct HuffLeaf<L: HuffLetter>{
     letter: Option<L>,
-    frequency: usize,
+    weight: usize,
     code: Option<BitVec<Msb0, u8>>,
 }
 
 impl<L: HuffLetter> Ord for HuffLeaf<L> {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.frequency().cmp(&other.frequency())
+        self.weight.cmp(&other.weight)
     }
 }
 
@@ -36,17 +36,17 @@ impl<L: HuffLetter> PartialOrd for HuffLeaf<L> {
 
 impl<L: HuffLetter> PartialEq for HuffLeaf<L>{
     fn eq(&self, other: &Self) -> bool {
-        self.frequency == other.frequency
+        self.weight == other.weight
     }
 }
 
 impl<L: HuffLetter> HuffLeaf<L>{
-    /// Initialize a HuffLeaf with the given letter and frequency 
+    /// Initialize a HuffLeaf with the given letter and weight 
     /// (code is at first set to None and can be changed with the `set_code` method)
-    pub fn new(letter: Option<L>, frequency: usize) -> Self{
+    pub fn new(letter: Option<L>, weight: usize) -> Self{
         HuffLeaf{
             letter,
-            frequency,
+            weight,
             code: None,
         }
     }
@@ -56,9 +56,9 @@ impl<L: HuffLetter> HuffLeaf<L>{
         self.letter.as_ref()
     }
 
-    /// Returns the stored frequency
-    pub fn frequency(&self) -> usize{
-        self.frequency
+    /// Returns the stored weight
+    pub fn weight(&self) -> usize{
+        self.weight
     }
 
     /// Returns the stored code

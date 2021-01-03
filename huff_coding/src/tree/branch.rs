@@ -5,9 +5,8 @@ use std::cmp::Ordering;
 
 
 
-
 /// Struct representing a branch in the `HuffTree` struct. 
-/// It contains data stored in a `HuffLeaf` (letter, frequency and code) and 
+/// It contains data stored in a `HuffLeaf` (letter, weight and code) and 
 /// optionally two child `HuffBranch`es (left and right)
 ///
 /// Examples 
@@ -199,7 +198,7 @@ impl<L: HuffLetter> HuffBranch<L>{
     }
 
     /// Return a reference to the `HuffLeaf` containing the branch's
-    /// letter, frequency and code.
+    /// letter, weight and code.
     pub fn leaf(&self) -> &HuffLeaf<L>{
         &self.leaf
     }
@@ -296,7 +295,7 @@ impl<L: HuffLetter> HuffBranch<L>{
     }
 }
 
-/// An iterator ovet a `HuffBranch`'s children
+/// An iterator over a `HuffBranch`'s children
 pub struct ChildrenIter<'a, L: HuffLetter>{
     parent: &'a HuffBranch<L>,
     child_pos: u8,

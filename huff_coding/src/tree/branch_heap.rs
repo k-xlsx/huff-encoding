@@ -1,6 +1,6 @@
 
 use super::{HuffBranch, HuffLeaf, HuffLetter};
-use crate::freqs::Freq;
+use crate::weights::Weights;
 
 use std::{
     collections::BinaryHeap,
@@ -12,17 +12,17 @@ use std::{
 /// A struct used to build a ```HuffTree```
 /// 
 /// Stores ```HuffBranch```es inside a ```std::collections::BinaryHeap```, but reversed
-/// (branches with the smallest frequencies are at the end, so they can be easily popped)
+/// (branches with the smallest weights are at the end, so they can be easily popped)
 #[derive(Debug, Clone)]
 pub struct HuffBranchHeap<L: HuffLetter>{
     heap: BinaryHeap<HuffBranchHeapItem<L>>,
 }
 
 impl<L: HuffLetter> HuffBranchHeap<L>{
-    /// Initialize a new `HuffBranchHeap` from the given freqs struct
-    pub fn from_freq<F: Freq<L>>(freqs: F) -> Self{
+    /// Initialize a new `HuffBranchHeap` from the given weights struct
+    pub fn from_weights<W: Weights<L>>(weights: W) -> Self{
         let mut heap = HuffBranchHeap::new();
-        heap.build(freqs);
+        heap.build(weights);
         heap
     }
 
@@ -33,7 +33,7 @@ impl<L: HuffLetter> HuffBranchHeap<L>{
         }
     }
 
-    /// Return the lenght of the heap
+    /// Return the length of the heap
     pub fn len(&self) -> usize{
         self.heap.len()
     }
@@ -43,13 +43,13 @@ impl<L: HuffLetter> HuffBranchHeap<L>{
         self.heap.push(HuffBranchHeapItem(branch));
     }
 
-    /// Pop the `HuffBranch` with the smallest frequency
+    /// Pop the `HuffBranch` with the smallest weight
     pub fn pop_min(&mut self) -> HuffBranch<L>{
         self.heap.pop().unwrap().unwrap()
     }
 
-    fn build<F: Freq<L>>(&mut self, freqs: F){
-        for (l, f) in freqs.into_iter(){
+    fn build<W: Weights<L>>(&mut self, weights: W){
+        for (l, f) in weights.into_iter(){
             let new_branch = HuffBranch::new(HuffLeaf::new(Some(l), f), None);
     
             self.push(new_branch);
@@ -77,7 +77,7 @@ impl<L: HuffLetter> PartialOrd for HuffBranchHeapItem<L>{
 
 impl<L: HuffLetter> PartialEq for HuffBranchHeapItem<L>{
     fn eq(&self, other: &Self) -> bool {
-        self.0.leaf().frequency() == other.0.leaf().frequency()
+        self.0.leaf().weight() == other.0.leaf().weight()
     }
 }
 

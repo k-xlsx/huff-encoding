@@ -31,10 +31,3 @@ pub fn ration_vec<T: Clone>(vec: &[T], ration_count: usize) -> Vec<Vec<T>>{
 pub fn size_of_bits<T>() -> usize{
     std::mem::size_of::<T>() * 8
 }
-
-/// Return how many bits will be used as padding
-/// when converting to bytes with given the bit_count.
-pub fn calc_padding_bits(bit_count: usize) -> u8{
-    let n = (8 - bit_count % 8) as u8; 
-    match n{8 => 0, _ => n}
-}

@@ -1,4 +1,4 @@
-# TODO: change the name on github
+# TODO: change the name on github to huffman-coding or something alike
 [workspace]
 members = [
     "huff",
