@@ -8,16 +8,13 @@ use std::{
 
 
 /// Trait specifying that the given type can be stored in a `HuffTree`, which means
-/// it implements:
-/// 
-/// `Clone` + `Eq` + `std::hash::Hash`
+/// it implements: `Clone` + `Eq` + `std::hash::Hash`
 /// 
 /// Implemented by default for every primitive type, except floats and including String
 pub trait HuffLetter: Clone + Eq + Hash + Debug{}
 /// Trait specifying that the given HuffLetter can be converted
-/// into bytes *(returns `Vec<u8>` 'cause i have no idea right now)* and
-/// can be created from bytes (`&[u8]`)
-/// 
+/// into bytes *(returns `Box<u8>`)* and
+/// can be created from bytes (`&[u8]`),
 /// so the `HuffTree` can be represented in binary.
 /// 
 /// Implemented by default for every integer

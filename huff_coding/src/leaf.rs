@@ -1,5 +1,7 @@
-use super::HuffLetter;
-use crate::bitvec::prelude::*;
+use super::{
+    letter::HuffLetter,
+    bitvec::prelude::{BitVec, Msb0},
+};
 
 use std::cmp::Ordering;
 
@@ -14,7 +16,15 @@ use std::cmp::Ordering;
 /// * `weight: usize`
 /// * `code: Option<BitVec<Msb0, u8>>` (big endian)
 /// 
-/// *Can be compared with an another `HuffLeaf` by their weights*
+/// # Examples
+/// ---
+/// Initialization:
+/// ```
+/// use huff_coding::prelude::{HuffLeaf, HuffLetter};
+/// 
+/// let foo = HuffLeaf::new(Some("oblo"), 12);
+/// let bar = HuffLeaf::new(Some(23), 0);
+/// ```
 #[derive(Debug, Eq, Clone)]
 pub struct HuffLeaf<L: HuffLetter>{
     letter: Option<L>,

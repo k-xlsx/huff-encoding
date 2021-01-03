@@ -1,5 +1,8 @@
-use super::{HuffLeaf, HuffLetter};
-use crate::bitvec::prelude::*;
+use super::{
+    leaf::HuffLeaf, 
+    letter::HuffLetter,
+    bitvec::prelude::{BitVec, Msb0},
+};
 
 use std::cmp::Ordering;
 

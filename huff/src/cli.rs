@@ -10,8 +10,6 @@ use std::{
     sync::mpsc::{self, TryRecvError},
 };
 
-use huff_encoding::file::{write_hfe, threaded_write_hfe, read_hfe};
-
 
 
 #[derive(StructOpt)]
@@ -25,7 +23,7 @@ struct Cli{
 }
 
 #[derive(StructOpt)]
-#[structopt(about = "kinda wonky compressing software")]
+#[structopt(about = "kinda wonky compression software")]
 pub enum Commands {
     /// Compress the file from src_path into dst_path.
     /// 
@@ -74,8 +72,7 @@ pub fn process_args() -> Result<(), &'static str>{
         Commands::Decompress{src_path, dst_path} =>{
             todo!();
         }
-
-    Ok(())
+    }
 }
 
 fn spawn_wait_indicator(msg: &'static str, delay: Duration) -> mpsc::Sender<()> {

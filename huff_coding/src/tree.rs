@@ -1,11 +1,8 @@
 use super::{
-    HuffBranch, HuffLeaf, HuffLetter, HuffLetterAsBytes,
-    branch_heap::HuffBranchHeap
-};
-use crate::{
-    bitvec::prelude::*,
+    prelude::*,
+    branch_heap::HuffBranchHeap,
     utils::size_of_bits,
-    weights::Weights,
+    bitvec::prelude::{bitvec, BitVec, Msb0},
 };
 
 use std::{
@@ -307,12 +304,12 @@ impl<L: HuffLetter> HuffTree<L>{
         }
     }
 
-    /// Return a reference to the tree's root `Box<std::cell::RefCell<HuffBranch>>`
+    /// Return a reference to the tree's root branch
     pub fn root(&self) -> &HuffBranch<L>{
         &self.root
     }
 
-    /// Return a mutable reference to the tree's root `Box<std::cell::RefCell<HuffBranch>>`
+    /// Return a mutable reference to the tree's root branch
     pub fn root_mut(&mut self) -> &mut HuffBranch<L>{
         &mut self.root
     }

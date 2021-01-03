@@ -48,7 +48,8 @@ impl<L: Eq + Clone + Hash> Weights<L> for HashMap<L, usize>{
     }
 }
 
-/// Module containing the `ByteWeights` struct and stuff related to it
+/// Struct storing the number of occurences of each byte in
+/// a provided byte slice.
 pub mod byte_weights{
     use std::{
         ops::{Add, AddAssign},
@@ -60,11 +61,84 @@ pub mod byte_weights{
 
 
 
-    // TODO: docs
+    /// Struct storing the number of occurences of each byte in
+    /// a provided byte slice.
+    /// 
+    /// A `HuffTree` can be initialized with it, as `ByteWeights`
+    /// implements the `Weights` trait.
+    /// 
+    /// # Examples
+    /// ---
+    /// Initialization and interfacing:
+    /// ```
+    /// use huff_coding::prelude::ByteWeights;
+    /// 
+    /// let byte_weights = ByteWeights::from_bytes(b"fffff");
+    /// assert_eq!(*byte_weights.get(&b'f').unwrap(), 5);
+    /// assert_eq!(byte_weights.len(), 1);
+    /// ```
+    /// Iteration:
+    /// ```
+    /// use huff_coding::prelude::ByteWeights;
+    /// 
+    /// let byte_weights = ByteWeights::from_bytes(&[0, 1, 1, 2, 2, 2]);
+    /// for (byte, weight) in byte_weights{
+    ///     assert_eq!(byte as usize, weight - 1);
+    /// }
+    /// ```
+    /// Adding two `ByteWeights`:
+    /// ```
+    /// use huff_coding::prelude::ByteWeights;
+    /// 
+    /// let mut byte_weights = ByteWeights::from_bytes(b"aabbb");
+    /// let other = ByteWeights::from_bytes(b"aaabbc");
+    /// 
+    /// byte_weights += other;
+    /// 
+    /// assert_eq!(*byte_weights.get(&b'a').unwrap(), 5);
+    /// assert_eq!(*byte_weights.get(&b'b').unwrap(), 5);
+    /// assert_eq!(*byte_weights.get(&b'c').unwrap(), 1);
+    /// ```
     #[derive(Clone, Copy, Eq)]
     pub struct ByteWeights{
         weights: [usize; 256],
         len: usize,
+    }
+
+    impl Weights<u8> for ByteWeights{
+        fn get(&self, byte: &u8) -> Option<&usize>{
+            self.get(byte)
+        }
+
+        fn get_mut(&mut self, byte: &u8) -> Option<&mut usize>{
+            self.get_mut(byte)
+        }
+
+        fn len(&self) -> usize{
+            self.len()
+        }
+
+        fn is_empty(&self) -> bool{
+            self.is_empty()
+        }
+    }
+
+    impl IntoIterator for ByteWeights{
+        type Item = (u8, usize);
+        type IntoIter = IntoIter;
+
+        fn into_iter(self) -> IntoIter{
+            IntoIter{weights: self, current_index: 0}
+        }   
+    }
+
+    impl <'a> IntoIterator for &'a ByteWeights{
+        type Item = (u8, usize);
+        type IntoIter = Iter<'a>;
+
+        fn into_iter(self) -> Iter<'a>{
+            Iter{weights: &self, current_index: 0}
+        }   
     }
 
     impl PartialEq for ByteWeights{
@@ -88,113 +162,20 @@ pub mod byte_weights{
         }
     }
 
-    impl Weights<u8> for ByteWeights{
-        /// Return a reference to the weight corresponding
-        /// to the given byte.
-        fn get(&self, byte: &u8) -> Option<&usize>{
-            let weight = self.weights.get(*byte as usize)?;
-            if *weight == 0{
-                return None
-            }
-            Some(weight)
-        }
-
-        /// Return a mutable reference to the weight corresponding
-        /// to the given byte.
-        fn get_mut(&mut self, byte: &u8) -> Option<&mut usize>{
-            let weight = self.weights.get_mut(*byte as usize)?;
-            if *weight == 0{
-                return None
-            }
-            Some(weight)
-        }
-
-        /// Return the number of different counted bytes stored in the `ByteWeights`
-        fn len(&self) -> usize{
-            self.len
-        }
-
-        /// Return true if len == 0
-        fn is_empty(&self) -> bool{
-            self.len == 0
-        }
-    }
-
-
-    // Consuming iterator over the contents (`(u8, usize)`) of `ByteWeights` 
-    pub struct IntoIter{
-        weights: ByteWeights,
-        current_index: usize,
-    }
-
-    impl Iterator for IntoIter{
-        type Item = (u8, usize);
-
-        fn next(&mut self) -> Option<Self::Item>{
-            if self.current_index == 256{
-                return None
-            }
-
-            while self.weights.get(&(self.current_index as u8)).is_none(){
-                if self.current_index == 256{
-                    return None
-                }
-                self.current_index += 1
-            }
-            let entry = Some((self.current_index as u8, *self.weights.get(&(self.current_index as u8)).unwrap()));
-            if self.current_index != 256{self.current_index += 1;}
-
-            entry
-        }
-    }
-
-    impl IntoIterator for ByteWeights{
-        type Item = (u8, usize);
-        type IntoIter = IntoIter;
-
-        fn into_iter(self) -> IntoIter{
-            IntoIter{weights: self, current_index: 0}
-        }   
-    }
-
-    /// Non consuming iterator over the contents (`(u8, usize)`) of `ByteWeights` 
-    pub struct Iter<'a>{
-        weights: &'a ByteWeights,
-        current_index: usize,
-    }
-
-    impl Iterator for Iter<'_>{
-        type Item = (u8, usize);
-
-        fn next(&mut self) -> Option<Self::Item>{
-            if self.current_index == 256{
-                return None
-            }
-
-            while self.weights.get(&(self.current_index as u8)).is_none(){
-                if self.current_index == 256{
-                    return None
-                }
-                self.current_index += 1
-            }
-            let entry = Some((self.current_index as u8, *self.weights.get(&(self.current_index as u8)).unwrap()));
-            if self.current_index != 256{self.current_index += 1;}
-
-            entry
-        }
-    }
-
-    impl <'a> IntoIterator for &'a ByteWeights{
-        type Item = (u8, usize);
-        type IntoIter = Iter<'a>;
-
-        fn into_iter(self) -> Iter<'a>{
-            Iter{weights: &self, current_index: 0}
-        }   
-    }
-
-
     impl ByteWeights{
+        /// Initialize new `ByteWeights` from the given `&[u8]`
+        /// 
+        /// This algorithm is inherently O(n), therefore for
+        /// larger collections `threaded_from_bytes` should be used.
+        /// 
+        /// # Example
+        /// ---
+        /// ```
+        /// use huff_coding::prelude::ByteWeights;
+        /// 
+        /// let byte_weights = ByteWeights::from_bytes(b"aaaaa");
+        /// assert_eq!(*byte_weights.get(&b'a').unwrap(), 5);
+        /// ```
         pub fn from_bytes(bytes: &[u8]) -> Self{
             // count bytes into an array
             let mut weights: [usize; 256] = [0;256];
@@ -211,6 +192,18 @@ pub mod byte_weights{
             }
         }
 
+        /// Initialize new `ByteWeights` from the given `&[u8]`, but
+        /// using the specified number of threads to speed up the
+        /// process.
+        /// 
+        /// # Example
+        /// ---
+        /// ```
+        /// use huff_coding::prelude::ByteWeights;
+        /// 
+        /// let byte_weights = ByteWeights::threaded_from_bytes(b"aaaaa", 12);
+        /// assert_eq!(*byte_weights.get(&b'a').unwrap(), 5)
+        /// ```
         pub fn threaded_from_bytes(bytes: &[u8], thread_num: usize) -> Self{
             // divide the bytes into rations per thread
             let byte_rations = ration_vec(bytes, thread_num);
@@ -239,12 +232,59 @@ pub mod byte_weights{
             weights
         }
 
+        /// Return a reference to the weight corresponding
+        /// to the given byte.
+        pub fn get(&self, byte: &u8) -> Option<&usize>{
+            let weight = self.weights.get(*byte as usize)?;
+            if *weight == 0{
+                return None
+            }
+            Some(weight)
+        }
+
+        /// Return a mutable reference to the weight corresponding
+        /// to the given byte.
+        pub fn get_mut(&mut self, byte: &u8) -> Option<&mut usize>{
+            let weight = self.weights.get_mut(*byte as usize)?;
+            if *weight == 0{
+                return None
+            }
+            Some(weight)
+        }
+
+        /// Return the number of different counted bytes stored in the `ByteWeights`
+        pub fn len(&self) -> usize{
+            self.len
+        }
+
+        /// Return true if len == 0
+        pub fn is_empty(&self) -> bool{
+            self.len == 0
+        }
+
         /// Returns an iterator over the bytes to their weights `(u8, usize)`
         pub fn iter(&self) -> Iter{
             self.into_iter()
         }
 
-        /// Add another `ByteWeights` to self
+        /// Add another `ByteWeights` to self, like so:
+        /// * if a byte is present in self & other, add their weights
+        /// * if a byte is present in other, but not in self, add it to self with other's weight
+        /// 
+        /// # Example
+        /// –––
+        /// ```
+        /// use huff_coding::prelude::ByteWeights;
+        /// 
+        /// let mut byte_weights = ByteWeights::from_bytes(b"aabbb");
+        /// let other = ByteWeights::from_bytes(b"aaabbc");
+        /// 
+        /// byte_weights.add_byte_weights(&other);
+        /// 
+        /// assert_eq!(*byte_weights.get(&b'a').unwrap(), 5);
+        /// assert_eq!(*byte_weights.get(&b'b').unwrap(), 5);
+        /// assert_eq!(*byte_weights.get(&b'c').unwrap(), 1);
+        /// ```
         pub fn add_byte_weights(&mut self, other: &ByteWeights){
             for (b, f) in other{
                 let self_entry = self.get_mut(&b);
@@ -259,5 +299,59 @@ pub mod byte_weights{
                 }
             }
         }
+    }
+
+    // Consuming iterator over the contents (`(u8, usize)`) of `ByteWeights` 
+    pub struct IntoIter{
+        weights: ByteWeights,
+        current_index: usize,
+    }
+    
+    impl Iterator for IntoIter{
+        type Item = (u8, usize);
+
+        fn next(&mut self) -> Option<Self::Item>{
+            if self.current_index == 256{
+                return None
+            }
+
+            while self.weights.get(&(self.current_index as u8)).is_none(){
+                if self.current_index == 256{
+                    return None
+                }
+                self.current_index += 1
+            }
+            let entry = Some((self.current_index as u8, *self.weights.get(&(self.current_index as u8)).unwrap()));
+            if self.current_index != 256{self.current_index += 1;}
+
+            entry
+        }
+    }
+
+    /// Non consuming iterator over the contents (`(u8, usize)`) of `ByteWeights` 
+    pub struct Iter<'a>{
+            weights: &'a ByteWeights,
+            current_index: usize,
+    }
+
+    impl Iterator for Iter<'_>{
+            type Item = (u8, usize);
+    
+            fn next(&mut self) -> Option<Self::Item>{
+                if self.current_index == 256{
+                    return None
+                }
+    
+                while self.weights.get(&(self.current_index as u8)).is_none(){
+                    if self.current_index == 256{
+                        return None
+                    }
+                    self.current_index += 1
+                }
+                let entry = Some((self.current_index as u8, *self.weights.get(&(self.current_index as u8)).unwrap()));
+                if self.current_index != 256{self.current_index += 1;}
+    
+                entry
+            }
     }
 }
