@@ -7,11 +7,11 @@ use std::cmp::Ordering;
 
 
 
-/// Struct representing a HuffBranch's data.
+/// Struct representing a [HuffBranch's][crate::branch::HuffBranch] data.
 /// 
 /// Stores:
 /// * `letter: Option<L>`
-///  * type implementing `HuffLetter`
+///  * type implementing [`HuffLetter`][crate::letter::HuffLetter]
 ///  * if is a joint branch then `letter == None`
 /// * `weight: usize`
 /// * `code: Option<BitVec<Msb0, u8>>` (big endian)
@@ -51,8 +51,8 @@ impl<L: HuffLetter> PartialEq for HuffLeaf<L>{
 }
 
 impl<L: HuffLetter> HuffLeaf<L>{
-    /// Initialize a HuffLeaf with the given letter and weight 
-    /// (code is at first set to None and can be changed with the `set_code` method)
+    /// Initialize a [HuffLeaf][HuffLeaf] with the given letter and weight 
+    /// (code is at first set to None and can be changed with the [`set_code`](#method.set_code) method)
     pub fn new(letter: Option<L>, weight: usize) -> Self{
         HuffLeaf{
             letter,

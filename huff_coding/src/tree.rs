@@ -15,25 +15,25 @@ use std::{
 
 
 /// Struct representing a Huffman Tree with an alphabet of
-/// type `L: HuffLetter`
+/// type [`L: HuffLetter`][letter]
 /// 
-/// A `HuffTree` can be initialized in two ways:
-/// * from a struct implementing the `huff_coding::weights::Weights<L>` trait, 
-/// where `L` must implement the `HuffLetter` trait  
-/// * from a binary representation: `BitVec<Msb0, u8>`
-/// where in order to even get it,
-/// `L` must implement the `HuffLetterAsBytes` trait 
+/// A [`HuffTree`][tree] can be initialized in two ways:
+/// * from a struct implementing the [`Weights<L>`][weights] trait ([`from_weights`](#method.from_weights)), 
+/// where `L` must implement the [`HuffLetter`][letter] trait  
+/// * from a binary representation ([`try_from_bin`](#method.try_from_bin)): 
+/// [`BitVec<Msb0, u8>`][bitvec::prelude::BitVec], where in order to even get it,
+/// `L` must implement the [`HuffLetterAsBytes`][letter_bytes] trait 
 /// 
-/// Codes stored by the tree can be retrieved using the `self.codes` method
+/// Codes stored by the tree can be retrieved using the [`codes`](#method.codes) method
 /// 
 /// # How it works
 /// ---
-/// When initialized with the `HuffTree::from_weights` method it
-/// follows the steps of the Huffman Coding algorithm (duh):
+/// When initialized with the [`HuffTree::from_weights`](#method.from_weights) method it
+/// follows the steps of the [Huffman Coding algorithm][huff_wiki] (duh):
 /// 1. Creates standalone branches for every letter found in the given weights and
-/// pushes them into a `HuffBranchHeap`
+/// pushes them onto a branch heap
 /// 2. Finds two branches with the lowest weights
-/// 3. Makes them children to a branch with a `None` letter and
+/// 3. Makes them children to a branch with a [`None`][None] letter and
 /// the children's summed up weight
 /// 4. Removes the two found branches from the heap and adds the newly created
 /// branch into it
@@ -43,15 +43,15 @@ use std::{
 ///  * Every branch gets its parent's code with its own position in the parent branch (left - 0, right - 1)
 /// 
 /// Initializing from bits goes as follows:
-/// 1. Go through the HuffTree encoded in binary (big endian) bit by bit
+/// 1. Go through the [`HuffTree`][tree] encoded in binary ([big endian][end_wiki]) bit by bit
 /// 2. Every 1 means a joint branch
-/// 3. Every 0 means a letter branch followed by `size_of::<L> * 8` bits representing
+/// 3. Every 0 means a letter branch followed by [`size_of::<L> * 8`][mem::size_of] bits representing
 /// the stored letter
 /// 
 /// 
 /// # Examples
 /// ---
-/// Initialization from `huff_coding::weights::ByteWeights`
+/// Initialization from [`ByteWeights`][byte_weights]
 /// ```
 /// use huff_coding::{
 ///     bitvec::prelude::*,
@@ -77,7 +77,7 @@ use std::{
 ///     &bitvec![Msb0, u8; 1, 0]
 /// );
 /// ```
-/// Initialization from `std::collections::HashMap<L, usize>`:
+/// Initialization from [`HashMap<L, usize>`][HashMap]:
 /// ```
 /// use huff_coding::{
 ///     bitvec::prelude::*,
@@ -146,8 +146,8 @@ use std::{
 /// 
 /// # Panics
 /// ---
-/// When trying to create a `HuffTree<L>` from a type implementing 
-/// `huff_coding::weights::Weights<L>` with len == 0:
+/// When trying to create a [`HuffTree<L>`][tree] from a type implementing 
+/// [`Weights<L>`][weights] with len == 0:
 /// ```should_panic
 /// use huff_coding::prelude::{HuffTree, Weights};
 /// use std::collections::HashMap;
@@ -160,7 +160,7 @@ use std::{
 /// 
 /// # Errors
 /// ---
-/// When trying to create a `HuffTree<L>` from binary where the original's
+/// When trying to create a [`HuffTree<L>`][tree] from binary where the original's
 /// letter type is different than the one specified to be read:
 /// ```should_panic
 /// use huff_coding::prelude::{HuffTree, ByteWeights};
@@ -182,21 +182,30 @@ use std::{
 /// let tree = HuffTree::<u128>::try_from_bin(bitvec![Msb0, u8; 0, 1])
 ///     .expect("this will return a FromBinError (provided BitVec is to small)");
 /// ```
+/// 
+/// [tree]:HuffTree
+/// [branch]:crate::branch::HuffBranch
+/// [letter]:crate::letter::HuffLetter
+/// [letter_bytes]:crate::letter::HuffLetterAsBytes
+/// [weights]:crate::weights::Weights
+/// [byte_weights]:crate::weights::ByteWeights
+/// [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding
+/// [end_wiki]:https://en.wikipedia.org/wiki/Endianness
 #[derive(Debug, Clone)]
 pub struct HuffTree<L: HuffLetter>{
     root: HuffBranch<L>,
 }
 
 impl<L: HuffLetter> HuffTree<L>{
-    /// Initialize the `HuffTree` with a struct implementing the `huff_coding::weights::Weights<L>` trait,
-    /// where `L` implements `HuffLetter`
+    /// Initialize the [`HuffTree`][tree] with a struct implementing the [`Weights<L>`][weights] trait,
+    /// where `L` implements [`HuffLetter`][letter]
     /// 
-    /// In order to get the tree represented in binary(`Bitvec<Msb0, u8>`) you must ensure 
-    /// that `L` also implements `HuffLetterAsBytes`
+    /// In order to get the tree represented in binary([`Bitvec<Msb0, u8>`][bitvec::prelude::BitVec]) you must ensure 
+    /// that `L` also implements [`HuffLetterAsBytes`][letter_bytes]
     /// 
     /// # Examples
     /// ---
-    /// Initialization from `huff_coding::weights::ByteWeights`
+    /// Initialization from [`ByteWeights`][byte_weights]
     /// ```
     /// use huff_coding::{
     ///     bitvec::prelude::*,
@@ -222,7 +231,7 @@ impl<L: HuffLetter> HuffTree<L>{
     ///     &bitvec![Msb0, u8; 1, 0]
     /// );
     /// ```
-    /// Initialization from `std::collections::HashMap<L, usize>`:
+    /// Initialization from [`HashMap<L, usize>`][std::collections::HashMap]:
     /// ```
     /// use huff_coding::{
     ///     bitvec::prelude::*,
@@ -254,8 +263,8 @@ impl<L: HuffLetter> HuffTree<L>{
     /// 
     /// # Panics
     /// ---
-    /// When trying to create a `HuffTree<L>` from a type implementing 
-    /// `huff_coding::weights::Weights<L>` with len == 0:
+    /// When trying to create a [`HuffTree<L>`][tree] from a type implementing 
+    /// [`Weights<L>`][weights] with len == 0:
     /// ```should_panic
     /// use huff_coding::prelude::{HuffTree, Weights};
     /// use std::collections::HashMap;
@@ -265,6 +274,12 @@ impl<L: HuffLetter> HuffTree<L>{
     /// // panics here at 'provided empty weights'
     /// let tree = HuffTree::from_weights(weights);
     /// ```
+    /// 
+    /// [tree]:HuffTree
+    /// [letter]:crate::letter::HuffLetter
+    /// [letter_bytes]:crate::letter::HuffLetterAsBytes
+    /// [weights]:crate::weights::Weights
+    /// [byte_weights]:crate::weights::ByteWeights
     pub fn from_weights<W: Weights<L>>(weights: W) -> Self{
         // panic when provided with empty weights
         assert!(!weights.is_empty(), "provided empty weights");
@@ -315,7 +330,7 @@ impl<L: HuffLetter> HuffTree<L>{
     }
 
     /// Go down the tree reading every letter's code and returning
-    /// a `std::collections::HashMap<L, BitVec<Msb0, u8>>`
+    /// a [`HashMap<L, BitVec<Msb0, u8>>`][HashMap]
     /// 
     /// # Example
     /// ---
@@ -343,8 +358,8 @@ impl<L: HuffLetter> HuffTree<L>{
     }
 
     /// Go down the tree reading every letter's code and returning
-    /// a `std::collections::HashMap<L, BitVec<Msb0, u8>, S>` where `S` 
-    /// is the provided hash builder (implementing ```std::hash::BuildHasher```)
+    /// a [`HashMap<L, BitVec<Msb0, u8>, S>][HashMap]` where `S` 
+    /// is the provided hash builder (implementing [`BuildHasher`][BuildHasher])
     /// 
     /// # Example
     /// ---
@@ -426,17 +441,19 @@ impl<L: HuffLetter> HuffTree<L>{
 }
 
 impl<L: HuffLetterAsBytes> HuffTree<L>{
-    /// Try to read the provided `BitVec<Msb0, u8>` and construct a `HuffTree<L>` from it.
-    /// Every weight in the newly created tree is set to 0 as they're not stored in the binary representation
+    /// Try to read the provided [`BitVec<Msb0, u8>`][bitvec::prelude::BitVec] and
+    /// construct a [`HuffTree<L>`][tree] from it.
+    /// Every weight in the newly created tree is set to 0 
+    /// as they're not stored in the binary representation
     /// 
-    /// In order to call this method, `L` must implement `HuffLetterAsBytes`
+    /// In order to call this method, `L` must implement [`HuffLetterAsBytes`][letter_bytes]
     /// 
     /// # Decoding scheme
     /// ---
     /// 1. Go bit by bit
-    /// 2. Create a `HuffBranch` with no letter (a joint branch) when a 1 is found
-    /// 3. When a 0 is found, read `next size_of::<L>() * 8` bits and create a
-    /// value of type `L` from them, inserting it then into a `HuffBranch`
+    /// 2. Create a [`HuffBranch`][branch] with no letter (a joint branch) when a 1 is found
+    /// 3. When a 0 is found, read next [`size_of::<L>() * 8`][mem::size_of] bits and create a
+    /// value of type `L` from them, inserting it then into a [`HuffBranch`][branch]
     /// 
     /// # Example
     /// ---
@@ -477,7 +494,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// 
     /// # Errors
     /// ---
-    /// When trying to create a `HuffTree<L>` from binary where the original's
+    /// When trying to create a [`HuffTree<L>`][tree] from binary where the original's
     /// letter type is different than the one specified to be read:
     /// ```should_panic
     /// use huff_coding::prelude::{HuffTree, ByteWeights};
@@ -499,6 +516,10 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// let tree = HuffTree::<u128>::try_from_bin(bitvec![Msb0, u8; 0, 1])
     ///     .expect("this will return a FromBinError (provided BitVec is to small)");
     /// ```
+    /// 
+    /// [tree]:HuffTree
+    /// [branch]:crate::branch::HuffBranch
+    /// [letter_bytes]:crate::letter::HuffLetterAsBytes
     pub fn try_from_bin(bin: BitVec<Msb0, u8>) -> Result<Self, FromBinError<L>>{
         /// Recursively reads branches and their children from the given bits
         /// When finding a 1 -> recurses to get children,
@@ -584,9 +605,10 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         })
     }
 
-    /// Return a binary representation of the `HuffTree<L>` -> `BitVec<Msb0, u8>`
+    /// Return a binary representation of the [`HuffTree<L>`][tree] 
+    /// ([`BitVec<Msb0, u8>`][bitvec::prelude::BitVec])
     /// 
-    /// In order to call this method, `L` must implement `HuffLetterAsBytes`
+    /// In order to call this method, `L` must implement [`HuffLetterAsBytes`][letter_bytes]
     /// 
     /// # Encoding scheme
     /// ---
@@ -607,6 +629,9 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// let tree_bin = tree.as_bin();
     /// assert_eq!(tree_bin.to_string(), "[10011000, 11100110, 00010011, 00010]");
     /// ```
+    /// 
+    /// [tree]:HuffTree
+    /// [letter_bytes]:crate::letter::HuffLetterAsBytes
     pub fn as_bin(&self) -> BitVec<Msb0, u8>{
         /// Recursively push bits to the given BitVec<Msb0, u8>
         /// depending on the branches you encounter:
@@ -646,8 +671,8 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     }
 }
 
-/// Error encountered while trying to construct a `HuffTree` from bin
-/// with the `HuffTree::try_from_bin` method
+/// [Error][std::error::Error] encountered while trying to construct a [`HuffTree`][HuffTree] from bin
+/// with the [`HuffTree::try_from_bin`](struct.HuffTree.html#method.try_from_bin) method
 #[derive(Debug)]
 pub struct FromBinError<L: HuffLetterAsBytes>{
     message: &'static str,

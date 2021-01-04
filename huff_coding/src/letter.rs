@@ -8,14 +8,15 @@ use std::{
 
 
 /// Trait specifying that the given type can be stored in a `HuffTree`, which means
-/// it implements: `Clone` + `Eq` + `std::hash::Hash`
+/// it implements: [`Clone`][Clone] + [`Eq`][Eq] + [`Hash`][std::hash::Hash]
 /// 
-/// Implemented by default for every primitive type, except floats and including String
+/// Implemented by default for every [primitive type][https://doc.rust-lang.org/stable/std/primitive], 
+/// except floats and including [String][String]
 pub trait HuffLetter: Clone + Eq + Hash + Debug{}
 /// Trait specifying that the given HuffLetter can be converted
-/// into bytes *(returns `Box<u8>`)* and
+/// into bytes *(returns `Box<[u8]>`)* and
 /// can be created from bytes (`&[u8]`),
-/// so the `HuffTree` can be represented in binary.
+/// so the [`HuffTree`][crate::tree::HuffTree] can be represented in binary.
 /// 
 /// Implemented by default for every integer
 pub trait HuffLetterAsBytes: HuffLetter{

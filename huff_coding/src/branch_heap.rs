@@ -1,5 +1,3 @@
-//! Module containing the `HuffBranchHeap` struct
-
 use super::{
     letter::HuffLetter,
     branch::HuffBranch, 

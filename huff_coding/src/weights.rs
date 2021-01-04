@@ -11,21 +11,21 @@ use std::{
 /// Trait signifying that the struct stores the weights of a type `L`, so that
 /// for any stored `L` there is a corresponding `usize`(weight).
 /// 
-/// Implemented by default for `std::collections::HashMap<L, usize>` and
-/// for `huff_coding::weights::byte_weights::ByteWeights`
+/// Implemented by default for [`HashMap<L, usize>`][std::collections::HashMap] and
+/// for [`ByteWeights`][byte_weights::ByteWeights]
 /// 
 /// Needed implementations:
 /// * Traits:
-///  * `Eq`
-///  * `Clone`
-///  * `IntoIterator<Item = (L, usize)>`
+///  * [`Eq`][Eq]
+///  * [`Clone`][Clone]
+///  * [`IntoIterator<Item = (L, usize)>`][IntoIterator]
 /// * Methods:
 ///  * `fn get(&self, letter: &L) -> Option<&usize>`
 ///  * `fn get_mut(&mut self, letter: &L) -> Option<&mut usize>`
 ///  * `fn len(&self) -> usize`
 ///  * `fn is_empty(&self) -> bool`
 /// 
-/// *In order to build with a `huff_coding::tree::HuffTree` `L` must implement `huff_coding::tree::HuffLetter`*
+/// In order to build with a [`HuffTree`][crate::tree::HuffTree] `L` must implement [`HuffLetter`][crate::letter::HuffLetter]
 pub trait Weights<L>: Eq + Clone + IntoIterator<Item = (L, usize)>{
     fn get(&self, letter: &L) -> Option<&usize>;
     fn get_mut(&mut self, letter: &L) -> Option<&mut usize>;
@@ -64,8 +64,8 @@ pub mod byte_weights{
     /// Struct storing the number of occurences of each byte in
     /// a provided byte slice.
     /// 
-    /// A `HuffTree` can be initialized with it, as `ByteWeights`
-    /// implements the `Weights` trait.
+    /// A [`HuffTree`][crate::tree::HuffTree] can be initialized with it,
+    /// as [`ByteWeights`][ByteWeights] implements the [`Weights`][crate::weights::Weights] trait.
     /// 
     /// # Examples
     /// ---
@@ -86,7 +86,7 @@ pub mod byte_weights{
     ///     assert_eq!(byte as usize, weight - 1);
     /// }
     /// ```
-    /// Adding two `ByteWeights`:
+    /// Adding two [`ByteWeights`][ByteWeights]:
     /// ```
     /// use huff_coding::prelude::ByteWeights;
     /// 
@@ -163,10 +163,10 @@ pub mod byte_weights{
     }
 
     impl ByteWeights{
-        /// Initialize new `ByteWeights` from the given `&[u8]`
+        /// Initialize new [`ByteWeights`][ByteWeights] from the given [`&[u8]`][u8]
         /// 
         /// This algorithm is inherently O(n), therefore for
-        /// larger collections `threaded_from_bytes` should be used.
+        /// larger collections [`threaded_from_bytes`](#method.threaded_from_bytes) should be used.
         /// 
         /// # Example
         /// ---
@@ -192,7 +192,7 @@ pub mod byte_weights{
             }
         }
 
-        /// Initialize new `ByteWeights` from the given `&[u8]`, but
+        /// Initialize new [`ByteWeights`][ByteWeights] from the given [`&[u8]`][u8], but
         /// using the specified number of threads to speed up the
         /// process.
         /// 
@@ -252,7 +252,7 @@ pub mod byte_weights{
             Some(weight)
         }
 
-        /// Return the number of different counted bytes stored in the `ByteWeights`
+        /// Return the number of different counted bytes stored in the [`ByteWeights`][ByteWeights]
         pub fn len(&self) -> usize{
             self.len
         }
@@ -267,7 +267,7 @@ pub mod byte_weights{
             self.into_iter()
         }
 
-        /// Add another `ByteWeights` to self, like so:
+        /// Add another [`ByteWeights`][ByteWeights] to self, like so:
         /// * if a byte is present in self & other, add their weights
         /// * if a byte is present in other, but not in self, add it to self with other's weight
         /// 
@@ -301,7 +301,7 @@ pub mod byte_weights{
         }
     }
 
-    // Consuming iterator over the contents (`(u8, usize)`) of `ByteWeights` 
+    /// Consuming iterator over the contents (`(u8, usize)`) of [`ByteWeights`][ByteWeights]
     pub struct IntoIter{
         weights: ByteWeights,
         current_index: usize,
@@ -328,7 +328,7 @@ pub mod byte_weights{
         }
     }
 
-    /// Non consuming iterator over the contents (`(u8, usize)`) of `ByteWeights` 
+    /// Non consuming iterator over the contents (`(u8, usize)`) of [`ByteWeights`][ByteWeights]
     pub struct Iter<'a>{
             weights: &'a ByteWeights,
             current_index: usize,

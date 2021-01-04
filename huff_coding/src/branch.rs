@@ -8,9 +8,9 @@ use std::cmp::Ordering;
 
 
 
-/// Struct representing a branch in the `HuffTree` struct. 
-/// It contains data stored in a `HuffLeaf` (letter, weight and code) and 
-/// optionally two child `HuffBranch`es (left and right)
+/// Struct representing a branch in the [`HuffTree`][tree] struct. 
+/// It contains data stored in a [`HuffLeaf`][leaf] (letter, weight and code) and 
+/// optionally two child [`HuffBranch`es][branch] (left and right)
 ///
 /// Examples 
 /// ---
@@ -42,7 +42,7 @@ use std::cmp::Ordering;
 ///     ))
 /// );
 /// ```
-/// Iterating over the children of a `HuffBranch`:
+/// Iterating over the children of a [`HuffBranch`][branch]:
 /// ```
 /// use huff_coding::prelude::{HuffBranch, HuffLeaf};
 /// use std::cell::RefCell;
@@ -152,6 +152,10 @@ use std::cmp::Ordering;
 ///     ))
 /// );
 /// ```
+/// 
+/// [leaf]:crate::leaf::HuffLeaf
+/// [tree]:crate::tree::HuffTree
+/// [branch]:HuffBranch
 #[derive(Debug, Clone, Eq)]
 pub struct HuffBranch<L: HuffLetter>{
     leaf: HuffLeaf<L>,
@@ -178,7 +182,7 @@ impl<L: HuffLetter> PartialEq for HuffBranch<L>{
 }
 
 impl<L: HuffLetter> HuffBranch<L>{
-    /// Initialize a new `HuffBranch<L>` with the given leaf and children
+    /// Initialize a new [`HuffBranch<L>`][HuffBranch] with the given leaf and children
     /// 
     /// In the provided tuple:
     /// * 0 means left_child
@@ -200,14 +204,14 @@ impl<L: HuffLetter> HuffBranch<L>{
         }
     }
 
-    /// Return a reference to the `HuffLeaf` containing the branch's
+    /// Return a reference to the [`HuffLeaf`][crate::leaf::HuffLeaf] containing the branch's
     /// letter, weight and code.
     pub fn leaf(&self) -> &HuffLeaf<L>{
         &self.leaf
     }
 
-    /// Return an iterator over the branch's children (`&HuffBranch<L>`)
-    /// or `None` if it has no children
+    /// Return an iterator over the branch's children ([`&HuffBranch<L>`][HuffBranch])
+    /// or [`None`][None] if it has no children
     /// 
     /// # Example
     /// ---
@@ -247,26 +251,26 @@ impl<L: HuffLetter> HuffBranch<L>{
         else{None}
     }
 
-    /// Return a reference to the left child of the branch `HuffBranch<L>`, or 
-    /// `None` if it has no children
+    /// Return a reference to the left child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// [`None`][None] if it has no children
     pub fn left_child(&self) -> Option<&HuffBranch<L>>{
         self.left_child.as_deref()
     }
 
-    /// Return a mutable reference to the left child of the branch `HuffBranch<L>`, or 
-    /// `None` if it has no children
+    /// Return a mutable reference to the left child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// [`None`][None] if it has no children
     pub fn left_child_mut(&mut self) -> Option<&mut HuffBranch<L>>{
         self.left_child.as_deref_mut()
     }
 
-    /// Return a reference to the right child of the branch `HuffBranch<L>`, or 
-    /// `None` if it has no children
+    /// Return a reference to the right child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// [`None`][None] if it has no children
     pub fn right_child(&self) -> Option<&HuffBranch<L>>{
         self.right_child.as_deref()
     }
 
-    /// Return a mutable reference to the right child of the branch `HuffBranch<L>`, or 
-    /// `None` if it has no children
+    /// Return a mutable reference to the right child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// [`None`][None] if it has no children
     pub fn right_child_mut(&mut self) -> Option<&mut HuffBranch<L>>{
         self.right_child.as_deref_mut()
     }
@@ -298,7 +302,7 @@ impl<L: HuffLetter> HuffBranch<L>{
     }
 }
 
-/// An iterator over a `HuffBranch`'s children
+/// An iterator over a [`HuffBranch`'s][HuffBranch] children
 pub struct ChildrenIter<'a, L: HuffLetter>{
     parent: &'a HuffBranch<L>,
     child_pos: u8,
