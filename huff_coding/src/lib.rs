@@ -23,8 +23,8 @@
 //! [huff_wiki_expl]:https://en.wikipedia.org/wiki/Huffman_coding#Basic_technique
 //! [huff_wiki_codes]:https://en.wikipedia.org/wiki/Prefix_code
 
-// TODO: compression/decompression
-// TODO: links in docs
+// TODO: decompression
+// TODO: serde
 
 /// Struct representing a Huffman Tree.
 pub mod tree;
@@ -43,6 +43,9 @@ pub mod weights;
 /// This collects the general public API into a single spot for inclusion, as
 /// `use huff_coding::prelude::*;`, without polluting the root namespace of the crate.
 pub mod prelude;
+/// Example compression/decompression functions using the [`HuffTree`][crate::tree::HuffTree] struct
+// TODO: find a better name
+pub mod cmpr;
 
 mod utils;
 mod branch_heap;

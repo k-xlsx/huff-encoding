@@ -10,4 +10,9 @@ pub use super::{
         Weights,
         byte_weights::ByteWeights,
     },
+    cmpr::{
+        compress,
+        compress_with_tree,
+        get_compressed_bytes,
+    }
 };

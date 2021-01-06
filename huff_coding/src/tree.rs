@@ -528,13 +528,12 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         Result<HuffBranch<L>, FromBinError<L>>{
             // check whether the bit can be popped at all, if not return Err
             // remove first bit, if its 1 -> joint branch
-            if {if let Some(bit) = bits.next(){*bit}
+            if if let Some(bit) = bits.next(){*bit}
                 else{
                     return Err(FromBinError::new(
                         "Provided BitVec is too small for an encoded HuffTree"
                     ))
-                }
-            }{
+                }{
                 // create joint branch, recurse to get its children
                 let branch = HuffBranch::new(
                     HuffLeaf::new(None, 0),
@@ -601,7 +600,7 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         }
         
         Ok(HuffTree{
-            root: root,
+            root
         })
     }
 
