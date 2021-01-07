@@ -1,8 +1,8 @@
+pub use crate::weights::Weights;
 use super::{
     letter::HuffLetter,
     branch::HuffBranch, 
     leaf::HuffLeaf, 
-    weights::Weights,
 };
 
 use std::{

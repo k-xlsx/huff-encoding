@@ -16,8 +16,8 @@
 //! using my implementation of this algorithm.
 //! 
 //! [tree]:tree::HuffTree
-//! [letter]:letter::HuffLetter
-//! [letter_bytes]:letter::HuffLetterAsBytes
+//! [letter]:tree::letter::HuffLetter
+//! [letter_bytes]:tree::letter::HuffLetterAsBytes
 //! [weights]:weights::Weights
 //! [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding
 //! [huff_wiki_expl]:https://en.wikipedia.org/wiki/Huffman_coding#Basic_technique
@@ -26,29 +26,23 @@
 // TODO: decompression
 // TODO: serde
 
-/// Struct representing a Huffman Tree.
+
 pub mod tree;
-/// Struct representing a branch in the [`HuffTree`][crate::tree::HuffTree] struct. 
-pub mod branch;
-/// Struct representing a [`HuffBranch`'s][crate::branch::HuffBranch] data.
-pub mod leaf;
-/// Traits signyfing that a type can be stored in a [`HuffTree`][crate::tree::HuffTree] as a letter.
-pub mod letter;
 /// Trait signifying that a struct stores the weights of a type `L`, so that
 /// for any stored `L` there is a corresponding `usize`(weight), and 
 /// an implementation of it over bytes. 
 pub mod weights;
+/// Example compression/decompression functions using the [`HuffTree`][crate::tree::HuffTree] struct
+// TODO: find a better name
+pub mod cmpr;
 /// `huff_coding` prelude.
 ///
 /// This collects the general public API into a single spot for inclusion, as
 /// `use huff_coding::prelude::*;`, without polluting the root namespace of the crate.
 pub mod prelude;
-/// Example compression/decompression functions using the [`HuffTree`][crate::tree::HuffTree] struct
-// TODO: find a better name
-pub mod cmpr;
 
 mod utils;
-mod branch_heap;
+
 
 // `bitvec` re-export
 pub use bitvec;

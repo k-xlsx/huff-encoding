@@ -1,10 +1,12 @@
 pub use super::{
-    tree::HuffTree,
-    branch::HuffBranch,
-    leaf::HuffLeaf,
-    letter::{
-        HuffLetter,
-        HuffLetterAsBytes,
+    tree::{
+        HuffTree,
+        branch::HuffBranch,
+        leaf::HuffLeaf,
+        letter::{
+            HuffLetter,
+            HuffLetterAsBytes,
+        }
     },
     weights::{
         Weights,

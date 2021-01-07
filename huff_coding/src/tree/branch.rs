@@ -1,7 +1,7 @@
+use crate::bitvec::prelude::{BitVec, Msb0};
 use super::{
     leaf::HuffLeaf, 
     letter::HuffLetter,
-    bitvec::prelude::{BitVec, Msb0},
 };
 
 use std::cmp::Ordering;
@@ -153,7 +153,7 @@ use std::cmp::Ordering;
 /// );
 /// ```
 /// 
-/// [leaf]:crate::leaf::HuffLeaf
+/// [leaf]:crate::tree::leaf::HuffLeaf
 /// [tree]:crate::tree::HuffTree
 /// [branch]:HuffBranch
 #[derive(Debug, Clone, Eq)]
@@ -204,7 +204,7 @@ impl<L: HuffLetter> HuffBranch<L>{
         }
     }
 
-    /// Return a reference to the [`HuffLeaf`][crate::leaf::HuffLeaf] containing the branch's
+    /// Return a reference to the [`HuffLeaf`][crate::tree::leaf::HuffLeaf] containing the branch's
     /// letter, weight and code.
     pub fn leaf(&self) -> &HuffLeaf<L>{
         &self.leaf

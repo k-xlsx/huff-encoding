@@ -25,7 +25,7 @@ use std::{
 ///  * `fn len(&self) -> usize`
 ///  * `fn is_empty(&self) -> bool`
 /// 
-/// In order to build with a [`HuffTree`][crate::tree::HuffTree] `L` must implement [`HuffLetter`][crate::letter::HuffLetter]
+/// In order to build with a [`HuffTree`][crate::tree::HuffTree] `L` must implement [`HuffLetter`][crate::tree::letter::HuffLetter]
 pub trait Weights<L>: Eq + Clone + IntoIterator<Item = (L, usize)>{
     fn get(&self, letter: &L) -> Option<&usize>;
     fn get_mut(&mut self, letter: &L) -> Option<&mut usize>;

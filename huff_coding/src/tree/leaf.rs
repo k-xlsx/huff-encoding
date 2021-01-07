@@ -1,17 +1,15 @@
-use super::{
-    letter::HuffLetter,
-    bitvec::prelude::{BitVec, Msb0},
-};
+use crate::bitvec::prelude::{BitVec, Msb0};
+use super::letter::HuffLetter;
 
 use std::cmp::Ordering;
 
 
 
-/// Struct representing a [HuffBranch's][crate::branch::HuffBranch] data.
+/// Struct representing a [HuffBranch's][crate::tree::branch::HuffBranch] data.
 /// 
 /// Stores:
 /// * `letter: Option<L>`
-///  * type implementing [`HuffLetter`][crate::letter::HuffLetter]
+///  * type implementing [`HuffLetter`][crate::tree::letter::HuffLetter]
 ///  * if is a joint branch then `letter == None`
 /// * `weight: usize`
 /// * `code: Option<BitVec<Msb0, u8>>` (big endian)
