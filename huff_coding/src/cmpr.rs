@@ -119,7 +119,7 @@ impl CompressError{
 ///         b
 ///     })
 ///     .expect("this passes just fine")
-///     .read_codes();
+///     .letter_codes();
 /// 
 /// let mut cmp_codes = HashMap::new();
 /// cmp_codes.insert(b'a', bitvec![Msb0, u8; 1, 0]);
@@ -146,7 +146,7 @@ impl CompressError{
 /// And thus we succesfully read the bytes `b"abbccc"`!
 /// 
 /// [tree]:crate::tree::HuffTree
-/// [codes]:../tree/struct.HuffTree.html#method.read_codes
+/// [codes]:../tree/struct.HuffTree.html#method.letter_codes
 /// [from_bin]:../tree/struct.HuffTree.html#method.try_from_bin
 
 pub fn compress(bytes: &[u8]) -> Vec<u8>{
@@ -198,7 +198,7 @@ pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, 
     compressed.append(&mut tree_bin.into_vec());
 
     // convert bytes to compressed bytes and push them into compressed
-    let padding_bits = push_compressed_bytes(&mut compressed, bytes, &tree.read_codes())?;
+    let padding_bits = push_compressed_bytes(&mut compressed, bytes, &tree.letter_codes())?;
     // set the padding bits of the tree_bin and compressed bytes at the beginning
     // (first 4 bits -> tree, remaining 4 -> compressed bytes)
     compressed[0] = (tree_bin_padding_bits << 4) + padding_bits;
@@ -222,7 +222,7 @@ pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, 
 /// 
 /// let bytes = b"abbccc";
 /// 
-/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(bytes)).read_codes();
+/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(bytes)).letter_codes();
 /// 
 /// let (compressed_bytes, padding_bits) = get_compressed_bytes(bytes, &codes).unwrap();
 /// 
@@ -246,7 +246,7 @@ pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, 
 ///     get_compressed_bytes,
 /// };
 /// 
-/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(b"abbccc")).read_codes();
+/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(b"abbccc")).letter_codes();
 /// 
 /// let (compressed_bytes, padding_bits) = get_compressed_bytes(b"deefff", &codes)
 ///     .expect("this will return a CompressError (missing byte 0x64)");

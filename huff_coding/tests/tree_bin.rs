@@ -12,7 +12,7 @@ fn tree_from_bin(){
     Mysterio the Magnificent...
     a powerful wizard questing for the secret of immortality."));
     let tree_from_bin = HuffTree::try_from_bin(tree.as_bin()).unwrap();
-    assert_eq!(tree_from_bin.read_codes(), tree.read_codes());
+    assert_eq!(tree_from_bin.letter_codes(), tree.letter_codes());
 }
 
 
