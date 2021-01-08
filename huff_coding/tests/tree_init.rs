@@ -20,7 +20,7 @@ fn tree_normal_init(){
         h
     };
     let tree = HuffTree::from_weights(weights);
-    let codes = tree.letter_codes();
+    let codes = tree.read_codes();
 
     assert_eq!(
         codes.get("Spazz"), 

@@ -4,11 +4,15 @@ use huff_coding::prelude::*;
 
 fn main() {
     let bytes = b"abbccc";
+
     let start = std::time::Instant::now();
 
-    for b in compress(bytes){
-        print!("{:08b}", b);
-    }
+    let c = compress(bytes);
+
+    let d = decompress(&c);
+        
+    assert_eq!(&d.unwrap(), bytes);
+   
 
     println!("\n{:?}", start.elapsed());
 }

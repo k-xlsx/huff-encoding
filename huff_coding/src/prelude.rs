@@ -16,5 +16,9 @@ pub use super::{
         compress,
         compress_with_tree,
         get_compressed_bytes,
-    }
+    },
+    dcmpr::{
+        decompress,
+        get_decompressed_bytes,
+    },
 };

@@ -26,7 +26,7 @@
 // TODO: decompression
 // TODO: serde
 
-
+/// Struct and traits used to represent and construct Huffman trees
 pub mod tree;
 /// Trait signifying that a struct stores the weights of a type `L`, so that
 /// for any stored `L` there is a corresponding `usize`(weight), and 
@@ -35,6 +35,8 @@ pub mod weights;
 /// Example compression/decompression functions using the [`HuffTree`][crate::tree::HuffTree] struct
 // TODO: find a better name
 pub mod cmpr;
+/// TODO: Docs
+pub mod dcmpr;
 /// `huff_coding` prelude.
 ///
 /// This collects the general public API into a single spot for inclusion, as

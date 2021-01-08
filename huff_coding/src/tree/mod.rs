@@ -24,44 +24,6 @@ use std::{
 
 
 
-/// generate a the contents of a 'codes' fn (like `letter_codes` or `code_letters`)
-/// patterns/args: 
-///  * (HuffTree<L>, type implementing BuildHasher)
-///  * -> HashMap return type;
-///  * insert_fn: function inserting a letter and code in some chosen way
-macro_rules! gen_codes {
-    {($self:expr, $hash_builder:expr) -> $codes_ty:ty; insert_fn: $insert_fn:ident} => {
-        fn set_codes<L: HuffLetter, S: BuildHasher>(codes: &mut $codes_ty, root: &HuffBranch<L>, pos_in_parent: bool){
-            if let Some(children_iter) = root.children_iter(){
-                for (pos, child) in children_iter.enumerate(){
-                    let branch = child;
-                    let leaf = branch.leaf();
-                    if let Some(letter) = leaf.letter(){
-                        $insert_fn(codes, letter.clone(), leaf.code().unwrap().clone(), );
-                    }
-                    else{
-                        set_codes(codes, child, pos != 0);
-                    }
-                }
-            }  
-            else{
-                $insert_fn(codes, root.leaf().letter().unwrap().clone(), bitvec![Msb0, u8; pos_in_parent as u8])
-            }
-        }
-        let mut codes = HashMap::with_hasher($hash_builder);
-        let root = $self.root();
-        if root.has_children(){
-            set_codes(&mut codes, root.left_child().unwrap(), false);
-            set_codes(&mut codes, root.right_child().unwrap(), true);
-            codes
-        }
-        else{
-            $insert_fn(&mut codes, root.leaf().letter().unwrap().clone(), bitvec![Msb0, u8; 0], );
-            codes
-        }
-    };
-}
-
 /// Struct representing a Huffman Tree with an alphabet of
 /// type [`L: HuffLetter`][letter]
 /// 
@@ -110,7 +72,7 @@ macro_rules! gen_codes {
 /// let tree = HuffTree::from_weights(
 ///     ByteWeights::from_bytes(b"abbccc")
 /// );
-/// let codes = tree.letter_codes();
+/// let codes = tree.read_codes();
 /// 
 /// assert_eq!(
 ///     codes.get(&b'c').unwrap(), 
@@ -139,7 +101,7 @@ macro_rules! gen_codes {
 /// weights.insert(String::from("szef"), 3);
 /// 
 /// let tree = HuffTree::from_weights(weights);
-/// let codes = tree.letter_codes();
+/// let codes = tree.read_codes();
 /// 
 /// assert_eq!(
 ///     codes.get("szef").unwrap(), 
@@ -169,8 +131,8 @@ macro_rules! gen_codes {
 /// let new_tree = HuffTree::try_from_bin(tree_bin).unwrap();
 /// // the newly created tree is identical, except in weights
 /// assert_eq!(
-///     tree.letter_codes(),
-///     new_tree.letter_codes()
+///     tree.read_codes(),
+///     new_tree.read_codes()
 /// );
 /// assert_ne!(
 ///     tree
@@ -264,7 +226,7 @@ impl<L: HuffLetter> HuffTree<L>{
     /// let tree = HuffTree::from_weights(
     ///     ByteWeights::from_bytes(b"deefff")
     /// );
-    /// let codes = tree.letter_codes();
+    /// let codes = tree.read_codes();
     /// 
     /// assert_eq!(
     ///     codes.get(&b'f').unwrap(),
@@ -293,7 +255,7 @@ impl<L: HuffLetter> HuffTree<L>{
     /// weights.insert('😎', 3);
     /// 
     /// let tree = HuffTree::from_weights(weights);
-    /// let codes = tree.letter_codes();
+    /// let codes = tree.read_codes();
     /// 
     /// assert_eq!(
     ///     codes.get(&'😎').unwrap(),
@@ -380,9 +342,6 @@ impl<L: HuffLetter> HuffTree<L>{
     /// Go down the tree reading every letter's code and returning
     /// a [`HashMap<L, BitVec<Msb0, u8>>`][HashMap]
     /// 
-    /// To get a map of codes to their letters ([`HashMap<L, BitVec<Msb0, u8>>`][HashMap])
-    /// use [code_letters](#method.code_letters)
-    /// 
     /// # Example
     /// ---
     /// ```
@@ -395,7 +354,7 @@ impl<L: HuffLetter> HuffTree<L>{
     /// let tree = HuffTree::from_weights(
     ///     ByteWeights::from_bytes(b"ghhiii")
     /// );
-    /// let codes = tree.letter_codes();
+    /// let codes = tree.read_codes();
     /// 
     /// let mut cmp_codes = HashMap::new();
     /// cmp_codes.insert(b'i', bitvec![Msb0, u8; 0]);
@@ -404,17 +363,14 @@ impl<L: HuffLetter> HuffTree<L>{
     /// 
     /// assert_eq!(codes, cmp_codes);
     /// ```
-    pub fn letter_codes(&self) -> HashMap<L, BitVec<Msb0, u8>>{
-        self.letter_codes_with_hasher(RandomState::default())
+    pub fn read_codes(&self) -> HashMap<L, BitVec<Msb0, u8>>{
+        self.read_codes_with_hasher(RandomState::default())
     }
 
     /// Go down the tree reading every letter's code and returning
     /// a [`HashMap<L, BitVec<Msb0, u8>, S>][HashMap]` where `S` 
     /// is the provided hash builder (implementing [`BuildHasher`][BuildHasher])
     /// 
-    /// To get a map of codes to their letters ([`HashMap<L, BitVec<Msb0, u8>, S>`][HashMap])
-    /// use [code_letters](#method.code_letters_with_hasher)
-    /// 
     /// # Example
     /// ---
     /// ```
@@ -430,7 +386,7 @@ impl<L: HuffLetter> HuffTree<L>{
     /// let tree = HuffTree::from_weights(
     ///     ByteWeights::from_bytes(b"ghhiii")
     /// );
-    /// let codes = tree.letter_codes_with_hasher(RandomState::default());
+    /// let codes = tree.read_codes_with_hasher(RandomState::default());
     /// 
     /// let mut cmp_codes = HashMap::new();
     /// cmp_codes.insert(b'i', bitvec![Msb0, u8; 0]);
@@ -439,86 +395,38 @@ impl<L: HuffLetter> HuffTree<L>{
     /// 
     /// assert_eq!(codes, cmp_codes);
     /// ```
-    pub fn letter_codes_with_hasher<S: BuildHasher>(&self, hash_builder: S) -> HashMap<L, BitVec<Msb0, u8>, S>{
-        fn insert<L: HuffLetter, S: BuildHasher>(codes: &mut HashMap<L, BitVec<Msb0, u8>, S>, letter: L, code: BitVec<Msb0, u8>){
-            codes.insert(letter, code);
+    pub fn read_codes_with_hasher<S: BuildHasher>(&self, hash_builder: S) -> HashMap<L, BitVec<Msb0, u8>, S>{
+        /// Recursively insert letters to codes into the given HashMap<L, BitVec<Msb0, u8>>
+        fn set_codes<L: HuffLetter, S: BuildHasher>(codes: &mut HashMap<L, BitVec<Msb0, u8>, S>, root: &HuffBranch<L>, pos_in_parent: bool){
+            if let Some(children_iter) = root.children_iter(){
+                for (pos, child) in children_iter.enumerate(){
+                    let branch = child;
+                    let leaf = branch.leaf();
+                    if let Some(letter) = leaf.letter(){
+                        codes.insert(letter.clone(), leaf.code().unwrap().clone());
+                    }
+                    else{
+                        set_codes(codes, child, pos != 0);
+                    }
+                }
+            }  
+            else{
+                codes.insert(root.leaf().letter().unwrap().clone(), bitvec![Msb0, u8; pos_in_parent as u8]);
+            }
         }
-        gen_codes!{
-            (self, hash_builder) -> HashMap<L, BitVec<Msb0, u8>, S>; insert_fn: insert
+        
+        let mut codes = HashMap::with_hasher(hash_builder);
+        let root = self.root();
+        if root.has_children(){
+            set_codes(&mut codes, root.left_child().unwrap(), false);
+            set_codes(&mut codes, root.right_child().unwrap(), true);
+            codes
         }
-    }
-
-    /// Go down the tree reading every letter's code and returning
-    /// a [`HashMap<BitVec<Msb0, u8>, L>`][HashMap]
-    /// 
-    /// To get a map of letters to their codes ([`HashMap<L, BitVec<Msb0, u8>>`][HashMap])
-    /// use [letter_codes](#method.letter_codes)
-    /// 
-    /// # Example
-    /// ---
-    /// ```
-    /// use huff_coding::{
-    ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree, ByteWeights},
-    /// };
-    /// use std::collections::HashMap;
-    /// 
-    /// let tree = HuffTree::from_weights(
-    ///     ByteWeights::from_bytes(b"jkklll")
-    /// );
-    /// let codes = tree.code_letters();
-    /// 
-    /// let mut cmp_codes = HashMap::new();
-    /// cmp_codes.insert(bitvec![Msb0, u8; 0], b'l');
-    /// cmp_codes.insert(bitvec![Msb0, u8; 1, 1], b'k');
-    /// cmp_codes.insert(bitvec![Msb0, u8; 1, 0], b'j');
-    /// 
-    /// assert_eq!(codes, cmp_codes);
-    /// ```
-    pub fn code_letters(&self) -> HashMap<BitVec<Msb0, u8>, L>{
-        self.code_letters_with_hasher(RandomState::default())
-    }
-
-    /// Go down the tree reading every letter's code and returning
-    /// a [`HashMap<BitVec<Msb0, u8>, L, S>`][HashMap] where `S` 
-    /// is the provided hash builder (implementing [`BuildHasher`][BuildHasher])
-    /// 
-    /// To get a map of letters to their codes ([`HashMap<L, BitVec<Msb0, u8>, S>`][HashMap])
-    /// use [letter_codes](#method.letter_codes_with_hasher)
-    /// 
-    /// # Example
-    /// ---
-    /// ```
-    /// use huff_coding::{
-    ///     bitvec::prelude::*,
-    ///     prelude::{HuffTree, ByteWeights},
-    /// };
-    /// use std::collections::{
-    ///     HashMap,
-    ///     hash_map::RandomState,
-    /// };
-    /// 
-    /// let tree = HuffTree::from_weights(
-    ///     ByteWeights::from_bytes(b"jkklll")
-    /// );
-    /// let codes = tree.code_letters_with_hasher(RandomState::default());
-    /// 
-    /// let mut cmp_codes = HashMap::new();
-    /// cmp_codes.insert(bitvec![Msb0, u8; 0], b'l');
-    /// cmp_codes.insert(bitvec![Msb0, u8; 1, 1], b'k');
-    /// cmp_codes.insert(bitvec![Msb0, u8; 1, 0], b'j');
-    /// 
-    /// assert_eq!(codes, cmp_codes);
-    /// ```
-    pub fn code_letters_with_hasher<S: BuildHasher>(&self, hash_builder: S) -> HashMap<BitVec<Msb0, u8>, L, S>{
-        fn insert<L: HuffLetter, S: BuildHasher>(codes: &mut HashMap<BitVec<Msb0, u8>, L, S>, letter: L, code: BitVec<Msb0, u8>){
-            codes.insert(code, letter);
-        }
-        gen_codes!{
-            (self, hash_builder) -> HashMap<BitVec<Msb0, u8>, L, S>; insert_fn: insert
+        else{
+            codes.insert(root.leaf().letter().unwrap().clone(), bitvec![Msb0, u8; 0]);
+            codes
         }
     }
-
 
     /// Recursively set the codes in every encountered branch
     fn set_codes_in_child_branches(parent: &mut HuffBranch<L>, parent_code: Option<BitVec<Msb0, u8>>){
@@ -571,8 +479,8 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
     /// let new_tree = HuffTree::try_from_bin(tree_bin).unwrap();
     /// // the newly created tree is identical, except in weights
     /// assert_eq!(
-    ///     tree.letter_codes(),
-    ///     new_tree.letter_codes()
+    ///     tree.read_codes(),
+    ///     new_tree.read_codes()
     /// );
     /// assert_ne!(
     ///     tree

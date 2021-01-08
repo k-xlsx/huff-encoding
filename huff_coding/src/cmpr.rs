@@ -3,7 +3,10 @@ use super::{
         HuffTree,
         ByteWeights,
     },
-    bitvec::prelude::*,
+    bitvec::prelude::{
+        BitVec, 
+        Msb0
+    },
     utils::calc_padding_bits,
 };
 
@@ -65,7 +68,7 @@ impl CompressError{
 /// 1. A byte containing the number of bits used for padding:
 ///  * first 4 bits store the [HuffTree's][tree] padding bits
 ///  * the remaining bits store the compressed data's padding bits
-/// 2. 8 byte number representing the length (in bytes) of the stored [`HuffTree`][tree]
+/// 2. 4 byte number representing the length (in bytes) of the stored [`HuffTree`][tree]
 /// 3. A [`HuffTree`][tree], used to compress the file, 
 /// represented in binary (see [`HuffTree::try_from_bin`][from_bin])
 /// 4. The actual compressed data
@@ -99,10 +102,10 @@ impl CompressError{
 ///     0x37
 /// );
 /// 
-/// // the next 8 bytes store the tree's length, 
+/// // the next 4 bytes store the tree's length, 
 /// // in this case: 4 bytes
 /// assert_eq!(
-///     u64::from_be_bytes(compressed[1..9].try_into().unwrap()), 
+///     u32::from_be_bytes(compressed[1..5].try_into().unwrap()), 
 ///     4
 /// );
 /// 
@@ -114,12 +117,12 @@ impl CompressError{
 /// let codes = 
 ///     HuffTree::<u8>::try_from_bin({
 ///         // get the next 4 bytes from compressed and remove the specified 3 padding bits
-///         let mut b = BitVec::from_vec(compressed[9..13].to_vec());
+///         let mut b = BitVec::from_vec(compressed[5..9].to_vec());
 ///         b.drain(29..);
 ///         b
 ///     })
 ///     .expect("this passes just fine")
-///     .letter_codes();
+///     .read_codes();
 /// 
 /// let mut cmp_codes = HashMap::new();
 /// cmp_codes.insert(b'a', bitvec![Msb0, u8; 1, 0]);
@@ -129,8 +132,8 @@ impl CompressError{
 /// assert_eq!(codes, cmp_codes);
 /// 
 /// // the last bytes (containing the compressed data) are:
-/// assert_eq!(compressed[13], 0b10111100);
-/// assert_eq!(compressed[14], 0b00000000);
+/// assert_eq!(compressed[9], 0b10111100);
+/// assert_eq!(compressed[10], 0b00000000);
 /// ```
 /// now we could easily read the actual data:
 /// 1. 10111100:
@@ -146,7 +149,7 @@ impl CompressError{
 /// And thus we succesfully read the bytes `b"abbccc"`!
 /// 
 /// [tree]:crate::tree::HuffTree
-/// [codes]:../tree/struct.HuffTree.html#method.letter_codes
+/// [codes]:../tree/struct.HuffTree.html#method.read_codes
 /// [from_bin]:../tree/struct.HuffTree.html#method.try_from_bin
 
 pub fn compress(bytes: &[u8]) -> Vec<u8>{
@@ -179,18 +182,18 @@ pub fn compress(bytes: &[u8]) -> Vec<u8>{
 /// ```
 /// 
 /// [tree]: crate::tree::HuffTree
-pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, CompressError>{
+pub fn compress_with_tree(bytes: &[u8], huff_tree: &HuffTree<u8>) -> Result<Vec<u8>, CompressError>{
     // get tree in binary, 
     // calculate its padding bits when converted to bytes
     // calculate its lenght in bytes
-    let tree_bin = tree.as_bin();
+    let tree_bin = huff_tree.as_bin();
     let tree_bin_padding_bits = calc_padding_bits(tree_bin.len());
-    let tree_bytes_len = (tree_bin.len() as u64 + tree_bin_padding_bits as u64) / 8;
+    let tree_bytes_len = (tree_bin.len() as u32 + tree_bin_padding_bits as u32) / 8;
 
     let mut compressed = Vec::with_capacity(bytes.len());
     // push an empty byte, later to be filled by the padding bit nums
     compressed.push(0);
-    // push the length of the tree_bin (8 byte num)
+    // push the length of the tree_bin (4 byte num)
     compressed.extend(
         tree_bytes_len.to_be_bytes().iter()
     );
@@ -198,7 +201,7 @@ pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, 
     compressed.append(&mut tree_bin.into_vec());
 
     // convert bytes to compressed bytes and push them into compressed
-    let padding_bits = push_compressed_bytes(&mut compressed, bytes, &tree.letter_codes())?;
+    let padding_bits = push_compressed_bytes(&mut compressed, bytes, &huff_tree.read_codes())?;
     // set the padding bits of the tree_bin and compressed bytes at the beginning
     // (first 4 bits -> tree, remaining 4 -> compressed bytes)
     compressed[0] = (tree_bin_padding_bits << 4) + padding_bits;
@@ -222,7 +225,7 @@ pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, 
 /// 
 /// let bytes = b"abbccc";
 /// 
-/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(bytes)).letter_codes();
+/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(bytes)).read_codes();
 /// 
 /// let (compressed_bytes, padding_bits) = get_compressed_bytes(bytes, &codes).unwrap();
 /// 
@@ -246,7 +249,7 @@ pub fn compress_with_tree(bytes: &[u8], tree: &HuffTree<u8>) -> Result<Vec<u8>, 
 ///     get_compressed_bytes,
 /// };
 /// 
-/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(b"abbccc")).letter_codes();
+/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(b"abbccc")).read_codes();
 /// 
 /// let (compressed_bytes, padding_bits) = get_compressed_bytes(b"deefff", &codes)
 ///     .expect("this will return a CompressError (missing byte 0x64)");
