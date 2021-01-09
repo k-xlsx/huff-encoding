@@ -166,7 +166,7 @@ pub mod byte_weights{
         /// Initialize new [`ByteWeights`][ByteWeights] from the given [`&[u8]`][u8]
         /// 
         /// This algorithm is inherently O(n), therefore for
-        /// larger collections [`threaded_from_bytes`](#method.threaded_from_bytes) should be used.
+        /// larger collections [`threaded_from_bytes`](#method.threaded_from_bytes) is faster.
         /// 
         /// # Example
         /// ---

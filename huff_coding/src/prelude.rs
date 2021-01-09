@@ -12,12 +12,10 @@ pub use super::{
         Weights,
         byte_weights::ByteWeights,
     },
-    cmpr::{
+    comp::{
         compress,
         compress_with_tree,
         get_compressed_bytes,
-    },
-    dcmpr::{
         decompress,
         get_decompressed_bytes,
     },

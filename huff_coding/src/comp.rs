@@ -12,6 +12,7 @@ use super::{
 
 use std::{
     fmt,
+    convert::TryInto,
     collections::HashMap,
 };
 
@@ -53,6 +54,34 @@ impl CompressError{
     }
 }
 
+/// Error encountered while decompressing.
+/// 
+/// Returned by [`decompress`][decompress]
+#[derive(Debug, Clone)]
+pub struct DecompressError{
+    message: &'static str,
+}
+
+impl fmt::Display for DecompressError{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for DecompressError{}
+
+impl DecompressError{
+    pub fn new(message: &'static str) -> Self{
+        Self{
+            message,
+        }
+    }
+
+    pub fn message(&self) -> &str{
+        self.message
+    }
+}
+
 
 /// Example compression function using a [HuffTree's codes][codes]
 /// to replace every byte in the given slice.
@@ -75,7 +104,7 @@ impl CompressError{
 /// 
 /// # Example
 /// –––
-/// Here's a manual deconstruction of the compressed
+/// Here's a 'manual' deconstruction of the compressed
 /// data:
 /// ```
 /// use huff_coding::{
@@ -148,6 +177,16 @@ impl CompressError{
 /// 
 /// And thus we succesfully read the bytes `b"abbccc"`!
 /// 
+/// # Panics
+/// ---
+/// When providing an empty byte slice:
+/// ```should_panic
+/// use huff_coding::prelude::compress;
+/// 
+/// // Panics at trying to create a HuffTree with no letters
+/// compress(b"");
+/// ```
+/// 
 /// [tree]:crate::tree::HuffTree
 /// [codes]:../tree/struct.HuffTree.html#method.read_codes
 /// [from_bin]:../tree/struct.HuffTree.html#method.try_from_bin
@@ -209,10 +248,12 @@ pub fn compress_with_tree(bytes: &[u8], huff_tree: &HuffTree<u8>) -> Result<Vec<
     Ok(compressed)
 }
 
-/// Returns **ONLY** the bytes compressed using the provided codes and the number of bits used for padding. 
+/// Returns **ONLY** the bytes compressed using the provided tree's codes and the number of bits used for padding.
+/// `(Vec<u8>, u8)`
 /// 
 /// The returned [`Vec<u8>`][Vec] **DOES NOT** contain the data needed to decompress the bytes
 /// (contrary to [`compress`][compress] and [`compress_with_tree`][compress_with_tree]).
+/// It's the opposite of [`get_decompressed_bytes`][get_decompressed_bytes]
 /// 
 /// # Example
 /// ---
@@ -225,9 +266,9 @@ pub fn compress_with_tree(bytes: &[u8], huff_tree: &HuffTree<u8>) -> Result<Vec<
 /// 
 /// let bytes = b"abbccc";
 /// 
-/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(bytes)).read_codes();
+/// let tree = HuffTree::from_weights(ByteWeights::from_bytes(bytes));
 /// 
-/// let (compressed_bytes, padding_bits) = get_compressed_bytes(bytes, &codes).unwrap();
+/// let (compressed_bytes, padding_bits) = get_compressed_bytes(bytes, &tree).unwrap();
 /// 
 /// // every b'a' has been replaced by 10, every b'b' by 11, and every b'c',
 /// // so the resulting compressed bytes look like this:
@@ -249,15 +290,15 @@ pub fn compress_with_tree(bytes: &[u8], huff_tree: &HuffTree<u8>) -> Result<Vec<
 ///     get_compressed_bytes,
 /// };
 /// 
-/// let codes = HuffTree::from_weights(ByteWeights::from_bytes(b"abbccc")).read_codes();
+/// let tree = HuffTree::from_weights(ByteWeights::from_bytes(b"abbccc"));
 /// 
-/// let (compressed_bytes, padding_bits) = get_compressed_bytes(b"deefff", &codes)
+/// let (compressed_bytes, padding_bits) = get_compressed_bytes(b"deefff", &tree)
 ///     .expect("this will return a CompressError (missing byte 0x64)");
 /// ```
-pub fn get_compressed_bytes(bytes: &[u8], codes: &HashMap<u8, BitVec<Msb0, u8>>) -> Result<(Vec<u8>, u8), CompressError>{
+pub fn get_compressed_bytes(bytes: &[u8], huff_tree: &HuffTree<u8>) -> Result<(Vec<u8>, u8), CompressError>{
     let mut compressed_bytes = Vec::with_capacity(bytes.len());
     // convert bytes to compressed bytes and push them into compressed
-    let padding_bits = push_compressed_bytes(&mut compressed_bytes, bytes, codes)?;
+    let padding_bits = push_compressed_bytes(&mut compressed_bytes, bytes, &huff_tree.read_codes())?;
     Ok((compressed_bytes, padding_bits))
 }
 
@@ -297,4 +338,164 @@ fn push_compressed_bytes(compressed_bytes: &mut Vec<u8>, bytes: &[u8], codes: &H
 
     // return the compressed bytes' padding bits
     Ok(padding_bits)
+}
+
+/// Example decompression function bytes compressed with [`compress`][compress]
+/// 
+/// # Decoding scheme
+/// ---
+/// 1. Read padding information from the first byte:
+///  * first 4 bits represent the tree's padding bits
+///  * the remaining bits represent the compressed data's
+/// padding bits
+/// 2. Read the next 4 bytes as a `u32` representing the encoded
+/// tree's length in bytes
+/// 3. Build a [`HuffTree`][tree] from the next `tree_len * 8 - tree_padding_bits` bits
+/// 4. Decompress the remaining contents with the built tree, going bit by bit:
+///  * every encountered 0 means going to the left child
+///  * every 1 means the right child
+///  * upon finding a letter branch, store the letter and reset the current branch
+/// to tree's root
+/// 
+/// # Example
+/// ---
+/// Basic use:
+/// ```
+/// use huff_coding::prelude::{
+///     compress,
+///     decompress,
+/// };
+/// 
+/// let bytes = b"mirek";
+/// let comp = compress(bytes);
+/// let decomp = decompress(&comp).unwrap();
+/// 
+/// assert_eq!(bytes.to_vec(), decomp);
+/// ```
+/// 
+/// # Errors
+/// ---
+/// A provided slice must contain at least `5 + tree_len + 1` bytes:
+/// * 5 bytes reserved for tree_len and padding
+/// * a [`HuffTree`][tree] encoded in binary of size tree_len bytes
+/// * at least 1 byte of the actual compressed data
+/// 
+/// [tree]:crate::tree::HuffTree
+/// [from_bin]:../tree/struct.HuffTree.html#method.try_from_bin
+pub fn decompress(bytes: &[u8]) -> Result<Vec<u8>, DecompressError>{
+    /// Returns DecompressError with the given message 
+    /// if the index is out of bounds of bytes
+    macro_rules! bytes_try_get {
+        [$index:expr; $message:expr] => {
+            if let Some(subslice) = bytes.get($index){
+                Ok(subslice)
+            }
+            else{
+                Err(DecompressError::new($message))
+            }
+        };
+    }
+
+    // get padding data
+    let padding_bits = bytes_try_get![0; "slice is empty"]?;
+    let tree_padding_bits =  padding_bits >> 4;
+    let data_padding_bits = padding_bits & 0b0000_1111;
+
+    // read 4 bytes of tree length
+    let tree_len = u32::from_be_bytes(
+        bytes_try_get![1..5; "slice too short to read tree length"]?
+        .try_into()
+        .unwrap()
+    ) as usize;
+    assert!(tree_len >= 2, "stored tree length must be at least 2");
+
+    // read the tree
+    let tree_from_bin_result = 
+        HuffTree::<u8>::try_from_bin({
+            let mut b = BitVec::from_vec(
+                bytes_try_get![5..5 + tree_len; "slice too short to read tree"]?
+                .to_vec()
+            );
+            for _ in 0..tree_padding_bits{b.pop();}
+            b
+        });
+    let tree = 
+        if let Ok(tree) = tree_from_bin_result{
+            tree
+        }
+        else{
+            return Err(DecompressError::new(
+                "invalid tree in slice"
+            ))
+        };
+    
+    Ok(get_decompressed_bytes(
+        bytes_try_get![5 + tree_len..; "slice does not contain compressed data"]?, 
+        data_padding_bits, 
+        &tree
+    ))
+}
+
+/// Decompress the given bytes in accordance with the given 
+/// [`HuffTree`][crate::tree::HuffTree] and padding_bits
+/// 
+/// This function *ONLY* decompresses the given data, so be sure not to provide it the
+/// raw output of [`compress`][compress], as it also stores additional information encoded in the 
+/// first bytes (see [`compress`][compress] or [`decompress`][decompress] docs for elaboration).
+/// It's the opposite of [`get_compressed_bytes`][get_compressed_bytes]
+/// 
+/// # Example
+/// ---
+/// ```
+/// use huff_coding::prelude::{
+///     HuffTree,
+///     ByteWeights,
+///     get_compressed_bytes,
+///     get_decompressed_bytes,
+/// };
+/// 
+/// let bytes = b"abbccc";
+/// let tree = HuffTree::from_weights(ByteWeights::from_bytes(bytes));
+/// let (compressed_bytes, padding_bits) = get_compressed_bytes(bytes, &tree).unwrap();
+/// 
+/// let decompressed_bytes = get_decompressed_bytes(&compressed_bytes, padding_bits, &tree);
+/// 
+/// assert_eq!(bytes.to_vec(), decompressed_bytes);
+/// ```
+/// 
+/// # Panics & Errors
+/// ---
+/// This function always tries to decode the provided bytes with the given tree
+/// and should not panic or return an error. The worst that could happen, when providing
+/// incompatible tree & bytes (ie. the tree's not built from the bytes' weights), 
+/// is that the output may be empty or jumbled a little.
+pub fn get_decompressed_bytes(bytes: &[u8], padding_bits: u8, huff_tree: &HuffTree<u8>) -> Vec<u8>{
+    let mut decompressed_bytes = Vec::new();
+    let mut current_branch = huff_tree.root();
+    macro_rules! read_codes_in_byte {
+        ($byte: expr;[$bitrange:expr]) => {
+            for i in $bitrange{
+                if current_branch.has_children(){
+                    match ($byte >> (7 - i)) & 1 == 1{
+                        true =>{
+                            current_branch = current_branch.right_child().unwrap();
+                        }
+                        false =>{
+                            current_branch = current_branch.left_child().unwrap();
+                        }
+                    }
+                }
+                if !current_branch.has_children(){
+                    decompressed_bytes.push(*current_branch.leaf().letter().unwrap());
+                    current_branch = huff_tree.root();
+                }
+            }
+        };
+    }
+    for byte in &bytes[..bytes.len() - 1]{
+       read_codes_in_byte!(byte;[0..8]);
+    }
+    read_codes_in_byte!(bytes[bytes.len() - 1];[0..8 - padding_bits]);
+
+    decompressed_bytes
 }
