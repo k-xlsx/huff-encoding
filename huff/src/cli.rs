@@ -14,17 +14,13 @@ use std::{
 
 #[derive(StructOpt)]
 struct Cli{
-    /// Show the time it took for a command to finish
-    #[structopt(short = "t", long = "time")]
-    time: bool,
-
     #[structopt(subcommand)]
     cmd: Commands,
 }
 
 #[derive(StructOpt)]
 #[structopt(about = "kinda wonky compression software")]
-pub enum Commands {
+enum Commands{
     /// Compress the file from src_path into dst_path.
     /// 
     /// If no dst_path is provided, the compressed file
@@ -44,7 +40,6 @@ pub enum Commands {
         single_thread_flag: bool,
     },
     /// Decompress the file from src_path into dst_path.
-    /// (with the extension stored in the compressed file).
     /// 
     /// If no dst_path is provided, the decompressed file
     /// is saved with the src_path's file name.
@@ -67,13 +62,51 @@ pub fn process_args() -> Result<(), &'static str>{
     // TODO: cli for binary
     match cli.cmd{
         Commands::Compress{src_path, dst_path, single_thread_flag} =>{
-            todo!();
+            on_compress_cmd(src_path, dst_path, single_thread_flag)
         },
         Commands::Decompress{src_path, dst_path} =>{
-            todo!();
+            on_decompress_cmd(src_path, dst_path)
         }
     }
 }
+
+fn on_compress_cmd(src_path: PathBuf, dst_path: PathBuf, single_thread_flag: bool) -> Result<(), &'static str>{
+    let (src_path, dst_path) = parse_paths(src_path, dst_path)?;
+
+    Ok(())
+}
+
+fn on_decompress_cmd(src_path: PathBuf, dst_path: PathBuf) -> Result<(), &'static str>{
+    let (src_path, dst_path) = parse_paths(src_path, dst_path)?;
+
+    Ok(())
+}
+
+fn parse_paths(src_path: PathBuf, dst_path: PathBuf) -> Result<(PathBuf, PathBuf), &'static str>{
+    let mut dst_path = dst_path;
+
+    // check if src exists and is a file
+    if !src_path.exists() || !src_path.is_file(){
+        return Err("src path not found")
+    }
+
+    // copy file name from src if none is provided
+    if dst_path == Path::new("./"){
+        dst_path.push(Path::new(src_path.file_name().unwrap()));
+    }
+
+    // check if path to dst exists
+    if !dst_path.parent().unwrap().exists() && 
+        dst_path.parent().unwrap() != Path::new(""){
+        return Err("dst path not found")
+    }
+    // check if dst is a file 
+    if dst_path.is_dir(){
+        return Err("dst is a directory")
+    }
+
+    Ok((src_path, dst_path))
+} 
 
 fn spawn_wait_indicator(msg: &'static str, delay: Duration) -> mpsc::Sender<()> {
     let (tx, rx): (mpsc::Sender<()>, mpsc::Receiver<()>) = mpsc::channel();

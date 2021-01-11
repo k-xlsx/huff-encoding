@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "huff"
-version = "1.0.0"
+version = "0.0.0"
 dependencies = [
  "huff_coding",
  "structopt",
@@ -87,7 +87,7 @@ dependencies = [
 
 [[package]]
 name = "huff_coding"
-version = "1.0.0"
+version = "0.0.0"
 dependencies = [
  "bitvec",
 ]

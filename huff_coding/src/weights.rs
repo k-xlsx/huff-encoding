@@ -1,15 +1,23 @@
 pub use self::byte_weights::ByteWeights;
 
 
+use super::tree::letter::HuffLetter;
+
 use std::{
-    hash::Hash,
-    collections::HashMap,
+    collections::{
+        HashMap,
+        hash_map::RandomState,
+    },
+    hash::{
+        Hash, 
+        BuildHasher
+    },
 };
 
 
 
-/// Trait signifying that the struct stores the weights of a type `L`, so that
-/// for any stored `L` there is a corresponding `usize`(weight).
+/// Trait signifying that the struct stores the weights of a certain type (letter), so that
+/// for any stored letter there is a corresponding `usize`(weight).
 /// 
 /// Implemented by default for [`HashMap<L, usize>`][std::collections::HashMap] and
 /// for [`ByteWeights`][byte_weights::ByteWeights]
@@ -47,6 +55,79 @@ impl<L: Eq + Clone + Hash> Weights<L> for HashMap<L, usize>{
         self.is_empty()
     }
 }
+
+
+/// Count every letter in the provided slice Returning a [`HashMap`][std::collections::HashMap]
+/// of letters to their counts (weights)
+/// 
+/// # Example
+/// ---
+/// ```
+/// use huff_coding::weights::build_weights_map;
+/// 
+/// let weights = build_weights_map(&[12, -543, 12, 66, 66, 66]);
+/// 
+/// assert_eq!(weights.get(&-543), Some(&1));
+/// assert_eq!(weights.get(&12), Some(&2));
+/// assert_eq!(weights.get(&66), Some(&3));
+/// ```
+/// The resulting [`HashMap`][std::collections::HashMap] 
+/// can be used to build a [`HuffTree`][crate::tree::HuffTree]:
+/// ```
+/// use huff_coding::prelude::{
+///     HuffTree,
+///     build_weights_map,
+/// };
+/// 
+/// let weights = build_weights_map(&['a', 'a', 'a', 'b', 'b', 'c']);
+/// 
+/// let tree = HuffTree::from_weights(weights);
+/// ```
+pub fn build_weights_map<L: HuffLetter>(letters: &[L]) -> HashMap<L, usize>{
+    build_weights_map_with_hasher(letters, RandomState::default())
+}
+
+/// Count every letter in the provided slice Returning a [`HashMap`][std::collections::HashMap]
+/// of letters to their counts (weights), with the provided hash builder.
+/// 
+/// # Example
+/// ---
+/// ```
+/// use huff_coding::weights::build_weights_map;
+/// 
+/// let weights = build_weights_map(&[8, 6, 8, 12, 12, 12]);
+/// 
+/// assert_eq!(weights.get(&6), Some(&1));
+/// assert_eq!(weights.get(&8), Some(&2));
+/// assert_eq!(weights.get(&12), Some(&3));
+/// ```
+/// The resulting [`HashMap`][std::collections::HashMap] 
+/// can be used to build a [`HuffTree`][crate::tree::HuffTree]:
+/// ```
+/// use huff_coding::prelude::{
+///     HuffTree,
+///     build_weights_map_with_hasher,
+/// };
+/// use std::collections::hash_map::RandomState;
+/// 
+/// let weights = build_weights_map_with_hasher(
+///     &['d', 'd', 'd', 'e', 'e', 'f'],
+///     RandomState::default()
+/// );
+/// 
+/// let tree = HuffTree::from_weights(weights);
+/// ```
+pub fn build_weights_map_with_hasher<L: HuffLetter, S: BuildHasher>(letters: &[L], hash_builder: S) -> HashMap<L, usize, S>{
+    let mut map = HashMap::with_hasher(hash_builder);
+
+    for l in letters{
+        let entry = map.entry(l.clone()).or_insert(0);
+        *entry += 1;
+    }
+
+    return map;
+}
+
 
 /// Struct storing the number of occurences of each byte in
 /// a provided byte slice.

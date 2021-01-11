@@ -10,13 +10,13 @@ pub use super::{
     },
     weights::{
         Weights,
+        build_weights_map,
+        build_weights_map_with_hasher,
         byte_weights::ByteWeights,
     },
     comp::{
         compress,
         compress_with_tree,
-        get_compressed_bytes,
-        decompress,
-        get_decompressed_bytes,
+        decompress
     },
 };

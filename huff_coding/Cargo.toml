@@ -1,6 +1,6 @@
 [package]
 name = "huff_coding"
-version = "1.0.0"
+version = "0.0.0"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 

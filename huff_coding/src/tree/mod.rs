@@ -25,7 +25,7 @@ use std::{
 
 
 /// Struct representing a Huffman Tree with an alphabet of
-/// type [`L: HuffLetter`][letter]
+/// type implementing [`HuffLetter`][letter]
 /// 
 /// A [`HuffTree`][tree] can be initialized in two ways:
 /// * from a struct implementing the [`Weights<L>`][weights] trait ([`from_weights`](#method.from_weights)), 
