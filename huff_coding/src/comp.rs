@@ -6,10 +6,15 @@ use super::{
         build_weights_map,
     },
     utils::calc_padding_bits,
+    bitvec::prelude::BitVec,
+};
+use self::errors::{
+    CompressError,
+    CompressedDataFromBytesError,
 };
 
 use std::{
-    fmt,
+    convert::TryInto,
     marker::PhantomData,
 };
 
@@ -41,7 +46,7 @@ pub struct CompressedData<L: HuffLetter>{
 }
 
 impl<L: HuffLetter> CompressedData<L>{
-    /// Initialize a new instance of [`CompressedData`][CompressedData] with the provided
+    /// Initialize a new instance of `CompressedData` with the provided
     /// compressed bytes, padding bits and [`HuffTree`][crate::tree::HuffTree].
     pub fn new(comp_bytes: Vec<u8>, padding_bits: u8, huff_tree: HuffTree<L>) -> Self{
         Self{
@@ -69,7 +74,191 @@ impl<L: HuffLetter> CompressedData<L>{
 }
 
 impl<L: HuffLetterAsBytes> CompressedData<L>{
+    /// Try to construct `CompressedData<L>` from the given byte representation.
     /// 
+    /// Use [`to_bytes`](#method.to_bytes) to get the byte representation of the `CompressedData`.
+    /// 
+    /// # Example
+    /// ---
+    /// ```
+    /// use huff_coding::prelude::{
+    ///     CompressedData,
+    ///     compress,
+    ///     decompress,
+    /// };
+    /// 
+    /// let bytes = b"abbccc";
+    /// 
+    /// let comp_data = compress(bytes);
+    /// 
+    /// assert_eq!(
+    ///     bytes.to_vec(),
+    ///     decompress(
+    ///         &CompressedData::<u8>::try_from_bytes(
+    ///             &comp_data.to_bytes()
+    ///         ).unwrap()
+    ///     ),
+    /// ) 
+    /// ```
+    /// # Errors
+    /// ---
+    /// 1. When the provided slice is too short to read padding, tree length, tree
+    /// and data
+    /// 2. When the stored tree length is lower than 2 (a [`HuffTree`][tree] with padding 
+    /// can't be encoded in less than 2 bytes)
+    /// 3. When the [`HuffTree`][tree] stored in the bytes is invalid or has a different letter type
+    /// than specified
+    /// 
+    /// [tree]:crate::tree::HuffTree
+    pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, CompressedDataFromBytesError>{
+        /// Returns DecompressError with the given message 
+        /// if the index is out of bounds of bytes
+        macro_rules! bytes_try_get {
+            [$index:expr; $message:expr] => {
+                if let Some(subslice) = bytes.get($index){
+                    Ok(subslice)
+                }
+                else{
+                    Err(CompressedDataFromBytesError::new($message))
+                }
+            };
+        }
+
+        // get padding data
+        let padding_bits = bytes_try_get![0; "slice is empty"]?;
+        let tree_padding_bits =  padding_bits >> 4;
+        let data_padding_bits = padding_bits & 0b0000_1111;
+
+        // read 4 bytes of tree length
+        let tree_len = u32::from_be_bytes(
+            bytes_try_get![1..5; "slice too short to read tree length"]?
+            .try_into()
+            .unwrap()
+        ) as usize;
+        assert!(tree_len >= 2, "stored tree length must be at least 2");
+
+        // read the tree
+        let tree_from_bin_result = 
+            HuffTree::<L>::try_from_bin({
+                let mut b = BitVec::from_vec(
+                    bytes_try_get![5..5 + tree_len; "slice too short to read tree"]?
+                    .to_vec()
+                );
+                for _ in 0..tree_padding_bits{b.pop();}
+                b
+            });
+        let tree = 
+            if let Ok(tree) = tree_from_bin_result{
+                tree
+            }
+            else{
+                return Err(
+                    CompressedDataFromBytesError::new(
+                        "invalid tree in slice"
+                    )
+                )
+            };
+
+        Ok(CompressedData::new(
+            bytes_try_get![5 + tree_len..; "slice does not contain compressed data"]?.to_vec(), 
+            data_padding_bits,
+            tree
+        ))
+    }
+
+    /// Convert the `CompressedData` into a byte representation.
+    /// 
+    /// Use [`try_from_bytes`](#method.try_from_bytes) to convert it back into `CompressedData`.
+    /// 
+    /// # Encoding scheme
+    /// ---
+    /// The returned bytes store, in order:
+    /// 1. A byte containing the number of bits used for padding:
+    ///  * first 4 bits store the [HuffTree's][tree] padding bits
+    ///  * the remaining bits store the compressed data's padding bits
+    /// 2. 8 byte number representing the length (in bytes) of the stored [`HuffTree`][tree]
+    /// 3. A [`HuffTree`][tree], used to compress the file, 
+    /// represented in binary (see [`HuffTree::try_from_bin`][from_bin])
+    /// 4. The actual compressed data
+    /// 
+    /// # Example
+    /// –––
+    /// Here's a manual deconstruction of the compressed
+    /// data:
+    /// ```
+    /// use huff_coding::{
+    ///     prelude::{
+    ///         compress,
+    ///         HuffTree,
+    ///     },
+    ///     bitvec::prelude::*,
+    /// };
+    /// use std::{
+    ///     convert::TryInto,
+    ///     collections::HashMap,
+    /// };
+    /// 
+    /// // get compressed data
+    /// let compressed_data = compress(b"abbccc");
+    /// let compressed_data_bytes = compressed_data.to_bytes();
+    /// 
+    /// // first byte stores the padding bits, 
+    /// // in this case:
+    /// // * 3 padding bits used for the tree
+    /// // * 7 padding bits used for the data
+    /// assert_eq!(
+    ///     compressed_data_bytes[0], 
+    ///     0x37
+    /// );
+    /// 
+    /// // the next 4 bytes store the tree's length, 
+    /// // in this case: 4
+    /// assert_eq!(
+    ///     u32::from_be_bytes(compressed_data_bytes[1..5].try_into().unwrap()), 
+    ///     4
+    /// );
+    /// 
+    /// // next 4 bytes (as read from the length) store the tree,
+    /// // in this case it stores the following codes:
+    /// // b'a' - 10
+    /// // b'b' - 11
+    /// // b'c' - 0
+    /// let codes = 
+    ///     HuffTree::<u8>::try_from_bin({
+    ///         // get the next 4 bytes from compressed_data_bytes and remove the specified 3 padding bits
+    ///         let mut b = BitVec::from_vec(compressed_data_bytes[5..9].to_vec());
+    ///         b.drain(29..);
+    ///         b
+    ///     })
+    ///     .unwrap()
+    ///     .read_codes();
+    /// 
+    /// let mut cmp_codes = HashMap::new();
+    /// cmp_codes.insert(b'a', bitvec![Msb0, u8; 1, 0]);
+    /// cmp_codes.insert(b'b', bitvec![Msb0, u8; 1, 1]);
+    /// cmp_codes.insert(b'c', bitvec![Msb0, u8; 0]);
+    /// 
+    /// assert_eq!(codes, cmp_codes);
+    /// 
+    /// // the last bytes (containing the compressed data) are:
+    /// assert_eq!(compressed_data_bytes[9], 0b10111100);
+    /// assert_eq!(compressed_data_bytes[10], 0b00000000);
+    /// ```
+    /// now we could easily read the actual data:
+    /// 1. 10111100:
+    ///  * 10 -> `b'a'`
+    ///  * 11 -> `b'b'`
+    ///  * 11 -> `b'b'`
+    ///  * 0  -> `b'c'`
+    ///  * 0  -> `b'c'`
+    /// 2. 00000000:
+    ///  * 0  -> `b'c'`
+    ///  * the remaining 7 bits are used for padding.
+    /// 
+    /// And thus we succesfully read the bytes `b"abbccc"`!
+    /// 
+    /// [tree]:crate::tree::HuffTree
+    /// [from_bin]:../tree/struct.HuffTree.html#method.try_from_bin
     pub fn to_bytes(self) -> Vec<u8>{
         // get tree in binary, 
         // calculate its padding bits when converted to bytes
@@ -91,41 +280,6 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
         bytes.extend(self.comp_bytes());
  
         bytes
-    }
-}
-
-/// Error encountered while compressing, meaning that
-/// a byte hasn't been found in the provided codes.
-/// 
-/// Returned by [`compress_with_tree`][compress_with_tree] 
-#[derive(Debug, Clone)]
-pub struct CompressError<L: HuffLetter>{
-    message: &'static str,
-    missing_letter: L,
-}
-
-impl<L: HuffLetter> fmt::Display for CompressError<L>{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({:?})", self.message, self.missing_letter)
-    }
-}
-
-impl<L: HuffLetter> std::error::Error for CompressError<L>{}
-
-impl<L: HuffLetter> CompressError<L>{
-    pub fn new(message: &'static str, missing_letter: L) -> Self{
-        Self{
-            message,
-            missing_letter,
-        }
-    }
-
-    pub fn message(&self) -> &str{
-        self.message
-    }
-
-    pub fn missing_letter(&self) -> &L{
-        &self.missing_letter
     }
 }
 
@@ -342,4 +496,76 @@ pub fn decompress<L: HuffLetter>(comp_data: &CompressedData<L>) -> Vec<L>{
     read_codes_in_byte!(bytes[bytes.len() - 1];[0..8 - comp_data.padding_bits()]);
 
     decompressed_letters
+}
+
+
+/// Errors returned in the `comp` module's code.
+pub mod errors{
+    use super::super::prelude::HuffLetter;
+
+    use std::fmt;
+
+
+
+    /// Error encountered while trying to create [`CompressedData`][super::CompressedData] from bytes.
+    #[derive(Debug, Clone)]
+    pub struct CompressedDataFromBytesError{
+        message: &'static str,
+    }
+
+    impl fmt::Display for CompressedDataFromBytesError{
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.message)
+        }
+    }
+
+    impl std::error::Error for CompressedDataFromBytesError{}
+
+    impl CompressedDataFromBytesError{
+        pub fn new(message: &'static str) -> Self{
+            Self{
+                message,
+            }
+        }
+
+        pub fn message(&self) -> &str{
+            self.message
+        }
+    }
+
+
+    /// Error encountered while compressing, meaning that
+    /// a byte hasn't been found in the provided codes.
+    /// 
+    /// Returned by [`compress_with_tree`][super::compress_with_tree] 
+    #[derive(Debug, Clone)]
+    pub struct CompressError<L: HuffLetter>{
+        message: &'static str,
+        missing_letter: L,
+    }
+
+    impl<L: HuffLetter> fmt::Display for CompressError<L>{
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{} ({:?})", self.message, self.missing_letter)
+        }
+    }
+
+    impl<L: HuffLetter> std::error::Error for CompressError<L>{}
+
+    impl<L: HuffLetter> CompressError<L>{
+        pub fn new(message: &'static str, missing_letter: L) -> Self{
+            Self{
+                message,
+                missing_letter,
+            }
+        }
+
+        pub fn message(&self) -> &str{
+            self.message
+        }
+
+        pub fn missing_letter(&self) -> &L{
+            &self.missing_letter
+        }
+    }
 }

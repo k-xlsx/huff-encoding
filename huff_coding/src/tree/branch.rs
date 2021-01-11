@@ -182,7 +182,7 @@ impl<L: HuffLetter> PartialEq for HuffBranch<L>{
 }
 
 impl<L: HuffLetter> HuffBranch<L>{
-    /// Initialize a new [`HuffBranch<L>`][HuffBranch] with the given leaf and children
+    /// Initialize a new `HuffBranch<L>` with the given leaf and children
     /// 
     /// In the provided tuple:
     /// * 0 means left_child
@@ -210,7 +210,7 @@ impl<L: HuffLetter> HuffBranch<L>{
         &self.leaf
     }
 
-    /// Return an iterator over the branch's children ([`&HuffBranch<L>`][HuffBranch])
+    /// Return an iterator over the branch's children (`&HuffBranch<L>`])
     /// or [`None`][None] if it has no children
     /// 
     /// # Example
@@ -251,25 +251,25 @@ impl<L: HuffLetter> HuffBranch<L>{
         else{None}
     }
 
-    /// Return a reference to the left child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// Return a reference to the left child of the branch `HuffBranch<L>`, or 
     /// [`None`][None] if it has no children
     pub fn left_child(&self) -> Option<&HuffBranch<L>>{
         self.left_child.as_deref()
     }
 
-    /// Return a mutable reference to the left child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// Return a mutable reference to the left child of the branch `HuffBranch<L>`, or 
     /// [`None`][None] if it has no children
     pub fn left_child_mut(&mut self) -> Option<&mut HuffBranch<L>>{
         self.left_child.as_deref_mut()
     }
 
-    /// Return a reference to the right child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// Return a reference to the right child of the branch `HuffBranch<L>`, or 
     /// [`None`][None] if it has no children
     pub fn right_child(&self) -> Option<&HuffBranch<L>>{
         self.right_child.as_deref()
     }
 
-    /// Return a mutable reference to the right child of the branch [`HuffBranch<L>`][HuffBranch], or 
+    /// Return a mutable reference to the right child of the branch `HuffBranch<L>`, or 
     /// [`None`][None] if it has no children
     pub fn right_child_mut(&mut self) -> Option<&mut HuffBranch<L>>{
         self.right_child.as_deref_mut()

@@ -12,9 +12,9 @@ use std::{
 
 
 
-/// A struct used to build a ```HuffTree```
+/// A struct used to build a `HuffTree`
 /// 
-/// Stores ```HuffBranch```es inside a ```std::collections::BinaryHeap```, but reversed
+/// Stores `HuffBranch`es inside a `std::collections::BinaryHeap`, but reversed
 /// (branches with the smallest weights are at the end, so they can be easily popped)
 #[derive(Debug, Clone)]
 pub struct HuffBranchHeap<L: HuffLetter>{

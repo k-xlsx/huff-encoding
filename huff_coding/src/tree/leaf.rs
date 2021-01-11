@@ -49,7 +49,7 @@ impl<L: HuffLetter> PartialEq for HuffLeaf<L>{
 }
 
 impl<L: HuffLetter> HuffLeaf<L>{
-    /// Initialize a [HuffLeaf][HuffLeaf] with the given letter and weight 
+    /// Initialize a `HuffLeaf` with the given letter and weight 
     /// (code is at first set to None and can be changed with the [`set_code`](#method.set_code) method)
     pub fn new(letter: Option<L>, weight: usize) -> Self{
         HuffLeaf{

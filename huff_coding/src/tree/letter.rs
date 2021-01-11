@@ -7,8 +7,8 @@ use std::{
 
 
 
-/// Trait specifying that the given type can be stored in a `HuffTree`, which means
-/// it implements: [`Clone`][Clone] + [`Eq`][Eq] + [`Hash`][std::hash::Hash]
+/// Trait specifying that the given type can be stored in a [`HuffTree`][crate::tree::HuffTree], 
+/// which means it implements: [`Clone`][Clone] + [`Eq`][Eq] + [`Hash`][std::hash::Hash]
 /// 
 /// Implemented by default for every [primitive type][https://doc.rust-lang.org/stable/std/primitive], 
 /// except floats and including [String][String]

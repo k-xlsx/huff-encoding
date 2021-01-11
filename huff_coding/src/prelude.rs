@@ -15,6 +15,7 @@ pub use super::{
         byte_weights::ByteWeights,
     },
     comp::{
+        CompressedData,
         compress,
         compress_with_tree,
         decompress

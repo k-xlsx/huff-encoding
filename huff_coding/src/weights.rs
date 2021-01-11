@@ -146,7 +146,7 @@ pub mod byte_weights{
     /// a provided byte slice.
     /// 
     /// A [`HuffTree`][crate::tree::HuffTree] can be initialized with it,
-    /// as [`ByteWeights`][ByteWeights] implements the [`Weights`][crate::weights::Weights] trait.
+    /// as `ByteWeights` implements the [`Weights`][crate::weights::Weights] trait.
     /// 
     /// # Examples
     /// ---
@@ -167,7 +167,7 @@ pub mod byte_weights{
     ///     assert_eq!(byte as usize, weight - 1);
     /// }
     /// ```
-    /// Adding two [`ByteWeights`][ByteWeights]:
+    /// Adding two `ByteWeights`:
     /// ```
     /// use huff_coding::prelude::ByteWeights;
     /// 
@@ -244,7 +244,7 @@ pub mod byte_weights{
     }
 
     impl ByteWeights{
-        /// Initialize new [`ByteWeights`][ByteWeights] from the given [`&[u8]`][u8]
+        /// Initialize new `ByteWeights` from the given [`&[u8]`][u8]
         /// 
         /// This algorithm is inherently O(n), therefore for
         /// larger collections [`threaded_from_bytes`](#method.threaded_from_bytes) is faster.
@@ -273,7 +273,7 @@ pub mod byte_weights{
             }
         }
 
-        /// Initialize new [`ByteWeights`][ByteWeights] from the given [`&[u8]`][u8], but
+        /// Initialize new `ByteWeights` from the given [`&[u8]`][u8], but
         /// using the specified number of threads to speed up the
         /// process.
         /// 
@@ -333,7 +333,7 @@ pub mod byte_weights{
             Some(weight)
         }
 
-        /// Return the number of different counted bytes stored in the [`ByteWeights`][ByteWeights]
+        /// Return the number of different counted bytes stored in the `ByteWeights`
         pub fn len(&self) -> usize{
             self.len
         }
@@ -348,7 +348,7 @@ pub mod byte_weights{
             self.into_iter()
         }
 
-        /// Add another [`ByteWeights`][ByteWeights] to self, like so:
+        /// Add another `ByteWeights` to self, like so:
         /// * if a byte is present in self & other, add their weights
         /// * if a byte is present in other, but not in self, add it to self with other's weight
         /// 
@@ -382,7 +382,7 @@ pub mod byte_weights{
         }
     }
 
-    /// Consuming iterator over the contents (`(u8, usize)`) of [`ByteWeights`][ByteWeights]
+    /// Consuming iterator over the contents (`(u8, usize)`) of `ByteWeights`
     pub struct IntoIter{
         weights: ByteWeights,
         current_index: usize,
@@ -409,7 +409,7 @@ pub mod byte_weights{
         }
     }
 
-    /// Non consuming iterator over the contents (`(u8, usize)`) of [`ByteWeights`][ByteWeights]
+    /// Non consuming iterator over the contents (`(u8, usize)`) of `ByteWeights`
     pub struct Iter<'a>{
             weights: &'a ByteWeights,
             current_index: usize,
