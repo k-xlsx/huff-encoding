@@ -1,20 +1,20 @@
+//! kinda wonky compression software
+// TODO: docs
+
+mod cli;
+/// Functions reading file, compressing/decompressing them, 
+/// and writing the results to file
+mod comp;
+/// Various utility functions
+mod utils;
 
 
-use huff_coding::prelude::*;
 
-fn main() -> Result<(), &'static str>{
-    let b = b"abbccc";
-    let start = std::time::Instant::now();
+fn main() -> Result<(), Box<dyn std::error::Error>>{
+    let yaml = clap::load_yaml!("../res/cli.yml");
+    let app = clap::App::from_yaml(
+        yaml
+    );
 
-    
-        let c = compress_with_tree(b, HuffTree::from_weights(ByteWeights::from_bytes(b))).unwrap();
-        let d = decompress(&c);
-    
-        assert_eq!(b.to_vec(), d);
-        for by in c.to_bytes(){
-            print!("{:#010b} ", by);
-        }
-
-    println!("{:?}", start.elapsed());
-    Ok(())
+    cli::process_args(app.get_matches())
 }

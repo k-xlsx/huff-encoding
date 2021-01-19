@@ -132,13 +132,13 @@ pub fn build_weights_map_with_hasher<L: HuffLetter, S: BuildHasher>(letters: &[L
 /// Struct storing the number of occurences of each byte in
 /// a provided byte slice.
 pub mod byte_weights{
+    use crate::utils::ration_vec;
+    use super::Weights;
+
     use std::{
         ops::{Add, AddAssign},
         thread,
     };
-
-    use crate::utils::ration_vec;
-    use super::Weights;
 
 
 
@@ -244,6 +244,14 @@ pub mod byte_weights{
     }
 
     impl ByteWeights{
+        /// Initialize new empty `ByteWeights`
+        pub fn new() -> Self{
+            Self{
+                weights: [0;256],
+                len: 0,
+            }
+        }
+
         /// Initialize new `ByteWeights` from the given [`&[u8]`][u8]
         /// 
         /// This algorithm is inherently O(n), therefore for

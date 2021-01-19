@@ -1,0 +1,18 @@
+name: huff
+version: "1.0.0"
+author: Łukasz Dragon <lukasz.b.dragon@gmail.com>
+about:
+    Compress/decompress SRC_FILE into DST_FILE (compress by default)
+args:
+    - decompress:
+        short: d
+        long: decompress
+        help: Decompresses the hff SRC_FILE into DST_FILE
+    - time:
+        short: t
+        long: time
+        help: Prints how long it took to finish
+    - SRC_FILE:
+        required: true
+    - DST_FILE:
+        default_value: ./

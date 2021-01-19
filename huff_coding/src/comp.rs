@@ -38,17 +38,23 @@ use std::{
 /// [letter]:crate::tree::letter::HuffLetter
 /// [letter_bytes]:crate::tree::letter::HuffLetterAsBytes
 #[derive(Debug, Clone)]
-pub struct CompressedData<L: HuffLetter>{
+pub struct CompressData<L: HuffLetter>{
     comp_bytes: Vec<u8>,
     padding_bits: u8,
     huff_tree: HuffTree<L>,
     _typebind: PhantomData<L>
 }
 
-impl<L: HuffLetter> CompressedData<L>{
-    /// Initialize a new instance of `CompressedData` with the provided
+impl<L: HuffLetter> CompressData<L>{
+    /// Initialize a new instance of `CompressData` with the provided
     /// compressed bytes, padding bits and [`HuffTree`][crate::tree::HuffTree].
+    /// 
+    /// # Panics
+    /// When providing an empty `comp_bytes` or
+    /// when providing `padding_bits` larger than 7.
     pub fn new(comp_bytes: Vec<u8>, padding_bits: u8, huff_tree: HuffTree<L>) -> Self{
+        assert!(comp_bytes.len() > 0, "provided comp_bytes are empty");
+        assert!(padding_bits < 8, "padding bits cannot be larger than 7");
         Self{
             comp_bytes,
             padding_bits,
@@ -71,18 +77,23 @@ impl<L: HuffLetter> CompressedData<L>{
     pub fn huff_tree(&self) -> &HuffTree<L>{
         &self.huff_tree
     }
+
+    /// Consume `self` returning the ownership of `comp_bytes`, `padding_bits` and `huff_tree`
+    pub fn into_inner(self) -> (Vec<u8>, u8, HuffTree<L>){
+        (self.comp_bytes, self.padding_bits, self.huff_tree)
+    }
 }
 
-impl<L: HuffLetterAsBytes> CompressedData<L>{
-    /// Try to construct `CompressedData<L>` from the given byte representation.
+impl<L: HuffLetterAsBytes> CompressData<L>{
+    /// Try to construct `CompressData<L>` from the given byte representation.
     /// 
-    /// Use [`to_bytes`](#method.to_bytes) to get the byte representation of the `CompressedData`.
+    /// Use [`to_bytes`](#method.to_bytes) to get the byte representation of the `CompressData`.
     /// 
     /// # Example
     /// ---
     /// ```
     /// use huff_coding::prelude::{
-    ///     CompressedData,
+    ///     CompressData,
     ///     compress,
     ///     decompress,
     /// };
@@ -94,7 +105,7 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
     /// assert_eq!(
     ///     bytes.to_vec(),
     ///     decompress(
-    ///         &CompressedData::<u8>::try_from_bytes(
+    ///         &CompressData::<u8>::try_from_bytes(
     ///             &comp_data.to_bytes()
     ///         ).unwrap()
     ///     ),
@@ -159,16 +170,16 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
                 )
             };
 
-        Ok(CompressedData::new(
+        Ok(CompressData::new(
             bytes_try_get![5 + tree_len..; "slice does not contain compressed data"]?.to_vec(), 
             data_padding_bits,
             tree
         ))
     }
 
-    /// Convert the `CompressedData` into a byte representation.
+    /// Convert the `CompressData` into a byte representation.
     /// 
-    /// Use [`try_from_bytes`](#method.try_from_bytes) to convert it back into `CompressedData`.
+    /// Use [`try_from_bytes`](#method.try_from_bytes) to convert it back into `CompressData`.
     /// 
     /// # Encoding scheme
     /// ---
@@ -286,7 +297,7 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
 
 /// Compress the provided slice of letters (types implementing [`HuffLetter`][letter]), using binary
 /// codes generated with a [`HuffTree`][tree] struct, into a byte slice (returned with additional data
-/// in the form of [`CompressedData`][CompressedData]).
+/// in the form of [`CompressData`][CompressData]).
 /// 
 /// The letters are counted into a [`Weights`][weights] collection to create a [`HuffTree`][tree] using
 /// the [`build_weights_map`][weights_map] function, which can be optimized a lot for certain letter types.
@@ -294,7 +305,7 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
 /// providing a [`HuffTree`][tree] built with our own [`Weights`][weights] collection (an example of such collection
 /// is implemented in the crate on `u8` in the form of [`ByteWeights`][byte_weights]).
 /// 
-/// The returned [`CompressedData`][CompressedData] can be decompressed into the original letter slice with
+/// The returned [`CompressData`][CompressData] can be decompressed into the original letter slice with
 /// the [`decompress`][decompress] function.
 /// 
 /// # How it works
@@ -302,7 +313,7 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
 /// It just reads every letter's code in the created [`HuffTree`][tree] and inserts them into
 /// a [`Vec<u8>`][Vec]. The codes themselves are mostly not a multiple of 8 bits long, so some
 /// of them can be used as padding in the last byte. The padding information, as well as
-/// the tree used to compress the slice are included in the returned [`CompressedData`][CompressedData].
+/// the tree used to compress the slice are included in the returned [`CompressData`][CompressData].
 /// 
 /// # Example
 /// ---
@@ -333,24 +344,27 @@ impl<L: HuffLetterAsBytes> CompressedData<L>{
 /// [weights]:crate::weights::Weights
 /// [weights_map]:crate::weights::build_weights_map
 /// [byte_weights]:crate::weights::ByteWeights
-pub fn compress<L: HuffLetter>(letters: &[L]) -> CompressedData<L>{
+pub fn compress<L: HuffLetter>(letters: &[L]) -> CompressData<L>{
     let huff_tree = HuffTree::from_weights(build_weights_map(letters));
     compress_with_tree(letters, huff_tree).unwrap()
 }
 
 /// Compress the provided slice of letters (types implementing [`HuffLetter`][letter]), using binary
 /// codes generated with the provided [`HuffTree`][tree] struct, into a byte slice (returned with additional 
-/// data in the form of [`CompressedData`][CompressedData]).
+/// data in the form of [`CompressData`][CompressData]).
 /// 
-/// The returned [`CompressedData`][CompressedData] can be decompressed into the original letter slice with
+/// The returned [`CompressData`][CompressData] can be decompressed into the original letter slice with
 /// the [`decompress`][decompress] function.
+/// 
+/// Be wary that the same [`CompressData`][CompressData] built from different [`HuffTree`'s][tree]
+/// may not be exactly the same, but will decompress into the same thing 
 /// 
 /// # How it works
 /// ---
 /// It just reads every letter's code in the provided [`HuffTree`][tree] and inserts them into
 /// a [`Vec<u8>`][Vec]. The codes themselves are mostly not a multiple of 8 bits long, so some
 /// of them can be used as padding in the last byte. The padding information, as well as
-/// the tree used to compress the slice are included in the returned [`CompressedData`][CompressedData].
+/// the tree used to compress the slice are included in the returned [`CompressData`][CompressData].
 /// 
 /// # Example
 /// ---
@@ -396,11 +410,11 @@ pub fn compress<L: HuffLetter>(letters: &[L]) -> CompressedData<L>{
 /// 
 /// [tree]:crate::tree::HuffTree
 /// [letter]:crate::tree::letter::HuffLetter
-pub fn compress_with_tree<L: HuffLetter>(letters: &[L], huff_tree: HuffTree<L>) -> Result<CompressedData<L>, CompressError<L>>{
-    let mut compressed_letters = Vec::with_capacity(letters.len());
+pub fn compress_with_tree<L: HuffLetter>(letters: &[L], huff_tree: HuffTree<L>) -> Result<CompressData<L>, CompressError<L>>{
+    let mut comp_letters = Vec::with_capacity(letters.len());
     let codes = huff_tree.read_codes();
-    let mut current_byte = 0b0000_0000;
-    let mut i = 7;
+    let mut comp_byte = 0b0000_0000;
+    let mut bit_ptr = 7;
     for letter in letters{
         // return Err if there's no code
         let code = 
@@ -412,30 +426,30 @@ pub fn compress_with_tree<L: HuffLetter>(letters: &[L], huff_tree: HuffTree<L>) 
             }?;
         for bit in code{
             // set bit on current byte
-            current_byte |= (*bit as u8) << i;
-            // if filled current_byte
-            if i == 0{
-                compressed_letters.push(current_byte);
-                current_byte = 0b0000_0000;
-                i = 7;
+            comp_byte |= (*bit as u8) << bit_ptr;
+            // if filled comp_byte
+            if bit_ptr == 0{
+                comp_letters.push(comp_byte);
+                comp_byte = 0b0000_0000;
+                bit_ptr = 7;
             }
-            else{i -= 1};
+            else{bit_ptr -= 1};
         }
     }
     // calculate the compressed_letters' padding bits
-    let padding_bits = if i == 7{0} else{i + 1};
-    if padding_bits != 0{compressed_letters.push(current_byte);}
+    let padding_bits = if bit_ptr == 7{0} else{bit_ptr + 1};
+    if padding_bits != 0{comp_letters.push(comp_byte);}
 
 
-    Ok(CompressedData::new(compressed_letters, padding_bits, huff_tree))
+    Ok(CompressData::new(comp_letters, padding_bits, huff_tree))
 }
 
-/// Decompress the provided [`CompressedData<L>`][CompressedData] into a [`Vec<L>`][Vec].
+/// Decompress the provided [`CompressData<L>`][CompressData] into a [`Vec<L>`][Vec].
 /// 
 /// # How it works
 /// ---
 /// 1. Start at the root branch of the tree
-/// 2. Go bit by bit through the provided [`CompressedData`'s][CompressedData] comp_bytes
+/// 2. Go bit by bit through the provided [`CompressData`'s][CompressData] comp_bytes
 /// 3. Every time a 0 is found, go to the left branch, and 
 /// every 1 means going to the right branch
 /// 4. When it finally a letter branch is found, it push the letter into
@@ -464,17 +478,17 @@ pub fn compress_with_tree<L: HuffLetter>(letters: &[L], huff_tree: HuffTree<L>) 
 /// assert_eq!(chars.to_vec(), decompress(&comp_chars));
 /// assert_eq!(strs.to_vec(), decompress(&comp_strs));
 /// ```
-pub fn decompress<L: HuffLetter>(comp_data: &CompressedData<L>) -> Vec<L>{
+pub fn decompress<L: HuffLetter>(comp_data: &CompressData<L>) -> Vec<L>{
     let bytes = comp_data.comp_bytes();
     let tree = comp_data.huff_tree();
 
-    let mut decompressed_letters = Vec::new();
+    let mut decomp_letters = Vec::new();
     let mut current_branch = tree.root();
     macro_rules! read_codes_in_byte {
         ($byte: expr;[$bitrange:expr]) => {
-            for i in $bitrange{
+            for bit_ptr in $bitrange{
                 if current_branch.has_children(){
-                    match ($byte >> (7 - i)) & 1 == 1{
+                    match ($byte >> (7 - bit_ptr)) & 1 == 1{
                         true =>{
                             current_branch = current_branch.right_child().unwrap();
                         }
@@ -484,7 +498,7 @@ pub fn decompress<L: HuffLetter>(comp_data: &CompressedData<L>) -> Vec<L>{
                     }
                 }
                 if !current_branch.has_children(){
-                    decompressed_letters.push(current_branch.leaf().letter().unwrap().clone());
+                    decomp_letters.push(current_branch.leaf().letter().unwrap().clone());
                     current_branch = tree.root();
                 }
             }
@@ -495,7 +509,7 @@ pub fn decompress<L: HuffLetter>(comp_data: &CompressedData<L>) -> Vec<L>{
     }
     read_codes_in_byte!(bytes[bytes.len() - 1];[0..8 - comp_data.padding_bits()]);
 
-    decompressed_letters
+    decomp_letters
 }
 
 
@@ -507,7 +521,7 @@ pub mod errors{
 
 
 
-    /// Error encountered while trying to create [`CompressedData`][super::CompressedData] from bytes.
+    /// Error encountered while trying to create [`CompressData`][super::CompressData] from bytes.
     #[derive(Debug, Clone)]
     pub struct CompressedDataFromBytesError{
         message: &'static str,

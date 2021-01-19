@@ -555,8 +555,8 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
             else{
                 // read the letter bits and convert them to bytes
                 let mut letter_bytes = Vec::<u8>::with_capacity(mem::size_of::<L>());
-                let mut current_byte = 0b0000_0000;
-                let mut i = 7;
+                let mut byte = 0b0000_0000;
+                let mut bit_ptr = 7;
 
                 // get an iterator over the letter bits, if not enough bits left return err
                 let letter_bits = bits.take(size_of_bits::<L>());
@@ -566,13 +566,13 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
                     ))
                 };
                 for bit in letter_bits{
-                    current_byte |= (*bit as u8) << i;
-                    if i == 0{
-                        letter_bytes.push(current_byte);
-                        current_byte = 0b0000_0000;
-                        i = 7;
+                    byte |= (*bit as u8) << bit_ptr;
+                    if bit_ptr == 0{
+                        letter_bytes.push(byte);
+                        byte = 0b0000_0000;
+                        bit_ptr = 7;
                     }
-                    else{i -= 1};
+                    else{bit_ptr -= 1};
                 }
                 
                 // create letter branch (no children)
@@ -663,8 +663,8 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
 
                 // convert the letter to bytes and push the bytes' bits into the tree_bin
                 for byte in root.leaf().letter().unwrap().as_be_bytes().iter(){
-                    for i in 0..8{
-                        tree_bin.push((byte >> (7 - i)) & 1 == 1)
+                    for bit_ptr in 0..8{
+                        tree_bin.push((byte >> (7 - bit_ptr)) & 1 == 1)
                     }
                 }
             }
