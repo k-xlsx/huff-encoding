@@ -1,4 +1,4 @@
-/// Move the provided bytes 
+/// Move the provided bytes to the right by n bits
 pub fn offset_bytes(bytes: &[u8], n: usize) -> Vec<u8>{
     let mut offset_bytes = Vec::<u8>::with_capacity(bytes.len());
     let empty_bytes = n / 8;
