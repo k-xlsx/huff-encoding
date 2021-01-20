@@ -1,6 +1,6 @@
-name: huff
-version: "1.0.0"
-author: Łukasz Dragon <lukasz.b.dragon@gmail.com>
+name: ""
+version: ""
+author: ""
 about:
     Compress/decompress SRC_FILE into DST_FILE.hff (compress by default)
 args:
