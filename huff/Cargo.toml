@@ -8,5 +8,5 @@ license = "GPL-2.0-or-later"
 repository = "https://github.com/kxlsx/huffman-coding-rs/tree/master/huff"
 
 [dependencies]
-huff_coding = {path = "../huff_coding"}
+huff_coding = {version="0.0.1", path = "../huff_coding"}
 clap = {version = "2.33.3", features = ["yaml"]}
