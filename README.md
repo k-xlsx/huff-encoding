@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master)](https://travis-ci.com/k-xlsx/huffman-coding-rs)
 
-This repository hosts my best efforts to create an implementation of the [Huffman coding algorithm](https://en.wikipedia.org/wiki/**Huffman_coding**), in rust.
+This repository hosts my best efforts to create an implementation of the [Huffman coding algorithm](https://en.wikipedia.org/wiki/Huffman_coding), in rust.
 It's split into two crates:
 
 - [**huff_coding**][lib]:
