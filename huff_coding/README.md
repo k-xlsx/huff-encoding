@@ -93,7 +93,7 @@ Every binary representation in the crate is made thanks to the [`bitvec`][bitvec
 [license_img]: https://img.shields.io/crates/l/huff_coding.svg
 [crate]:https://crates.io/crates/huff_coding
 [crate_img]:https://img.shields.io/crates/v/huff_coding.svg?logo=rust
-[docs]:https://docs.rs/huff_coding/0.0.0/huff_coding/
+[docs]:https://docs.rs/huff_coding/0.0.1/huff_coding/
 [docs_img]:https://docs.rs/huff_coding/badge.svg
 
 [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding

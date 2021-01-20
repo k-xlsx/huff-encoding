@@ -1,7 +1,7 @@
 [package]
 name = "huff_coding"
 description = "An implementation of the Huffman coding algorithm, enabling one to create a Huffman tree with any alphabet they choose."
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 license = "GPL-2.0-or-later"
