@@ -4,12 +4,14 @@ Example compression/decompression CLI software based on the **huff_coding** crat
 
 ## Usage
 
+---
 ```txt
 huff [FLAGS] [OPTIONS] <SRC_FILE> [DST_FILE]
 ```
 
 ## Args
 
+---
 ```txt
 <SRC_FILE>    
 <DST_FILE>    [default: ./SRC_FILE.hff]
@@ -29,6 +31,7 @@ huff [FLAGS] [OPTIONS] <SRC_FILE> [DST_FILE]
 
 ## Flags
 
+---
 ```txt
 -d, --decompress    
         Decompresses the hff SRC_FILE into DST_FILE.hff
@@ -50,6 +53,7 @@ huff [FLAGS] [OPTIONS] <SRC_FILE> [DST_FILE]
 
 ## File format
 
+---
 The *hff* file format is encoded as follows:
 
 1. A byte containing the number of bits used for padding:

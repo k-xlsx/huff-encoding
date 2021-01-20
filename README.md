@@ -12,10 +12,12 @@ Refer to their corresponding documentations to learn more.
 
 ## Contributing
 
+---
 I accept any changes, but i doubt anyone cares.
 
 ## Learn more about the Huffman Coding algorithm
 
+---
 Cool articles/videos about the *Huffman Coding* algorithm I found and learned from while working on this
 
 - Articles
