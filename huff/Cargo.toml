@@ -1,0 +1,9 @@
+[package]
+name = "huff"
+version = "1.0.0"
+authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+huff_coding = {path = "../huff_coding"}
+clap = {version = "2.33.3", features = ["yaml"]}

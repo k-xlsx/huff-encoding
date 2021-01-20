@@ -1,6 +1,4 @@
 /target
 
 /.vscode
-
-# temp files
-temp*
+*.tmp

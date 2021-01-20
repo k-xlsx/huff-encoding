@@ -1,0 +1,39 @@
+name: huff
+version: "1.0.0"
+author: Łukasz Dragon <lukasz.b.dragon@gmail.com>
+about:
+    Compress/decompress SRC_FILE into DST_FILE.hff (compress by default)
+args:
+    - decompress:
+        short: d
+        long: decompress
+        help: Decompresses the hff SRC_FILE into DST_FILE.hff
+    - time:
+        short: t
+        long: time
+        help: Prints how long it took to finish
+    - replace:
+        short: r
+        long: replace
+        help: Deletes SRC_FILE upon completion
+    - noask:
+        short: n
+        long: noask
+        help: Omits asking if should replace existing DST_FILE
+    - block-size:
+        short: b
+        long: block-size
+        takes_value: true
+        value_name: SIZE
+        default_value: 2G
+        help: "Set how many bytes can be loaded from the file at one time"
+        long_help: |
+            Set how many bytes can be loaded from the file at one time
+            Possible units: 
+                K/Ki -> Kilobytes/Kibibytes
+                M/Mi -> Megabytes/Mebibytes
+                G/Gi -> Gigabytes/Gibibytes
+    - SRC_FILE:
+        required: true
+    - DST_FILE:
+        default_value: ./SRC_FILE.hff

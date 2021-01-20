@@ -1,9 +1,8 @@
-
-/// Ration a Vec<T> into ration_count sized rations.
+/// Ration a `Vec<T>` into ration_count sized rations.
 /// 
 /// Edge cases:
 /// * If cannot ration equally -> dumps the remainder into the last ration.
-/// * If Vec is to small -> returns just one ration with the whole Vec in it.
+/// * If `Vec<T>` is to small -> returns just one ration with the whole `Vec<T>` in it.
 pub fn ration_vec<T: Clone>(vec: &[T], ration_count: usize) -> Vec<Vec<T>>{
     let mut elements_left = vec.len();
     let elements_per_ration = elements_left / ration_count;
@@ -25,8 +24,12 @@ pub fn ration_vec<T: Clone>(vec: &[T], ration_count: usize) -> Vec<Vec<T>>{
             elements_left -= elements_per_ration;
         }
     }
-
     rations
+}
+
+/// Returns the size of the type in bits
+pub fn size_of_bits<T>() -> usize{
+    std::mem::size_of::<T>() * 8
 }
 
 /// Return how many bits will be used as padding
