@@ -1,5 +1,4 @@
-//! kinda wonky compression software
-
+/// Functions parsing and processing args
 mod cli;
 /// error returned by the program
 mod error;
@@ -8,7 +7,6 @@ mod error;
 mod comp;
 /// Various utility functions
 mod utils;
-
 
 
 fn main() -> Result<(), error::Error>{
