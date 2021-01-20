@@ -31,7 +31,7 @@ use std::{
 /// Read the the src file, compress it, and write the compressed data into dst file.
 /// 
 /// Chunk size means how many bytes will be read from src file at one time
-pub fn read_compress_write(src_path: &PathBuf, dst_path: &PathBuf, chunk_size: usize) -> Result<(), Error>{
+pub fn read_compress_write(src_path: &PathBuf, dst_path: &PathBuf, block_size: usize) -> Result<(), Error>{
     // read from src file
     let src = File::open(src_path)?;
     let mut src_bytes_left = src.metadata().unwrap().len() as usize;
@@ -41,8 +41,8 @@ pub fn read_compress_write(src_path: &PathBuf, dst_path: &PathBuf, chunk_size: u
     let dst = File::create(dst_path)?;
     let mut writer = BufWriter::new(dst);
 
-    // allocate a u8 buffer of size == chunk_size
-    let mut buf = vec![0; chunk_size];
+    // allocate a u8 buffer of size == block_size
+    let mut buf = vec![0; block_size];
 
     // create a HuffTree from the src file bytes
     let tree = huff_tree_from_reader(&mut reader, &mut src_bytes_left.clone(), &mut buf);
@@ -78,7 +78,7 @@ pub fn read_compress_write(src_path: &PathBuf, dst_path: &PathBuf, chunk_size: u
 /// Read the src file, decompress it, and write the decompressed data into dst file.
 /// 
 /// Chunk size means how many bytes will be read from src file at one time
-pub fn read_decompress_write(src_path: &PathBuf, dst_path: &PathBuf, chunk_size: usize) -> Result<(), Error>{
+pub fn read_decompress_write(src_path: &PathBuf, dst_path: &PathBuf, block_size: usize) -> Result<(), Error>{
     // read from src file
     let src = File::open(src_path)?;
     let mut src_bytes_left = src.metadata().unwrap().len() as usize;
@@ -88,8 +88,8 @@ pub fn read_decompress_write(src_path: &PathBuf, dst_path: &PathBuf, chunk_size:
     let dst = File::create(dst_path)?;
     let mut writer = BufWriter::new(dst);
 
-    // allocate a u8 buffer of size == chunk_size
-    let mut buf = vec![0; chunk_size];
+    // allocate a u8 buffer of size == block_size
+    let mut buf = vec![0; block_size];
 
     // read only first 5 bytes
     let mut reader = reader.take(5);

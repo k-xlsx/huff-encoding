@@ -1,14 +1,16 @@
 use std::{
-    process,
-    fmt,
     io,
+    fmt,
     error,
+    process,
 };
 
 
 /// Every kind of Error returned by the program
 #[derive(Clone, Debug)]
 pub enum ErrorKind{
+    /// When provided with invalid input 
+    InvalidInput,
     /// When the file you want to decompress has an
     /// extension other than cli::EXTENSION
     UnrecognizedFormat,
