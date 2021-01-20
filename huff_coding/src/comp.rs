@@ -187,7 +187,7 @@ impl<L: HuffLetterAsBytes> CompressData<L>{
     /// 1. A byte containing the number of bits used for padding:
     ///  * first 4 bits store the [HuffTree's][tree] padding bits
     ///  * the remaining bits store the compressed data's padding bits
-    /// 2. 8 byte number representing the length (in bytes) of the stored [`HuffTree`][tree]
+    /// 2. 4 byte number representing the length (in bytes) of the stored [`HuffTree`][tree]
     /// 3. A [`HuffTree`][tree], used to compress the file, 
     /// represented in binary (see [`HuffTree::try_from_bin`][from_bin])
     /// 4. The actual compressed data

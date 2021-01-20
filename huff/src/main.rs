@@ -1,5 +1,4 @@
 //! kinda wonky compression software
-// TODO: docs
 
 mod cli;
 /// error returned by the program
