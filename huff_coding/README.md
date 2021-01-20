@@ -3,8 +3,8 @@
 An implementation of the [Huffman coding algorithm][huff_wiki], enabling
 one to create a Huffman tree with any alphabet they choose.
 
-It mainly revolves around the `HuffTree` struct, which provides a way to generate Huffman [prefix codes][huff_wiki_codes] for any collection of types implementing the `HuffLetter` trait, where  for every letter there is a corresponding weight (To ensure this, the `Weights` trait must be implemented on the provided collection).
-If the provided letters also implement the `HuffLetterAsBytes` trait, the tree can be easily read or returned in binary form.
+It mainly revolves around the [`HuffTree`][tree] struct, which provides a way to generate Huffman [prefix codes][huff_wiki_codes] for any collection of types implementing the [`HuffLetter`][letter] trait, where  for every letter there is a corresponding weight (To ensure this, the [`Weights`][weights] trait must be implemented on the provided collection).
+If the provided letters also implement the [`HuffLetterAsBytes`][letter_bytes] trait, the tree can be easily read or returned in binary form.
 
 ```rust
 use huff_coding::{
@@ -83,3 +83,7 @@ Every binary representation in the crate is made thanks to the `bitvec` crate wh
 
 [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding
 [huff_wiki_codes]:https://en.wikipedia.org/wiki/Prefix_code
+[tree]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/mod.rs#L27
+[letter]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/letter.rs#L10
+[letter_bytes]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/letter.rs#L16
+[weights]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/weights.rs#L19

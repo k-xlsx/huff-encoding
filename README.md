@@ -1,23 +1,21 @@
 # **huffman-coding-rs**
 
-This repository hosts my best efforts to create an implementation of the Huffman coding algorithm in rust.
+This repository hosts my best efforts to create an implementation of the [Huffman coding algorithm](https://en.wikipedia.org/wiki/**Huffman_coding**), in rust.
 It's split into two crates:
 
-- **huff_coding**:
+- [**huff_coding**][lib]:
   - Library enabling one to create Huffman trees with any alphabet.
-- **huff**:
-  - Basic compression/decompression binary built on the huff_coding library.
+- [**huff**][bin]:
+  - Basic compression/decompression binary built on the **huff_coding** library.
 
 Refer to their corresponding documentations to learn more.
 
 ## Contributing
 
----
 I accept any changes, but i doubt anyone cares.
 
 ## Learn more about the Huffman Coding algorithm
 
----
 Cool articles/videos about the *Huffman Coding* algorithm I found and learned from while working on this
 
 - Articles
@@ -32,3 +30,6 @@ Cool articles/videos about the *Huffman Coding* algorithm I found and learned fr
   - [Computerphile on *Huffman Trees*](https://www.youtube.com/watch?v=umTbivyJoiI)
   - [Computerphile on Compression](https://www.youtube.com/watch?v=Lto-ajuqW3w)
   - [Abdul Bari's video](https://www.youtube.com/watch?v=co4_ahEDCho)
+
+[lib]:https://github.com/kxlsx/huff-encoding/tree/master/**huff_coding**
+[bin]:https://github.com/kxlsx/huff-encoding/tree/master/huff
