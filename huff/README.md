@@ -1,5 +1,7 @@
 # **huff**
 
+[![Build Status](https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master)](https://travis-ci.com/k-xlsx/huffman-coding-rs)
+
 Example compression/decompression CLI software based on the [**huff_coding**][lib] crate.
 
 ## Usage
@@ -60,6 +62,6 @@ The *hff* file format is encoded as follows:
 represented in binary (see [`HuffTree::try_from_bin`][tree_from_bin])
 4. The actual compressed data
 
-[lib]:https://github.com/kxlsx/huff-encoding/tree/master/**huff_coding**
-[tree]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/mod.rs#L27
-[tree_from_bin]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/mod.rs#L452
+[lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/**huff_coding**
+[tree]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/mod.rs#L27
+[tree_from_bin]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/mod.rs#L452

@@ -1,5 +1,7 @@
 # **huffman-coding-rs**
 
+[![Build Status](https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master)](https://travis-ci.com/k-xlsx/huffman-coding-rs)
+
 This repository hosts my best efforts to create an implementation of the [Huffman coding algorithm](https://en.wikipedia.org/wiki/**Huffman_coding**), in rust.
 It's split into two crates:
 
@@ -31,5 +33,5 @@ Cool articles/videos about the *Huffman Coding* algorithm I found and learned fr
   - [Computerphile on Compression](https://www.youtube.com/watch?v=Lto-ajuqW3w)
   - [Abdul Bari's video](https://www.youtube.com/watch?v=co4_ahEDCho)
 
-[lib]:https://github.com/kxlsx/huff-encoding/tree/master/**huff_coding**
-[bin]:https://github.com/kxlsx/huff-encoding/tree/master/huff
+[lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/**huff_coding**
+[bin]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff

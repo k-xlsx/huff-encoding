@@ -1,5 +1,7 @@
 # **huff_coding**
 
+[![Build Status](https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master)](https://travis-ci.com/k-xlsx/huffman-coding-rs)
+
 An implementation of the [Huffman coding algorithm][huff_wiki], enabling
 one to create a Huffman tree with any alphabet they choose.
 
@@ -79,11 +81,12 @@ let decomp_bytes =  decompress(&comp_data);
 assert_eq!(bytes.to_vec(), decomp_bytes);
 ```
 
-Every binary representation in the crate is made thanks to the `bitvec` crate which I've re-exported for convenience.
+Every binary representation in the crate is made thanks to the [`bitvec`][bitvec] crate which I've re-exported for convenience.
 
 [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding
 [huff_wiki_codes]:https://en.wikipedia.org/wiki/Prefix_code
-[tree]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/mod.rs#L27
-[letter]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/letter.rs#L10
-[letter_bytes]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/tree/letter.rs#L16
-[weights]:https://github.com/kxlsx/huff-encoding/blob/master/huff_coding/src/weights.rs#L19
+[tree]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/mod.rs#L27
+[letter]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/letter.rs#L10
+[letter_bytes]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/letter.rs#L16
+[weights]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/weights.rs#L19
+[bitvec]:https://github.com/bitvecto-rs/bitvec
