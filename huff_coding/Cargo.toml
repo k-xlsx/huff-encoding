@@ -5,6 +5,7 @@ version = "0.0.0"
 authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 license = "GPL-2.0-or-later"
+documentation = "https://docs.rs/huff_coding/0.0.0/huff_coding/"
 repository = "https://github.com/kxlsx/huffman-coding-rs/tree/master/huff_coding"
 readme = "./README.md"
 
