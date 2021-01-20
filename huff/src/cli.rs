@@ -7,6 +7,7 @@ use super::{
 };
 
 use std::{
+    fs,
     ffi::OsStr,
     io::{
         self,
@@ -51,12 +52,12 @@ macro_rules! parse_paths {
         parse_paths!($src_path, $dst_path);
         
         // add cli::EXTENSTION to the dst_path
-        $dst_path.set_extension({
+        $dst_path = $dst_path.with_extension({
             let mut ex = $dst_path
                 .extension()
-                .unwrap_or(OsStr::new(EXTENSTION))
+                .unwrap_or(OsStr::new("."))
                 .to_os_string();
-            if ex != EXTENSTION{ex.push("."); ex.push(EXTENSTION);}
+            ex.push(EXTENSTION);
             ex
         });
 
@@ -115,8 +116,8 @@ macro_rules! parse_block_size {
 }
 
 macro_rules! ask_replace {
-    ($path: expr, $replace:expr) => {
-        if $path.exists() && !$replace{
+    ($path: expr, $noask:expr) => {
+        if $path.exists() && !$noask{
             print!("{:?} already exists, do you want to replace it? [Y/N]: ", $path);
             io::stdout().flush()?;
 
@@ -148,27 +149,22 @@ pub fn process_args(matches: clap::ArgMatches) -> Result<(), Error>{
     if matches.is_present("decompress"){
         parse_paths!(decomp; src_path, dst_path);
         // ask if should replace dst_file
-        ask_replace!(dst_path, matches.is_present("replace"));
-        on_decompress(src_path, dst_path, block_size)?;
+        ask_replace!(dst_path, matches.is_present("noask"));
+        // read src, decompress it, write the results to dst
+        comp::read_decompress_write(&src_path, &dst_path, block_size)?;
     }
     // if no major flags are present, just compress
     else{
         parse_paths!(comp; src_path, dst_path);
         // ask if should replace dst_file
-        ask_replace!(dst_path, matches.is_present("replace"));
-        on_compress(src_path, dst_path, block_size)?;
+        ask_replace!(dst_path, matches.is_present("noask"));
+        // read src, compress it, write the results to dst
+        comp::read_compress_write(&src_path, &dst_path, block_size)?;
+    }
+    if matches.is_present("replace"){
+        fs::remove_file(src_path).unwrap();
     }
 
     if matches.is_present("time"){println!("{:?}", start.elapsed());}
     Ok(())
-}
-
-/// Things to do upon calling the compress command
-fn on_compress(src_path: PathBuf, dst_path: PathBuf, block_size: usize) -> Result<(), Error>{
-    comp::read_compress_write(&src_path, &dst_path, block_size)
-}
-
-/// Things to do upon calling the decompress command
-fn on_decompress(src_path: PathBuf, dst_path: PathBuf, block_size: usize) -> Result<(), Error>{
-    comp::read_decompress_write(&src_path, &dst_path, block_size)
 }

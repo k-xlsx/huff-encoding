@@ -15,7 +15,11 @@ args:
     - replace:
         short: r
         long: replace
-        help: Omits asking if should replace existing file
+        help: Deletes SRC_FILE upon completion
+    - noask:
+        short: n
+        long: noask
+        help: Omits asking if should replace existing DST_FILE
     - block-size:
         short: b
         long: block-size
