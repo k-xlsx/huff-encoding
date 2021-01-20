@@ -8,6 +8,11 @@ license = "GPL-2.0-or-later"
 documentation = "https://docs.rs/huff_coding/0.0.0/huff_coding/"
 repository = "https://github.com/kxlsx/huffman-coding-rs/tree/master/huff_coding"
 readme = "./README.md"
+keywords = [
+    "huffman_coding", 
+    "compression", 
+    "decompression"
+]
 
 [dependencies]
 bitvec = "0.20.1"

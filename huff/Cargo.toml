@@ -6,6 +6,12 @@ authors = ["Łukasz Dragon <lukasz.b.dragon@gmail.com>"]
 edition = "2018"
 license = "GPL-2.0-or-later"
 repository = "https://github.com/kxlsx/huffman-coding-rs/tree/master/huff"
+readme = "./README.md"
+keywords = [
+    "huffman_coding", 
+    "compression", 
+    "decompression"
+]
 
 [dependencies]
 huff_coding = {version="0.0.1", path = "../huff_coding"}
