@@ -55,8 +55,9 @@ macro_rules! parse_paths {
         $dst_path = $dst_path.with_extension({
             let mut ex = $dst_path
                 .extension()
-                .unwrap_or(OsStr::new("."))
+                .unwrap_or(OsStr::new(""))
                 .to_os_string();
+            ex.push(".");
             ex.push(EXTENSTION);
             ex
         });
