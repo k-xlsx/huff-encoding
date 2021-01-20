@@ -33,5 +33,5 @@ Cool articles/videos about the *Huffman Coding* algorithm I found and learned fr
   - [Computerphile on Compression](https://www.youtube.com/watch?v=Lto-ajuqW3w)
   - [Abdul Bari's video](https://www.youtube.com/watch?v=co4_ahEDCho)
 
-[lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/**huff_coding**
+[lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff_coding
 [bin]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff
