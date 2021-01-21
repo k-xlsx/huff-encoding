@@ -8,6 +8,7 @@ use super::{
 
 use std::{
     fs,
+    process,
     ffi::OsStr,
     io::{
         self,
@@ -57,7 +58,7 @@ macro_rules! parse_paths {
                 .extension()
                 .unwrap_or(OsStr::new(""))
                 .to_os_string();
-            ex.push(".");
+            if !ex.is_empty(){ex.push(".");}
             ex.push(EXTENSTION);
             ex
         });
@@ -126,7 +127,7 @@ macro_rules! ask_replace {
             io::stdin().read_line(&mut yes_no)?;
             match &yes_no.to_lowercase()[..yes_no.len() - 1]{
                 "yes" | "y" => {println!(); ()},
-                "no" | "n" => return Ok(()),
+                "no" | "n" => process::exit(0),
                 _ => 
                     return Err(Error::new(
                         String::from("Invalid input [Y or N]"), 

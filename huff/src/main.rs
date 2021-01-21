@@ -8,6 +8,7 @@ mod comp;
 /// Various utility functions
 mod utils;
 
+// TODO: add multithreading
 
 fn main() -> Result<(), error::Error>{
     let yaml = clap::load_yaml!("../res/cli.yml");

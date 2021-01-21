@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "huff"
-version = "1.0.2"
+version = "1.0.3"
 dependencies = [
  "clap",
  "huff_coding",
