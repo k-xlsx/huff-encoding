@@ -5,6 +5,8 @@ pub mod leaf;
 /// Traits signyfing that a type can be stored in a [`HuffTree`][crate::tree::HuffTree] as a letter.
 pub mod letter;
 
+pub mod bin;
+
 mod branch_heap;
 
 

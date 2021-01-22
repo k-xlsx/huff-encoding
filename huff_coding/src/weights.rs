@@ -125,7 +125,7 @@ pub fn build_weights_map_with_hasher<L: HuffLetter, S: BuildHasher>(letters: &[L
         *entry += 1;
     }
 
-    return map;
+    map
 }
 
 
@@ -240,6 +240,12 @@ pub mod byte_weights{
     impl AddAssign for ByteWeights{
         fn add_assign(&mut self, other: Self){
             self.add_byte_weights(&other);
+        }
+    }
+
+    impl Default for ByteWeights{
+        fn default() -> Self{
+            Self::new()
         }
     }
 

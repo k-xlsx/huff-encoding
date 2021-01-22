@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "huff"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "clap",
  "huff_coding",
@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "huff_coding"
-version = "0.0.1"
+version = "1.0.1"
 dependencies = [
  "bitvec",
 ]

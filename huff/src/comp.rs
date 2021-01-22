@@ -162,7 +162,7 @@ pub fn read_decompress_write(src_path: &PathBuf, dst_path: &PathBuf, block_size:
 /// from it at one time, building a HuffTree from them
 pub fn huff_tree_from_reader<R: Read>(reader: &mut R, reader_bytes_left: &mut usize, buf: &mut [u8]) -> HuffTree<u8>{
     let mut bw = ByteWeights::new();
-    while let Ok(_) = reader.read_exact(buf){
+    while reader.read_exact(buf).is_ok(){
         bw += ByteWeights::threaded_from_bytes(&buf, 12);
         *reader_bytes_left -= buf.len();
     }
@@ -206,7 +206,7 @@ fn compress_to_writer<R: Read, W: Write + Seek>(
         }};
     }
     // try to read exactly buf.len() bytes, compressing them and repeating
-    while let Ok(_) = reader.read_exact(buf){
+    while reader.read_exact(buf).is_ok(){
         let (comp_bytes, padding_bits, huff_tree) =  comp_data_from!(&buf);
         writer.write_all(&comp_bytes)?;
         
@@ -261,7 +261,7 @@ fn decompress_to_writer<R: Read, W: Write>(
         };
     }
     // try to read exactly buf.len() bytes, decompressing them and writing
-    while let Ok(_) = reader.read_exact(buf){
+    while reader.read_exact(buf).is_ok(){
         for byte in &buf[..]{
             read_codes_in_byte!(byte;[0..8]);
         }

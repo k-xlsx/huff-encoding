@@ -8,7 +8,6 @@ use super::{
 
 use std::{
     fs,
-    process,
     ffi::OsStr,
     io::{
         self,
@@ -125,15 +124,10 @@ macro_rules! ask_replace {
 
             let mut yes_no = String::new();
             io::stdin().read_line(&mut yes_no)?;
-            match &yes_no.to_lowercase()[..yes_no.len() - 1]{
-                "yes" | "y" => {println!(); ()},
-                "no" | "n" => process::exit(0),
-                _ => 
-                    return Err(Error::new(
-                        String::from("Invalid input [Y or N]"), 
-                        ErrorKind::InvalidInput)
-                    ),
+            if !yes_no.starts_with("y"){
+                return Ok(());
             }
+            println!();
         }
     };
 }

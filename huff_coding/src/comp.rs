@@ -53,7 +53,7 @@ impl<L: HuffLetter> CompressData<L>{
     /// When providing an empty `comp_bytes` or
     /// when providing `padding_bits` larger than 7.
     pub fn new(comp_bytes: Vec<u8>, padding_bits: u8, huff_tree: HuffTree<L>) -> Self{
-        assert!(comp_bytes.len() > 0, "provided comp_bytes are empty");
+        assert!(!comp_bytes.is_empty(), "provided comp_bytes are empty");
         assert!(padding_bits < 8, "padding bits cannot be larger than 7");
         Self{
             comp_bytes,
@@ -270,7 +270,7 @@ impl<L: HuffLetterAsBytes> CompressData<L>{
     /// 
     /// [tree]:crate::tree::HuffTree
     /// [from_bin]:../tree/struct.HuffTree.html#method.try_from_bin
-    pub fn to_bytes(self) -> Vec<u8>{
+    pub fn to_bytes(&self) -> Vec<u8>{
         // get tree in binary, 
         // calculate its padding bits when converted to bytes
         // calculate its lenght in bytes

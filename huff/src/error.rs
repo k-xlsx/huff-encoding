@@ -52,7 +52,7 @@ impl Error{
 
 impl error::Error for Error {}
 
-impl fmt::Display for Error {
+impl fmt::Display for Error{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", self.message)
     }
@@ -60,6 +60,6 @@ impl fmt::Display for Error {
 
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
-        Error::new(String::from(e.to_string()), ErrorKind::Io)
+        Error::new(e.to_string(), ErrorKind::Io)
     }
 }
