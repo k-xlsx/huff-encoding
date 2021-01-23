@@ -9,6 +9,7 @@ os:
 script:
   - cargo build --release --verbose
   - cargo test --release --verbose
+  - cargo clippy --release --verbose
 jobs:
   allow_failures:
     - rust: nightly

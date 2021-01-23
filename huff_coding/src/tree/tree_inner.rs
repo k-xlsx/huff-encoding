@@ -304,10 +304,10 @@ impl<L: HuffLetter> HuffTree<L>{
         let mut root = branch_heap.pop_min();
 
         // set codes for all branches recursively if has children
+        // else just set the root's code to 0
         if root.has_children(){
             HuffTree::set_codes_in_child_branches(&mut root, None);
         }
-        // else just set the root's code to 0
         else{
             root.set_code({let mut c = BitVec::with_capacity(1); c.push(false); c});
         }
@@ -588,10 +588,10 @@ impl<L: HuffLetterAsBytes> HuffTree<L>{
         }
 
         // set codes for all branches recursively if has children
+        // else just set the root's code to 0
         if root.has_children(){
             HuffTree::set_codes_in_child_branches(&mut root, None);
         }
-        // else just set the root's code to 0
         else{
             root.set_code(bitvec![Msb0, u8; 0]);
         }

@@ -1,10 +1,9 @@
 /// Move the provided bytes to the right by n bits
 pub fn offset_bytes(bytes: &[u8], n: usize) -> Vec<u8>{
-    let mut offset_bytes = Vec::<u8>::with_capacity(bytes.len());
     let empty_bytes = n / 8;
-    for _ in 0..empty_bytes{
-        offset_bytes.push(0);
-    }
+    let mut offset_bytes = vec![0; empty_bytes];
+    offset_bytes.reserve_exact(bytes.len());
+
     let mut comp_byte = 0b0000_0000;
     let mut bit_ptr = (7 - n) % 8;
     for byte in bytes{
