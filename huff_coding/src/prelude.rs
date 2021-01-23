@@ -6,7 +6,7 @@ pub use super::{
         letter::{
             HuffLetter,
             HuffLetterAsBytes,
-        }
+        },
     },
     weights::{
         Weights,
