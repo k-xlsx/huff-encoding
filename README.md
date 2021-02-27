@@ -1,16 +1,20 @@
 # **huffman-coding-rs**
 
-[![Build Status](https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master)](https://travis-ci.com/k-xlsx/huffman-coding-rs)
-
 This repository hosts my best efforts to create an implementation of the [Huffman coding algorithm](https://en.wikipedia.org/wiki/Huffman_coding), in rust.
 It's split into two crates:
 
-- [**huff_coding**][lib]:
-  - Library enabling one to create Huffman trees with any alphabet.
-- [**huff**][bin]:
-  - Basic compression/decompression binary built on the **huff_coding** library.
+## [**huff_coding**][lib]
 
-Refer to their corresponding documentations to learn more.
+[![Crate][lib_crate_img]][lib_crate]
+
+A library enabling one to create Huffman trees with any alphabet type they choose.
+
+## [**huff**][bin]
+  
+  [![Crate][bin_crate_img]][bin_crate]
+  
+  Basic compression/decompression binary built on the library
+  mentioned above.
 
 ## Contributing
 
@@ -33,5 +37,9 @@ Cool articles/videos about the *Huffman Coding* algorithm I found and learned fr
   - [Computerphile on Compression](https://www.youtube.com/watch?v=Lto-ajuqW3w)
   - [Abdul Bari's video](https://www.youtube.com/watch?v=co4_ahEDCho)
 
-[lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff_coding
 [bin]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff
+[bin_crate]:https://crates.io/crates/huff
+[bin_crate_img]:https://img.shields.io/crates/v/huff.svg?logo=rust
+[lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff_coding
+[lib_crate]:https://crates.io/crates/huff_coding
+[lib_crate_img]:https://img.shields.io/crates/v/huff_coding.svg?logo=rust

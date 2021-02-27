@@ -1,9 +1,8 @@
 # **huff**
 
-[![Build Status][build_img]][build]
+[![Crate][crate_img]][crate]
 
 [![License][license_img]][license_file]
-[![Crate][crate_img]][crate]
 
 Example compression/decompression CLI software based on the [**huff_coding**][lib] crate.
 
@@ -65,8 +64,6 @@ The *hff* file format is encoded as follows:
 represented in binary (see [`HuffTree::try_from_bin`][tree_from_bin])
 4. The actual compressed data
 
-[build]:https://travis-ci.com/k-xlsx/huffman-coding-rs
-[build_img]:https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master
 [license_file]:https://github.com/kxlsx/huffman-coding-rs/blob/master/LICENSE
 [license_img]: https://img.shields.io/crates/l/huff.svg
 [crate]:https://crates.io/crates/huff

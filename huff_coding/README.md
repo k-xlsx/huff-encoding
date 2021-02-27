@@ -1,10 +1,9 @@
 # **huff_coding**
 
-[![Build Status][build_img]][build]
-
-[![License][license_img]][license_file]
 [![Crate][crate_img]][crate]
 [![Documentation][docs_img]][docs]
+
+[![License][license_img]][license_file]
 
 An implementation of the [Huffman coding algorithm][huff_wiki], enabling
 one to create a Huffman tree with any alphabet they choose.
@@ -87,8 +86,6 @@ assert_eq!(bytes.to_vec(), decomp_bytes);
 
 Every binary representation in the crate is made thanks to the [`bitvec`][bitvec] crate which I've re-exported for convenience.
 
-[build]:https://travis-ci.com/k-xlsx/huffman-coding-rs
-[build_img]:https://travis-ci.com/kxlsx/huffman-coding-rs.svg?branch=master
 [license_file]:https://github.com/kxlsx/huffman-coding-rs/blob/master/LICENSE
 [license_img]: https://img.shields.io/crates/l/huff_coding.svg
 [crate]:https://crates.io/crates/huff_coding
