@@ -15,4 +15,5 @@ keywords = [
 ]
 
 [dependencies]
+funty = "=1.1.0" # FIXME: TEMP FIX
 bitvec = "0.20.1"
