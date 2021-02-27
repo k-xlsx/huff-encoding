@@ -11,6 +11,8 @@ one to create a Huffman tree with any alphabet they choose.
 It mainly revolves around the [`HuffTree`][tree] struct, which provides a way to generate Huffman [prefix codes][huff_wiki_codes] for any collection of types implementing the [`HuffLetter`][letter] trait, where  for every letter there is a corresponding weight (To ensure this, the [`Weights`][weights] trait must be implemented on the provided collection).
 If the provided letters also implement the [`HuffLetterAsBytes`][letter_bytes] trait, the tree can be easily read or returned in binary form.
 
+## Examples
+
 ```rust
 use huff_coding::{
 

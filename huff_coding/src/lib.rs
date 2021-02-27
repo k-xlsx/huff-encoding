@@ -7,6 +7,9 @@
 //! (To ensure this, the [`Weights`][weights] trait must be implemented on the provided collection).
 //! If the provided letters also implement the [`HuffLetterAsBytes`][letter_bytes] trait, 
 //! the tree can be easily read or returned in binary form.
+//! 
+//! # Examples
+//! 
 //! ```
 //! use huff_coding::{
 //!     prelude::*,
