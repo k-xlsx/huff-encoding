@@ -53,8 +53,12 @@ impl<L: HuffLetter> CompressData<L>{
     /// When providing an empty `comp_bytes` or
     /// when providing `padding_bits` larger than 7.
     pub fn new(comp_bytes: Vec<u8>, padding_bits: u8, huff_tree: HuffTree<L>) -> Self{
-        assert!(!comp_bytes.is_empty(), "provided comp_bytes are empty");
-        assert!(padding_bits < 8, "padding bits cannot be larger than 7");
+        if !comp_bytes.is_empty(){
+            panic!("provided comp_bytes are empty")
+        }
+        if padding_bits < 8{
+            panic!("padding bits cannot be larger than 7")
+        }
         Self{
             comp_bytes,
             padding_bits,
@@ -146,7 +150,9 @@ impl<L: HuffLetterAsBytes> CompressData<L>{
             .try_into()
             .unwrap()
         ) as usize;
-        assert!(tree_len >= 2, "stored tree length must be at least 2");
+        if tree_len >= 2{
+            panic!("stored tree length must be at least 2");
+        } 
 
         // read the tree
         let tree_from_bin_result = 
