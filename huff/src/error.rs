@@ -5,7 +5,6 @@ use std::{
     process,
 };
 
-
 /// Every kind of Error returned by the program
 #[derive(Clone, Debug)]
 pub enum ErrorKind{

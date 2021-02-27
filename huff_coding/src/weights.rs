@@ -1,6 +1,5 @@
 pub use self::byte_weights::ByteWeights;
 
-
 use super::tree::letter::HuffLetter;
 
 use std::{
@@ -13,8 +12,6 @@ use std::{
         BuildHasher
     },
 };
-
-
 
 /// Trait signifying that the struct stores the weights of a certain type (letter), so that
 /// for any stored letter there is a corresponding `usize`(weight).
@@ -55,7 +52,6 @@ impl<L: Eq + Clone + Hash> Weights<L> for HashMap<L, usize>{
         self.is_empty()
     }
 }
-
 
 /// Count every letter in the provided slice Returning a [`HashMap`][std::collections::HashMap]
 /// of letters to their counts (weights)
@@ -119,15 +115,12 @@ pub fn build_weights_map<L: HuffLetter>(letters: &[L]) -> HashMap<L, usize>{
 /// ```
 pub fn build_weights_map_with_hasher<L: HuffLetter, S: BuildHasher>(letters: &[L], hash_builder: S) -> HashMap<L, usize, S>{
     let mut map = HashMap::with_hasher(hash_builder);
-
     for l in letters{
         let entry = map.entry(l.clone()).or_insert(0);
         *entry += 1;
     }
-
     map
 }
-
 
 /// Struct storing the number of occurences of each byte in
 /// a provided byte slice.
@@ -139,8 +132,6 @@ pub mod byte_weights{
         ops::{Add, AddAssign},
         thread,
     };
-
-
 
     /// Struct storing the number of occurences of each byte in
     /// a provided byte slice.

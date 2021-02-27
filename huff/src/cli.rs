@@ -19,10 +19,7 @@ use std::{
     }
 };
 
-
-
 const EXTENSTION: &str = "hff";
-
 
 macro_rules! parse_paths {
     ($src_path: expr, $dst_path:expr) =>{
@@ -131,7 +128,6 @@ macro_rules! ask_replace {
         }
     };
 }
-
 
 pub fn process_args(matches: clap::ArgMatches) -> Result<(), Error>{
     let start = std::time::Instant::now();

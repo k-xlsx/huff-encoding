@@ -5,8 +5,6 @@ use huff_coding::{
 
 use std::collections::HashMap;
 
-
-
 #[test]
 fn tree_normal_init(){
     let weights = {

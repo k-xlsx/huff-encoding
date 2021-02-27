@@ -6,8 +6,6 @@ use super::{
 
 use std::cmp::Ordering;
 
-
-
 /// Struct representing a branch in the [`HuffTree`][tree] struct. 
 /// It contains data stored in a [`HuffLeaf`][leaf] (letter, weight and code) and 
 /// optionally two child [`HuffBranch`es][branch] (left and right)

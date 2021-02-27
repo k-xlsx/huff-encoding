@@ -10,8 +10,6 @@ use std::{
     cmp::Ordering,
 };
 
-
-
 /// A struct used to build a `HuffTree`
 /// 
 /// Stores `HuffBranch`es inside a `std::collections::BinaryHeap`, but reversed

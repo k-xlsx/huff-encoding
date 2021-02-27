@@ -1,3 +1,7 @@
+// when i have time:
+// TODO: add optional multithreading
+// TODO: verbose option
+
 /// Functions parsing and processing args
 mod cli;
 /// error returned by the program
@@ -7,8 +11,6 @@ mod error;
 mod comp;
 /// Various utility functions
 mod utils;
-
-// TODO: add multithreading
 
 fn main() -> Result<(), error::Error>{
     let yaml = clap::load_yaml!("../res/cli.yml");

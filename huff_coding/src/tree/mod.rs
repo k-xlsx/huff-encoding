@@ -8,7 +8,6 @@ pub mod letter;
 mod branch_heap;
 mod tree_inner;
 
-
 pub use tree_inner::{
     HuffTree,
     FromBinError

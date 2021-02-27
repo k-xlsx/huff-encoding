@@ -3,8 +3,6 @@ use super::letter::HuffLetter;
 
 use std::cmp::Ordering;
 
-
-
 /// Struct representing a [HuffBranch's][crate::tree::branch::HuffBranch] data.
 /// 
 /// Stores:

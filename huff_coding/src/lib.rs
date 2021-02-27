@@ -81,6 +81,9 @@
 //! [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding
 //! [huff_wiki_codes]:https://en.wikipedia.org/wiki/Prefix_code
 
+// when i have time:
+// TODO: add some abstraction over returned BitVecs (Deref 'n stuff)
+// TODO: look at serde
 
 /// Structs and traits used to represent and construct Huffman trees.
 pub mod tree;

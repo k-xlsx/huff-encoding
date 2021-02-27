@@ -5,8 +5,6 @@ use std::{
     convert::TryInto,
 };
 
-
-
 /// Trait specifying that the given type can be stored in a [`HuffTree`][crate::tree::HuffTree], 
 /// which means it implements: [`Clone`][Clone] + [`Eq`][Eq] + [`Hash`][std::hash::Hash]
 /// 
@@ -23,7 +21,6 @@ pub trait HuffLetterAsBytes: HuffLetter{
     fn try_from_be_bytes(bytes: &[u8]) ->  Result<Self, Box<dyn std::error::Error>>;
     fn as_be_bytes(&self) -> Box<[u8]>;
 }
-
 
 /// Implements `HuffLetter` for every provided type (without generics) 
 macro_rules! primitive_letter_impl{

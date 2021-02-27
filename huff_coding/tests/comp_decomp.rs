@@ -2,7 +2,6 @@ use huff_coding::{
     prelude::*,
 };
 
-
 // TODO: more
 
 #[test]

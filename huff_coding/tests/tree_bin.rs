@@ -3,8 +3,6 @@ use huff_coding::{
     bitvec::prelude::*,
 };
 
-
-
 #[test]
 fn tree_from_bin(){
     let tree = HuffTree::from_weights(ByteWeights::from_bytes(b"Mongo...

@@ -280,7 +280,7 @@ impl<L: HuffLetter> HuffTree<L>{
     /// [byte_weights]:crate::weights::ByteWeights
     pub fn from_weights<W: Weights<L>>(weights: W) -> Self{
         // panic when provided with empty weights
-        if !weights.is_empty(){
+        if weights.is_empty(){
             panic!("provided empty weights")
         }
 

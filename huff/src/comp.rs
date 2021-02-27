@@ -26,8 +26,6 @@ use std::{
     },
 };
 
-
-
 /// Read the the src file, compress it, and write the compressed data into dst file.
 /// 
 /// Chunk size means how many bytes will be read from src file at one time
