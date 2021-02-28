@@ -1,6 +1,7 @@
 // when i have time:
 // TODO: add optional multithreading
 // TODO: verbose option
+// TODO: TESTS
 
 /// Functions parsing and processing args
 mod cli;

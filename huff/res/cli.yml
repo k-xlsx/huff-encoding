@@ -36,4 +36,4 @@ args:
     - SRC_FILE:
         required: true
     - DST_FILE:
-        default_value: ./SRC_FILE_NAME.hff
+        default_value: ./SRC_FILE.hff
