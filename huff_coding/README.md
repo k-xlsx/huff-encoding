@@ -98,7 +98,7 @@ Every binary representation in the crate is made thanks to the [`bitvec`][bitvec
 [huff_wiki]:https://en.wikipedia.org/wiki/Huffman_coding
 [huff_wiki_codes]:https://en.wikipedia.org/wiki/Prefix_code
 
-[tree]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/mod.rs#L27
+[tree]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/tree_inner.rs#L17
 [letter]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/letter.rs#L10
 [letter_bytes]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/letter.rs#L16
 [weights]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/weights.rs#L19

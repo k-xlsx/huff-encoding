@@ -70,5 +70,5 @@ represented in binary (see [`HuffTree::try_from_bin`][tree_from_bin])
 [crate_img]:https://img.shields.io/crates/v/huff.svg?logo=rust
 
 [lib]:https://github.com/kxlsx/huffman-coding-rs/tree/master/huff_coding
-[tree]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/mod.rs#L27
-[tree_from_bin]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/mod.rs#L452
+[tree]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/tree_inner.rs#L17
+[tree_from_bin]:https://github.com/kxlsx/huffman-coding-rs/blob/master/huff_coding/src/tree/tree_inner.rs#L444
