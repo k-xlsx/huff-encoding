@@ -1,17 +1,7 @@
-// when i have time:
-// TODO: add optional multithreading
-// TODO: verbose option
-// TODO: TESTS
-
-/// Functions parsing and processing args
-mod cli;
-/// error returned by the program
-mod error;
-/// Functions reading file, compressing/decompressing them, 
-/// and writing the results to file
-mod comp;
-/// Various utility functions
-mod utils;
+use huff::{
+    error,
+    cli
+};
 
 fn main() -> Result<(), error::Error>{
     let yaml = clap::load_yaml!("../res/cli.yml");
@@ -22,8 +12,5 @@ fn main() -> Result<(), error::Error>{
     .version(clap::crate_version!())
     .author(clap::crate_authors!());
 
-    match cli::process_args(app.get_matches()){
-        Ok(_) => Ok(()),
-        Err(err) => err.exit()
-    }
+   cli::process_args(app.get_matches())
 }

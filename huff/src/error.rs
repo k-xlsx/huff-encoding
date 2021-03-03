@@ -2,7 +2,6 @@ use std::{
     io,
     fmt,
     error,
-    process,
 };
 
 /// Every kind of Error returned by the program
@@ -27,7 +26,7 @@ pub enum ErrorKind{
 }
 
 /// Error type returned by the program
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Error{
     pub message: String,
     pub kind: ErrorKind,
@@ -41,19 +40,19 @@ impl Error{
             kind,
         }
     }
-
-    /// Prints the error to `stderr` and exits with a status of `1`
-    pub fn exit(&self) -> ! {
-        eprintln!("Error: {}", self.message);
-        process::exit(1);  
-    }
 }
 
 impl error::Error for Error {}
 
 impl fmt::Display for Error{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{}", self.message)
+        write!(f, "{}", self.message)
+    }
+}
+
+impl fmt::Debug for Error{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        <Error as fmt::Display>::fmt(self, f)
     }
 }
 

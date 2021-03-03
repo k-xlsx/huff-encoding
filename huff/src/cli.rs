@@ -19,7 +19,7 @@ use std::{
     }
 };
 
-const EXTENSTION: &str = "hff";
+pub const EXTENSION: &str = "hff";
 
 macro_rules! parse_paths {
     ($src_path: expr, $dst_path:expr) =>{
@@ -27,14 +27,6 @@ macro_rules! parse_paths {
         if $dst_path == Path::new("./SRC_FILE.hff"){
             $dst_path.set_file_name("");
             $dst_path.push(Path::new($src_path.file_name().unwrap()));
-        }
-
-        // check if dst is a file 
-        if $dst_path.is_dir(){
-            return Err(Error::new(
-                format!("{:?} is a directory", $dst_path), 
-                ErrorKind::NotFile
-            ))
         }
 
         // check if src is a file
@@ -48,30 +40,38 @@ macro_rules! parse_paths {
     (comp; $src_path: expr, $dst_path:expr) =>{
         parse_paths!($src_path, $dst_path);
         
-        // add cli::EXTENSTION to the dst_path
+        // add cli::EXTENSION to the dst_path
         $dst_path = $dst_path.with_extension({
             let mut ex = $dst_path
                 .extension()
                 .unwrap_or(OsStr::new(""))
                 .to_os_string();
             if !ex.is_empty(){ex.push(".");}
-            ex.push(EXTENSTION);
+            ex.push(EXTENSION);
             ex
         });
 
     };
     (decomp; $src_path: expr, $dst_path:expr) =>{
         parse_paths!($src_path, $dst_path);
-        // check if the src_path file has a cli::EXTENSTION extension
-        if $src_path.extension() != Some(OsStr::new(EXTENSTION)){
+        // check if the src_path file has a cli::EXTENSION extension
+        if $src_path.extension() != Some(OsStr::new(EXTENSION)){
             return Err(Error::new(
-                format!("Unrecognized file format, expected {}", EXTENSTION), 
+                format!("Unrecognized file format, expected {}", EXTENSION), 
                 ErrorKind::UnrecognizedFormat
             ))
         }
-        // remove the cli::EXTENSTION extension if the dst_path is the same as src_path
+        // remove the cli::EXTENSION extension if the dst_path is the same as src_path
         if $dst_path == {let mut p = PathBuf::from("./"); p.push($src_path.clone()); p}{
             $dst_path.set_extension("");
+        }
+
+        // check if dst is a file 
+        if $dst_path.is_dir(){
+            return Err(Error::new(
+                format!("Destination {:?} is a directory", $dst_path), 
+                ErrorKind::NotFile
+            ))
         }
     };
 }
